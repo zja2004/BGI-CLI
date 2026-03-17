@@ -4,17 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from '@google/gemini-cli-core';
+import { AuthType, isCustomProviderAuthType } from '@google/gemini-cli-core';
 import { loadEnvironment, loadSettings } from './settings.js';
 
 export function validateAuthMethod(authMethod: string): string | null {
   loadEnvironment(loadSettings().merged, process.cwd());
-  if (
-    authMethod === AuthType.LOGIN_WITH_GOOGLE ||
-    authMethod === AuthType.COMPUTE_ADC
-  ) {
-    return null;
-  }
 
   if (authMethod === AuthType.USE_GEMINI) {
     if (!process.env['GEMINI_API_KEY']) {
@@ -39,6 +33,14 @@ export function validateAuthMethod(authMethod: string): string | null {
         'Update your environment and try again (no reload needed if using .env)!'
       );
     }
+    return null;
+  }
+
+  // Chinese AI providers and custom API — API key is required
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+  if (isCustomProviderAuthType(authMethod as AuthType)) {
+    // API key may be entered via dialog, so we allow validation to pass here.
+    // The actual key will be validated when the user submits it.
     return null;
   }
 

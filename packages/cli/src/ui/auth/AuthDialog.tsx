@@ -22,7 +22,6 @@ import {
 import { useKeypress } from '../hooks/useKeypress.js';
 import { AuthState } from '../types.js';
 import { validateAuthMethodWithSettings } from './useAuth.js';
-import { relaunchApp } from '../../utils/processUtils.js';
 
 interface AuthDialogProps {
   config: Config;
@@ -33,49 +32,50 @@ interface AuthDialogProps {
   setAuthContext: (context: { requiresRestart?: boolean }) => void;
 }
 
+const AUTH_ITEMS = [
+  {
+    label: 'MiniMax (海螺 AI)',
+    value: AuthType.USE_MINIMAX,
+    key: AuthType.USE_MINIMAX,
+  },
+  {
+    label: 'Kimi (月之暗面 Moonshot)',
+    value: AuthType.USE_KIMI,
+    key: AuthType.USE_KIMI,
+  },
+  {
+    label: 'Qwen (通义千问 Alibaba)',
+    value: AuthType.USE_QWEN,
+    key: AuthType.USE_QWEN,
+  },
+  {
+    label: 'DeepSeek (深度求索)',
+    value: AuthType.USE_DEEPSEEK,
+    key: AuthType.USE_DEEPSEEK,
+  },
+  {
+    label: 'Gemini API Key',
+    value: AuthType.USE_GEMINI,
+    key: AuthType.USE_GEMINI,
+  },
+  {
+    label: '自定义 API (Custom URL + API Key)',
+    value: AuthType.USE_CUSTOM,
+    key: AuthType.USE_CUSTOM,
+  },
+];
+
 export function AuthDialog({
-  config,
+  config: _config,
   settings,
   setAuthState,
   authError,
   onAuthError,
   setAuthContext,
 }: AuthDialogProps): React.JSX.Element {
-  const [exiting, setExiting] = useState(false);
-  let items = [
-    {
-      label: 'Sign in with Google',
-      value: AuthType.LOGIN_WITH_GOOGLE,
-      key: AuthType.LOGIN_WITH_GOOGLE,
-    },
-    ...(process.env['CLOUD_SHELL'] === 'true'
-      ? [
-          {
-            label: 'Use Cloud Shell user credentials',
-            value: AuthType.COMPUTE_ADC,
-            key: AuthType.COMPUTE_ADC,
-          },
-        ]
-      : process.env['GEMINI_CLI_USE_COMPUTE_ADC'] === 'true'
-        ? [
-            {
-              label: 'Use metadata server application default credentials',
-              value: AuthType.COMPUTE_ADC,
-              key: AuthType.COMPUTE_ADC,
-            },
-          ]
-        : []),
-    {
-      label: 'Use Gemini API Key',
-      value: AuthType.USE_GEMINI,
-      key: AuthType.USE_GEMINI,
-    },
-    {
-      label: 'Vertex AI',
-      value: AuthType.USE_VERTEX_AI,
-      key: AuthType.USE_VERTEX_AI,
-    },
-  ];
+  const [exiting] = useState(false);
+
+  let items = [...AUTH_ITEMS];
 
   if (settings.merged.security.auth.enforcedType) {
     items = items.filter(
@@ -83,32 +83,14 @@ export function AuthDialog({
     );
   }
 
-  let defaultAuthType = null;
-  const defaultAuthTypeEnv = process.env['GEMINI_DEFAULT_AUTH_TYPE'];
-  if (
-    defaultAuthTypeEnv &&
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    Object.values(AuthType).includes(defaultAuthTypeEnv as AuthType)
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    defaultAuthType = defaultAuthTypeEnv as AuthType;
-  }
-
   let initialAuthIndex = items.findIndex((item) => {
     if (settings.merged.security.auth.selectedType) {
       return item.value === settings.merged.security.auth.selectedType;
     }
-
-    if (defaultAuthType) {
-      return item.value === defaultAuthType;
-    }
-
-    if (process.env['GEMINI_API_KEY']) {
-      return item.value === AuthType.USE_GEMINI;
-    }
-
-    return item.value === AuthType.LOGIN_WITH_GOOGLE;
+    return item.value === AuthType.USE_DEEPSEEK;
   });
+
+  if (initialAuthIndex < 0) initialAuthIndex = 0;
   if (settings.merged.security.auth.enforcedType) {
     initialAuthIndex = 0;
   }
@@ -119,36 +101,16 @@ export function AuthDialog({
         return;
       }
       if (authType) {
-        if (authType === AuthType.LOGIN_WITH_GOOGLE) {
-          setAuthContext({ requiresRestart: true });
-        } else {
-          setAuthContext({});
-        }
+        setAuthContext({});
         await clearCachedCredentialFile();
-
         settings.setValue(scope, 'security.auth.selectedType', authType);
-        if (
-          authType === AuthType.LOGIN_WITH_GOOGLE &&
-          config.isBrowserLaunchSuppressed()
-        ) {
-          setExiting(true);
-          setTimeout(relaunchApp, 100);
-          return;
-        }
-
-        if (authType === AuthType.USE_GEMINI) {
-          if (process.env['GEMINI_API_KEY'] !== undefined) {
-            setAuthState(AuthState.Unauthenticated);
-            return;
-          } else {
-            setAuthState(AuthState.AwaitingApiKeyInput);
-            return;
-          }
-        }
+        // All providers need API key entry
+        setAuthState(AuthState.AwaitingApiKeyInput);
+        return;
       }
       setAuthState(AuthState.Unauthenticated);
     },
-    [settings, config, setAuthState, exiting, setAuthContext],
+    [settings, setAuthState, exiting, setAuthContext],
   );
 
   const handleAuthSelect = (authMethod: AuthType) => {
@@ -164,13 +126,10 @@ export function AuthDialog({
   useKeypress(
     (key) => {
       if (key.name === 'escape') {
-        // Prevent exit if there is an error message.
-        // This means they user is not authenticated yet.
         if (authError) {
           return true;
         }
         if (settings.merged.security.auth.selectedType === undefined) {
-          // Prevent exiting if no auth method is set
           onAuthError(
             'You must select an auth method to proceed. Press Ctrl+C twice to exit.',
           );
@@ -195,9 +154,7 @@ export function AuthDialog({
         width="100%"
         alignItems="flex-start"
       >
-        <Text color={theme.text.primary}>
-          Logging in with Google... Restarting Gemini CLI to continue.
-        </Text>
+        <Text color={theme.text.primary}>正在初始化... 重启 BGI CLI。</Text>
       </Box>
     );
   }
@@ -214,12 +171,10 @@ export function AuthDialog({
       <Text color={theme.text.accent}>? </Text>
       <Box flexDirection="column" flexGrow={1}>
         <Text bold color={theme.text.primary}>
-          Get started
+          欢迎使用 BGI CLI
         </Text>
         <Box marginTop={1}>
-          <Text color={theme.text.primary}>
-            How would you like to authenticate for this project?
-          </Text>
+          <Text color={theme.text.primary}>请选择您的 AI 服务提供商：</Text>
         </Box>
         <Box marginTop={1}>
           <RadioButtonSelect
@@ -237,17 +192,7 @@ export function AuthDialog({
           </Box>
         )}
         <Box marginTop={1}>
-          <Text color={theme.text.secondary}>(Use Enter to select)</Text>
-        </Box>
-        <Box marginTop={1}>
-          <Text color={theme.text.primary}>
-            Terms of Services and Privacy Notice for Gemini CLI
-          </Text>
-        </Box>
-        <Box marginTop={1}>
-          <Text color={theme.text.link}>
-            {'https://geminicli.com/docs/resources/tos-privacy/'}
-          </Text>
+          <Text color={theme.text.secondary}>(按 Enter 确认选择)</Text>
         </Box>
       </Box>
     </Box>

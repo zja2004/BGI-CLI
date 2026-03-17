@@ -13,6 +13,7 @@ import {
   AuthType,
   createContentGenerator,
   createContentGeneratorConfig,
+  isCustomProviderAuthType,
   type ContentGenerator,
   type ContentGeneratorConfig,
 } from '../core/contentGenerator.js';
@@ -1364,7 +1365,8 @@ export class Config implements McpContext, AgentLoopContext {
     const authType = this.contentGeneratorConfig.authType;
     if (
       authType === AuthType.USE_GEMINI ||
-      authType === AuthType.USE_VERTEX_AI
+      authType === AuthType.USE_VERTEX_AI ||
+      (authType !== undefined && isCustomProviderAuthType(authType))
     ) {
       this.setHasAccessToPreviewModel(true);
     }

@@ -11,6 +11,7 @@ import { createCache } from '../utils/cache.js';
 
 const KEYCHAIN_SERVICE_NAME = 'gemini-cli-api-key';
 const DEFAULT_API_KEY_ENTRY = 'default-api-key';
+const BASE_URL_ENTRY = 'custom-base-url';
 
 const storage = new HybridTokenStorage(KEYCHAIN_SERVICE_NAME);
 
@@ -89,4 +90,53 @@ export async function clearApiKey(): Promise<void> {
   } catch (error: unknown) {
     debugLogger.error('Failed to clear API key from storage:', error);
   }
+}
+
+const baseUrlCache = createCache<string, Promise<string | null>>({
+  storage: 'map',
+  defaultTtl: 30000,
+});
+
+/**
+ * Load stored custom base URL
+ */
+export async function loadBaseUrl(): Promise<string | null> {
+  return baseUrlCache.getOrCreate(BASE_URL_ENTRY, async () => {
+    try {
+      const credentials = await storage.getCredentials(BASE_URL_ENTRY);
+      if (credentials?.token?.accessToken) {
+        return credentials.token.accessToken;
+      }
+      return null;
+    } catch (error: unknown) {
+      debugLogger.error('Failed to load base URL from storage:', error);
+      return null;
+    }
+  });
+}
+
+/**
+ * Save custom base URL
+ */
+export async function saveBaseUrl(
+  baseUrl: string | null | undefined,
+): Promise<void> {
+  baseUrlCache.delete(BASE_URL_ENTRY);
+  if (!baseUrl || baseUrl.trim() === '') {
+    try {
+      await storage.deleteCredentials(BASE_URL_ENTRY);
+    } catch {
+      // ignore
+    }
+    return;
+  }
+  const credentials: OAuthCredentials = {
+    serverName: BASE_URL_ENTRY,
+    token: {
+      accessToken: baseUrl,
+      tokenType: 'BaseUrl',
+    },
+    updatedAt: Date.now(),
+  };
+  await storage.setCredentials(credentials);
 }

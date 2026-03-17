@@ -61,6 +61,35 @@ export enum AuthType {
   LEGACY_CLOUD_SHELL = 'cloud-shell',
   COMPUTE_ADC = 'compute-default-credentials',
   GATEWAY = 'gateway',
+  // Chinese AI providers
+  USE_MINIMAX = 'minimax-api-key',
+  USE_KIMI = 'kimi-api-key',
+  USE_QWEN = 'qwen-api-key',
+  USE_DEEPSEEK = 'deepseek-api-key',
+  USE_CUSTOM = 'custom-api-key',
+}
+
+/**
+ * Base URLs for Chinese AI providers
+ */
+export const PROVIDER_BASE_URLS: Partial<Record<AuthType, string>> = {
+  [AuthType.USE_MINIMAX]: 'https://api.minimax.chat/v1',
+  [AuthType.USE_KIMI]: 'https://api.moonshot.cn/v1',
+  [AuthType.USE_QWEN]: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  [AuthType.USE_DEEPSEEK]: 'https://api.deepseek.com/v1',
+};
+
+/**
+ * Returns true if the auth type is a Chinese AI provider or custom API.
+ */
+export function isCustomProviderAuthType(authType: AuthType): boolean {
+  return (
+    authType === AuthType.USE_MINIMAX ||
+    authType === AuthType.USE_KIMI ||
+    authType === AuthType.USE_QWEN ||
+    authType === AuthType.USE_DEEPSEEK ||
+    authType === AuthType.USE_CUSTOM
+  );
 }
 
 /**
@@ -150,6 +179,20 @@ export async function createContentGeneratorConfig(
     return contentGeneratorConfig;
   }
 
+  // Handle Chinese AI providers and custom API (all use API key + base URL)
+  if (authType && isCustomProviderAuthType(authType) && geminiApiKey) {
+    contentGeneratorConfig.apiKey = geminiApiKey;
+    contentGeneratorConfig.vertexai = false;
+    // Use provider's default base URL if not explicitly provided
+    if (!contentGeneratorConfig.baseUrl) {
+      const defaultUrl = PROVIDER_BASE_URLS[authType];
+      if (defaultUrl) {
+        contentGeneratorConfig.baseUrl = defaultUrl;
+      }
+    }
+    return contentGeneratorConfig;
+  }
+
   return contentGeneratorConfig;
 }
 
@@ -217,7 +260,9 @@ export async function createContentGenerator(
     if (
       config.authType === AuthType.USE_GEMINI ||
       config.authType === AuthType.USE_VERTEX_AI ||
-      config.authType === AuthType.GATEWAY
+      config.authType === AuthType.GATEWAY ||
+      (config.authType !== undefined &&
+        isCustomProviderAuthType(config.authType))
     ) {
       let headers: Record<string, string> = { ...baseHeaders };
       if (config.customHeaders) {

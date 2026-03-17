@@ -8,8 +8,11 @@ import { useState, useEffect, useCallback } from 'react';
 import type { LoadedSettings } from '../../config/settings.js';
 import {
   AuthType,
+  isCustomProviderAuthType,
+  PROVIDER_BASE_URLS,
   type Config,
   loadApiKey,
+  loadBaseUrl,
   debugLogger,
   isAccountSuspendedError,
   ProjectIdRequiredError,
@@ -27,6 +30,10 @@ export function validateAuthMethodWithSettings(
     return `Authentication is enforced to be ${enforcedType}, but you are currently using ${authType}.`;
   }
   if (settings.merged.security.auth.useExternal) {
+    return null;
+  }
+  // Custom providers: validation passes (API key entered via dialog)
+  if (isCustomProviderAuthType(authType)) {
     return null;
   }
   // If using Gemini API key, we don't validate it here as we might need to prompt for it.
@@ -91,20 +98,19 @@ export const useAuthCommand = (
         return;
       }
 
+       
       const authType = settings.merged.security.auth.selectedType;
       if (!authType) {
-        if (process.env['GEMINI_API_KEY']) {
-          onAuthError(
-            'Existing API key detected (GEMINI_API_KEY). Select "Gemini API Key" option to use it.',
-          );
-        } else {
-          onAuthError('No authentication method selected.');
-        }
+        onAuthError('No authentication method selected.');
         return;
       }
 
-      if (authType === AuthType.USE_GEMINI) {
-        const key = await reloadApiKey(); // Use the unified function
+      // Custom providers and Gemini key need API key input if none stored
+      if (
+        authType === AuthType.USE_GEMINI ||
+        isCustomProviderAuthType(authType)
+      ) {
+        const key = await reloadApiKey();
         if (!key) {
           setAuthState(AuthState.AwaitingApiKeyInput);
           return;
@@ -117,21 +123,20 @@ export const useAuthCommand = (
         return;
       }
 
-      const defaultAuthType = process.env['GEMINI_DEFAULT_AUTH_TYPE'];
-      if (
-        defaultAuthType &&
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        !Object.values(AuthType).includes(defaultAuthType as AuthType)
-      ) {
-        onAuthError(
-          `Invalid value for GEMINI_DEFAULT_AUTH_TYPE: "${defaultAuthType}". ` +
-            `Valid values are: ${Object.values(AuthType).join(', ')}.`,
-        );
-        return;
-      }
-
       try {
-        await config.refreshAuth(authType);
+        // Resolve base URL for the selected provider
+        let baseUrl: string | undefined;
+        if (isCustomProviderAuthType(authType)) {
+          const presetUrl = PROVIDER_BASE_URLS[authType];
+          if (presetUrl) {
+            baseUrl = presetUrl;
+          } else {
+            // USE_CUSTOM: load from storage
+            baseUrl = (await loadBaseUrl()) ?? undefined;
+          }
+        }
+
+        await config.refreshAuth(authType, undefined, baseUrl);
 
         debugLogger.log(`Authenticated via "${authType}".`);
         setAuthError(null);
@@ -145,8 +150,6 @@ export const useAuthCommand = (
             appealLinkText: suspendedError.appealLinkText,
           });
         } else if (e instanceof ProjectIdRequiredError) {
-          // OAuth succeeded but account setup requires project ID
-          // Show the error message directly without "Failed to login" prefix
           onAuthError(getErrorMessage(e));
         } else {
           onAuthError(`Failed to sign in. Message: ${getErrorMessage(e)}`);

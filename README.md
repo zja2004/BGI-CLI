@@ -1,393 +1,382 @@
-# Gemini CLI
+# BGI CLI
 
-[![Gemini CLI CI](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml)
-[![Gemini CLI E2E (Chained)](https://github.com/google-gemini/gemini-cli/actions/workflows/chained_e2e.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/chained_e2e.yml)
-[![Version](https://img.shields.io/npm/v/@google/gemini-cli)](https://www.npmjs.com/package/@google/gemini-cli)
-[![License](https://img.shields.io/github/license/google-gemini/gemini-cli)](https://github.com/google-gemini/gemini-cli/blob/main/LICENSE)
-[![View Code Wiki](https://assets.codewiki.google/readme-badge/static.svg)](https://codewiki.google/github.com/google-gemini/gemini-cli?utm_source=badge&utm_medium=github&utm_campaign=github.com/google-gemini/gemini-cli)
+<div align="center">
 
-![Gemini CLI Screenshot](/docs/assets/gemini-screenshot.png)
-
-Gemini CLI is an open-source AI agent that brings the power of Gemini directly
-into your terminal. It provides lightweight access to Gemini, giving you the
-most direct path from your prompt to our model.
-
-Learn all about Gemini CLI in our [documentation](https://geminicli.com/docs/).
-
-## 🚀 Why Gemini CLI?
-
-- **🎯 Free tier**: 60 requests/min and 1,000 requests/day with personal Google
-  account.
-- **🧠 Powerful Gemini 3 models**: Access to improved reasoning and 1M token
-  context window.
-- **🔧 Built-in tools**: Google Search grounding, file operations, shell
-  commands, web fetching.
-- **🔌 Extensible**: MCP (Model Context Protocol) support for custom
-  integrations.
-- **💻 Terminal-first**: Designed for developers who live in the command line.
-- **🛡️ Open source**: Apache 2.0 licensed.
-
-## 📦 Installation
-
-See
-[Gemini CLI installation, execution, and releases](./docs/get-started/installation.md)
-for recommended system specifications and a detailed installation guide.
-
-### Quick Install
-
-#### Run instantly with npx
-
-```bash
-# Using npx (no installation required)
-npx @google/gemini-cli
+```
+██████╗  ██████╗ ██╗
+██╔══██╗██╔════╝ ██║
+██████╔╝██║  ███╗██║
+██╔══██╗██║   ██║██║
+██████╔╝╚██████╔╝██║
+╚═════╝  ╚═════╝ ╚═╝
 ```
 
-#### Install globally with npm
+**专为中国大陆用户设计的 AI 命令行工具**
 
-```bash
-npm install -g @google/gemini-cli
-```
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-green.svg)](https://nodejs.org)
+[![Based on](https://img.shields.io/badge/based%20on-Gemini%20CLI-orange.svg)](https://github.com/google-gemini/gemini-cli)
 
-#### Install globally with Homebrew (macOS/Linux)
+[English](#english) · [中文](#中文使用说明)
 
-```bash
-brew install gemini-cli
-```
-
-#### Install globally with MacPorts (macOS)
-
-```bash
-sudo port install gemini-cli
-```
-
-#### Install with Anaconda (for restricted environments)
-
-```bash
-# Create and activate a new environment
-conda create -y -n gemini_env -c conda-forge nodejs
-conda activate gemini_env
-
-# Install Gemini CLI globally via npm (inside the environment)
-npm install -g @google/gemini-cli
-```
-
-## Release Cadence and Tags
-
-See [Releases](./docs/releases.md) for more details.
-
-### Preview
-
-New preview releases will be published each week at UTC 23:59 on Tuesdays. These
-releases will not have been fully vetted and may contain regressions or other
-outstanding issues. Please help us test and install with `preview` tag.
-
-```bash
-npm install -g @google/gemini-cli@preview
-```
-
-### Stable
-
-- New stable releases will be published each week at UTC 20:00 on Tuesdays, this
-  will be the full promotion of last week's `preview` release + any bug fixes
-  and validations. Use `latest` tag.
-
-```bash
-npm install -g @google/gemini-cli@latest
-```
-
-### Nightly
-
-- New releases will be published each day at UTC 00:00. This will be all changes
-  from the main branch as represented at time of release. It should be assumed
-  there are pending validations and issues. Use `nightly` tag.
-
-```bash
-npm install -g @google/gemini-cli@nightly
-```
-
-## 📋 Key Features
-
-### Code Understanding & Generation
-
-- Query and edit large codebases
-- Generate new apps from PDFs, images, or sketches using multimodal capabilities
-- Debug issues and troubleshoot with natural language
-
-### Automation & Integration
-
-- Automate operational tasks like querying pull requests or handling complex
-  rebases
-- Use MCP servers to connect new capabilities, including
-  [media generation with Imagen, Veo or Lyria](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/mcp-genmedia)
-- Run non-interactively in scripts for workflow automation
-
-### Advanced Capabilities
-
-- Ground your queries with built-in
-  [Google Search](https://ai.google.dev/gemini-api/docs/grounding) for real-time
-  information
-- Conversation checkpointing to save and resume complex sessions
-- Custom context files (GEMINI.md) to tailor behavior for your projects
-
-### GitHub Integration
-
-Integrate Gemini CLI directly into your GitHub workflows with
-[**Gemini CLI GitHub Action**](https://github.com/google-github-actions/run-gemini-cli):
-
-- **Pull Request Reviews**: Automated code review with contextual feedback and
-  suggestions
-- **Issue Triage**: Automated labeling and prioritization of GitHub issues based
-  on content analysis
-- **On-demand Assistance**: Mention `@gemini-cli` in issues and pull requests
-  for help with debugging, explanations, or task delegation
-- **Custom Workflows**: Build automated, scheduled and on-demand workflows
-  tailored to your team's needs
-
-## 🔐 Authentication Options
-
-Choose the authentication method that best fits your needs:
-
-### Option 1: Sign in with Google (OAuth login using your Google Account)
-
-**✨ Best for:** Individual developers as well as anyone who has a Gemini Code
-Assist License. (see
-[quota limits and terms of service](https://cloud.google.com/gemini/docs/quotas)
-for details)
-
-**Benefits:**
-
-- **Free tier**: 60 requests/min and 1,000 requests/day
-- **Gemini 3 models** with 1M token context window
-- **No API key management** - just sign in with your Google account
-- **Automatic updates** to latest models
-
-#### Start Gemini CLI, then choose _Sign in with Google_ and follow the browser authentication flow when prompted
-
-```bash
-gemini
-```
-
-#### If you are using a paid Code Assist License from your organization, remember to set the Google Cloud Project
-
-```bash
-# Set your Google Cloud Project
-export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-gemini
-```
-
-### Option 2: Gemini API Key
-
-**✨ Best for:** Developers who need specific model control or paid tier access
-
-**Benefits:**
-
-- **Free tier**: 1000 requests/day with Gemini 3 (mix of flash and pro)
-- **Model selection**: Choose specific Gemini models
-- **Usage-based billing**: Upgrade for higher limits when needed
-
-```bash
-# Get your key from https://aistudio.google.com/apikey
-export GEMINI_API_KEY="YOUR_API_KEY"
-gemini
-```
-
-### Option 3: Vertex AI
-
-**✨ Best for:** Enterprise teams and production workloads
-
-**Benefits:**
-
-- **Enterprise features**: Advanced security and compliance
-- **Scalable**: Higher rate limits with billing account
-- **Integration**: Works with existing Google Cloud infrastructure
-
-```bash
-# Get your key from Google Cloud Console
-export GOOGLE_API_KEY="YOUR_API_KEY"
-export GOOGLE_GENAI_USE_VERTEXAI=true
-gemini
-```
-
-For Google Workspace accounts and other authentication methods, see the
-[authentication guide](./docs/get-started/authentication.md).
-
-## 🚀 Getting Started
-
-### Basic Usage
-
-#### Start in current directory
-
-```bash
-gemini
-```
-
-#### Include multiple directories
-
-```bash
-gemini --include-directories ../lib,../docs
-```
-
-#### Use specific model
-
-```bash
-gemini -m gemini-2.5-flash
-```
-
-#### Non-interactive mode for scripts
-
-Get a simple text response:
-
-```bash
-gemini -p "Explain the architecture of this codebase"
-```
-
-For more advanced scripting, including how to parse JSON and handle errors, use
-the `--output-format json` flag to get structured output:
-
-```bash
-gemini -p "Explain the architecture of this codebase" --output-format json
-```
-
-For real-time event streaming (useful for monitoring long-running operations),
-use `--output-format stream-json` to get newline-delimited JSON events:
-
-```bash
-gemini -p "Run tests and deploy" --output-format stream-json
-```
-
-### Quick Examples
-
-#### Start a new project
-
-```bash
-cd new-project/
-gemini
-> Write me a Discord bot that answers questions using a FAQ.md file I will provide
-```
-
-#### Analyze existing code
-
-```bash
-git clone https://github.com/google-gemini/gemini-cli
-cd gemini-cli
-gemini
-> Give me a summary of all of the changes that went in yesterday
-```
-
-## 📚 Documentation
-
-### Getting Started
-
-- [**Quickstart Guide**](./docs/get-started/index.md) - Get up and running
-  quickly.
-- [**Authentication Setup**](./docs/get-started/authentication.md) - Detailed
-  auth configuration.
-- [**Configuration Guide**](./docs/reference/configuration.md) - Settings and
-  customization.
-- [**Keyboard Shortcuts**](./docs/reference/keyboard-shortcuts.md) -
-  Productivity tips.
-
-### Core Features
-
-- [**Commands Reference**](./docs/reference/commands.md) - All slash commands
-  (`/help`, `/chat`, etc).
-- [**Custom Commands**](./docs/cli/custom-commands.md) - Create your own
-  reusable commands.
-- [**Context Files (GEMINI.md)**](./docs/cli/gemini-md.md) - Provide persistent
-  context to Gemini CLI.
-- [**Checkpointing**](./docs/cli/checkpointing.md) - Save and resume
-  conversations.
-- [**Token Caching**](./docs/cli/token-caching.md) - Optimize token usage.
-
-### Tools & Extensions
-
-- [**Built-in Tools Overview**](./docs/reference/tools.md)
-  - [File System Operations](./docs/tools/file-system.md)
-  - [Shell Commands](./docs/tools/shell.md)
-  - [Web Fetch & Search](./docs/tools/web-fetch.md)
-- [**MCP Server Integration**](./docs/tools/mcp-server.md) - Extend with custom
-  tools.
-- [**Custom Extensions**](./docs/extensions/index.md) - Build and share your own
-  commands.
-
-### Advanced Topics
-
-- [**Headless Mode (Scripting)**](./docs/cli/headless.md) - Use Gemini CLI in
-  automated workflows.
-- [**Architecture Overview**](./docs/architecture.md) - How Gemini CLI works.
-- [**IDE Integration**](./docs/ide-integration/index.md) - VS Code companion.
-- [**Sandboxing & Security**](./docs/cli/sandbox.md) - Safe execution
-  environments.
-- [**Trusted Folders**](./docs/cli/trusted-folders.md) - Control execution
-  policies by folder.
-- [**Enterprise Guide**](./docs/cli/enterprise.md) - Deploy and manage in a
-  corporate environment.
-- [**Telemetry & Monitoring**](./docs/cli/telemetry.md) - Usage tracking.
-- [**Tools reference**](./docs/reference/tools.md) - Built-in tools overview.
-- [**Local development**](./docs/local-development.md) - Local development
-  tooling.
-
-### Troubleshooting & Support
-
-- [**Troubleshooting Guide**](./docs/resources/troubleshooting.md) - Common
-  issues and solutions.
-- [**FAQ**](./docs/resources/faq.md) - Frequently asked questions.
-- Use `/bug` command to report issues directly from the CLI.
-
-### Using MCP Servers
-
-Configure MCP servers in `~/.gemini/settings.json` to extend Gemini CLI with
-custom tools:
-
-```text
-> @github List my open pull requests
-> @slack Send a summary of today's commits to #dev channel
-> @database Run a query to find inactive users
-```
-
-See the [MCP Server Integration guide](./docs/tools/mcp-server.md) for setup
-instructions.
-
-## 🤝 Contributing
-
-We welcome contributions! Gemini CLI is fully open source (Apache 2.0), and we
-encourage the community to:
-
-- Report bugs and suggest features.
-- Improve documentation.
-- Submit code improvements.
-- Share your MCP servers and extensions.
-
-See our [Contributing Guide](./CONTRIBUTING.md) for development setup, coding
-standards, and how to submit pull requests.
-
-Check our [Official Roadmap](https://github.com/orgs/google-gemini/projects/11)
-for planned features and priorities.
-
-## 📖 Resources
-
-- **[Official Roadmap](./ROADMAP.md)** - See what's coming next.
-- **[Changelog](./docs/changelogs/index.md)** - See recent notable updates.
-- **[NPM Package](https://www.npmjs.com/package/@google/gemini-cli)** - Package
-  registry.
-- **[GitHub Issues](https://github.com/google-gemini/gemini-cli/issues)** -
-  Report bugs or request features.
-- **[Security Advisories](https://github.com/google-gemini/gemini-cli/security/advisories)** -
-  Security updates.
-
-### Uninstall
-
-See the [Uninstall Guide](./docs/resources/uninstall.md) for removal
-instructions.
-
-## 📄 Legal
-
-- **License**: [Apache License 2.0](LICENSE)
-- **Terms of Service**: [Terms & Privacy](./docs/resources/tos-privacy.md)
-- **Security**: [Security Policy](SECURITY.md)
+</div>
 
 ---
 
-<p align="center">
-  Built with ❤️ by Google and the open source community
-</p>
+## 中文使用说明
+
+BGI CLI 是基于 [Google Gemini CLI](https://github.com/google-gemini/gemini-cli)
+二次开发的命令行 AI 工具，针对中国大陆网络环境做了适配，**无需 Google 账号**，原生支持 MiniMax、Kimi、通义千问、DeepSeek 等国内主流 AI 服务商，同时支持任意 OpenAI 兼容接口。
+
+### 功能特性
+
+- 🇨🇳 **国内服务商原生支持** — MiniMax · Kimi · Qwen ·
+  DeepSeek，预置 API 地址，开箱即用
+- 🔌 **自定义 API 接口** — 支持任意 OpenAI 兼容的 API 地址 + Key
+- 🎨 **彩色 BGI 大字 Logo** — 启动界面美观，主题渐变色
+- 🛠️ **强大的 AI 编程助手**
+  — 读写文件、执行命令、代码搜索、网页获取，一键完成复杂任务
+- 💬 **多轮对话** — 完整的上下文记忆，支持会话保存与恢复
+- 🔧 **MCP 扩展** — 支持 Model Context Protocol，可接入自定义工具
+- 📦 **跨平台** — Windows · macOS · Linux 均可使用
+
+---
+
+### 安装
+
+#### 方式一：从源码安装（推荐）
+
+**前置要求：** Node.js ≥ 20.0.0
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/zja2004/BGI-CLI.git
+cd BGI-CLI
+
+# 2. 安装依赖
+npm install
+
+# 3. 打包构建
+npm run bundle
+
+# 4. 全局链接（注册 bgi 命令）
+npm link
+```
+
+安装完成后，在任意终端输入 `bgi` 即可启动。
+
+#### 方式二：直接运行（无需安装）
+
+```bash
+git clone https://github.com/zja2004/BGI-CLI.git
+cd BGI-CLI
+npm install
+npm run bundle
+node bundle/gemini.js
+```
+
+---
+
+### 快速开始
+
+#### 第一步：启动
+
+```bash
+bgi
+```
+
+启动后会看到彩色 BGI Logo 和服务商选择界面。
+
+#### 第二步：选择 AI 服务商
+
+使用 **↑ ↓ 方向键** 选择服务商，按 **Enter** 确认：
+
+```
+? 欢迎使用 BGI CLI
+  请选择您的 AI 服务提供商：
+
+  ○ MiniMax (海螺 AI)
+  ○ Kimi (月之暗面 Moonshot)
+  ○ Qwen (通义千问 Alibaba)
+  ● DeepSeek (深度求索)          ← 默认选中
+  ○ Gemini API Key
+  ○ 自定义 API (Custom URL + API Key)
+```
+
+#### 第三步：输入 API Key
+
+选择服务商后，系统会显示对应的 API 地址，并提示输入 API Key：
+
+```
+DeepSeek (深度求索) — 输入 API Key
+API 端点： https://api.deepseek.com/v1
+
+API Key：
+┌────────────────────────────────────┐
+│ 粘贴您的 API Key                    │
+└────────────────────────────────────┘
+```
+
+粘贴 API Key 后按 **Enter** 即可开始对话。
+
+---
+
+### 各服务商 API Key 获取方式
+
+| 服务商              | 官网注册地址                                           | API 地址                                            |
+| ------------------- | ------------------------------------------------------ | --------------------------------------------------- |
+| **DeepSeek**        | [platform.deepseek.com](https://platform.deepseek.com) | `https://api.deepseek.com/v1`                       |
+| **Kimi (Moonshot)** | [platform.moonshot.cn](https://platform.moonshot.cn)   | `https://api.moonshot.cn/v1`                        |
+| **通义千问 (Qwen)** | [dashscope.aliyun.com](https://dashscope.aliyun.com)   | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| **MiniMax**         | [platform.minimax.chat](https://platform.minimax.chat) | `https://api.minimax.chat/v1`                       |
+| **自定义**          | 任意 OpenAI 兼容接口                                   | 自行填写                                            |
+
+---
+
+### 使用示例
+
+#### 对话模式
+
+```bash
+bgi
+```
+
+```
+BGI CLI v0.35.0
+
+> 帮我用 Python 写一个快速排序算法
+
+✓ 当然，下面是 Python 快速排序实现：
+
+def quicksort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    ...
+```
+
+#### 非交互式模式（单次执行）
+
+```bash
+# 直接传入提示词
+bgi -p "解释一下 Docker 和虚拟机的区别"
+
+# 分析当前目录代码
+bgi -p "分析这个项目的架构，列出主要模块"
+
+# 输出 JSON 格式（适合脚本集成）
+bgi -p "列出5个设计模式" --output-format json
+```
+
+#### 常用快捷键
+
+| 快捷键   | 功能                        |
+| -------- | --------------------------- |
+| `Enter`  | 发送消息                    |
+| `Ctrl+C` | 取消当前请求 / 两次退出程序 |
+| `Ctrl+D` | 退出（空行时）              |
+| `Ctrl+L` | 清屏                        |
+| `↑ / ↓`  | 浏览历史输入                |
+| `Ctrl+R` | 搜索历史输入                |
+| `Esc`    | 关闭对话框 / 取消           |
+| `F12`    | 切换调试控制台              |
+| `Alt+M`  | 切换 Markdown 渲染          |
+
+---
+
+### 常用命令
+
+在对话界面中输入以 `/` 开头的命令：
+
+```bash
+/auth          # 切换 AI 服务商
+/model         # 切换模型
+/settings      # 打开设置界面
+/clear         # 清空对话历史
+/memory show   # 查看当前上下文
+/help          # 查看全部命令
+/quit          # 退出程序
+```
+
+---
+
+### 切换服务商
+
+已认证后如需切换服务商：
+
+```bash
+# 方式1：在对话界面输入
+/auth
+
+# 方式2：启动时指定
+bgi --auth
+```
+
+---
+
+### 自定义 API 接口
+
+如果你有自己的 API 服务（例如本地部署的模型，或 API 中转站），选择
+**"自定义 API"** 选项：
+
+```
+自定义 API — 输入 API Key
+自定义 API 地址 (Base URL)：
+┌────────────────────────────────────┐
+│ https://your-api-endpoint/v1       │
+└────────────────────────────────────┘
+
+API Key：
+┌────────────────────────────────────┐
+│ 粘贴您的 API Key                    │
+└────────────────────────────────────┘
+```
+
+支持任意符合 OpenAI API 格式的接口。
+
+---
+
+### 高级配置
+
+#### 通过环境变量配置
+
+```bash
+# 直接使用 API Key（跳过对话界面）
+export GEMINI_API_KEY="your-api-key"
+export GOOGLE_GEMINI_BASE_URL="https://api.deepseek.com/v1"
+
+bgi
+```
+
+#### 配置文件
+
+BGI CLI 配置文件位于 `~/.gemini/settings.json`（与 Gemini CLI 共用配置目录）：
+
+```json
+{
+  "security": {
+    "auth": {
+      "selectedType": "deepseek-api-key"
+    }
+  },
+  "model": "deepseek-chat"
+}
+```
+
+---
+
+### 常见问题
+
+**Q: 启动后提示 "No authentication method selected"？**
+
+A: 运行 `bgi` 后选择一个服务商并输入对应的 API Key 即可。
+
+**Q: API Key 保存在哪里？**
+
+A: API Key 使用系统 Keychain（Windows 凭据管理器 / macOS Keychain / Linux Secret
+Service）安全存储，不会明文写入磁盘。
+
+**Q: 能用 DeepSeek R1 等推理模型吗？**
+
+A: 可以，使用 `/model` 命令切换具体模型名称即可。
+
+**Q: 是否支持代理？**
+
+A: 支持。在设置中配置 `proxy` 字段，或设置环境变量 `HTTPS_PROXY`。
+
+**Q: API 响应格式和 Gemini 不兼容怎么办？**
+
+A: 国内服务商一般支持 OpenAI 兼容模式。如遇格式问题，推荐使用支持 Gemini 格式转换的 API 中转服务（如
+[one-api](https://github.com/songquanpeng/one-api)）。
+
+---
+
+### 项目结构
+
+```
+BGI-CLI/
+├── packages/
+│   ├── core/          # 核心逻辑：认证、模型、工具
+│   └── cli/           # CLI 界面：React/Ink 渲染
+├── bundle/            # 打包后的可执行文件
+├── schemas/           # 配置 JSON Schema
+└── docs/              # 文档
+```
+
+---
+
+### 参与贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+```bash
+# Fork 并克隆
+git clone https://github.com/your-username/BGI-CLI.git
+cd BGI-CLI
+
+# 安装依赖
+npm install
+
+# 开发模式运行（无需打包）
+npm run start
+
+# 构建
+npm run bundle
+```
+
+---
+
+### 许可证
+
+本项目基于 [Apache 2.0](LICENSE) 许可证开源。
+
+原始项目：[google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli)
+© Google LLC
+
+---
+
+## English
+
+BGI CLI is a fork of
+[Google Gemini CLI](https://github.com/google-gemini/gemini-cli), adapted for
+users in mainland China. It removes Google authentication and adds native
+support for Chinese AI providers.
+
+### Supported Providers
+
+| Provider        | Base URL                                            |
+| --------------- | --------------------------------------------------- |
+| DeepSeek        | `https://api.deepseek.com/v1`                       |
+| Kimi (Moonshot) | `https://api.moonshot.cn/v1`                        |
+| Qwen (Alibaba)  | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| MiniMax         | `https://api.minimax.chat/v1`                       |
+| Custom API      | Any OpenAI-compatible endpoint                      |
+
+### Installation
+
+```bash
+git clone https://github.com/zja2004/BGI-CLI.git
+cd BGI-CLI
+npm install
+npm run bundle
+npm link
+```
+
+Then run `bgi` in any terminal.
+
+### Usage
+
+```bash
+# Interactive mode
+bgi
+
+# One-shot mode
+bgi -p "Explain the CAP theorem"
+
+# With environment variables
+GEMINI_API_KEY=your-key GOOGLE_GEMINI_BASE_URL=https://api.deepseek.com/v1 bgi
+```
+
+### License
+
+Apache 2.0 — see [LICENSE](LICENSE)

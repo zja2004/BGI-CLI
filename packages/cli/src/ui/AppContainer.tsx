@@ -56,11 +56,13 @@ import {
   getErrorMessage,
   getAllGeminiMdFilenames,
   AuthType,
+  isCustomProviderAuthType,
   clearCachedCredentialFile,
   type ResumedSessionData,
   recordExitFail,
   ShellExecutionService,
   saveApiKey,
+  saveBaseUrl,
   debugLogger,
   coreEvents,
   CoreEvent,
@@ -807,7 +809,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
   );
 
   const handleApiKeySubmit = useCallback(
-    async (apiKey: string) => {
+    async (apiKey: string, baseUrl?: string) => {
       try {
         onAuthError(null);
         if (!apiKey.trim() && apiKey.length > 1) {
@@ -818,8 +820,23 @@ Logging in with Google... Restarting Gemini CLI to continue.
         }
 
         await saveApiKey(apiKey);
+        if (baseUrl) {
+          await saveBaseUrl(baseUrl);
+        }
         await reloadApiKey();
-        await config.refreshAuth(AuthType.USE_GEMINI);
+
+        // Use the selected auth type; fall back to USE_GEMINI
+        const rawType = settings.merged.security.auth.selectedType;
+        const authType =
+          rawType &&
+           
+          (rawType === AuthType.USE_GEMINI ||
+            isCustomProviderAuthType(rawType as AuthType))
+            ?  
+              (rawType as AuthType)
+            : AuthType.USE_GEMINI;
+
+        await config.refreshAuth(authType, undefined, baseUrl);
         setAuthState(AuthState.Authenticated);
       } catch (e) {
         onAuthError(
@@ -827,7 +844,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
         );
       }
     },
-    [setAuthState, onAuthError, reloadApiKey, config],
+    [settings, setAuthState, onAuthError, reloadApiKey, config],
   );
 
   const handleApiKeyCancel = useCallback(() => {

@@ -17,29 +17,43 @@ import { theme } from '../semantic-colors.js';
 import { ThemedGradient } from './ThemedGradient.js';
 import { CliSpinner } from './CliSpinner.js';
 
-import { isAppleTerminal } from '@google/gemini-cli-core';
-
 interface AppHeaderProps {
   version: string;
   showDetails?: boolean;
 }
 
-const DEFAULT_ICON = `▝▜▄  
-  ▝▜▄
- ▗▟▀ 
-▝▀    `;
-
 /**
- * The default Apple Terminal.app adds significant line-height padding between
- * rows. This breaks Unicode block-drawing characters that rely on vertical
- * adjacency (like half-blocks). This version is perfectly symmetric vertically,
- * which makes the padding gaps look like an intentional "scanline" design
- * rather than a broken image.
+ * BGI logo rendered as a multi-line ASCII art block.
+ * Line 0 gets the gradient, remaining lines use secondary colour.
+ *
+ * Each line is kept to ≤ 40 chars so it fits even in narrow terminals.
  */
-const MAC_TERMINAL_ICON = `▝▜▄  
-  ▝▜▄
-  ▗▟▀
-▗▟▀  `;
+const BGI_LOGO = [
+  '██████╗  ██████╗ ██╗',
+  '██╔══██╗██╔════╝ ██║',
+  '██████╔╝██║  ███╗██║',
+  '██╔══██╗██║   ██║██║',
+  '██████╔╝╚██████╔╝██║',
+  '╚═════╝  ╚═════╝ ╚═╝',
+];
+
+function BgiLogo() {
+  return (
+    <Box flexDirection="column">
+      {BGI_LOGO.map((line, i) =>
+        i === 0 ? (
+          <ThemedGradient key={i}>
+            <Text>{line}</Text>
+          </ThemedGradient>
+        ) : (
+          <Text key={i} color={theme.text.accent}>
+            {line}
+          </Text>
+        ),
+      )}
+    </Box>
+  );
+}
 
 export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
   const settings = useSettings();
@@ -53,8 +67,6 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
     settings.merged.ui.hideBanner || config.getScreenReader()
   );
 
-  const ICON = isAppleTerminal() ? MAC_TERMINAL_ICON : DEFAULT_ICON;
-
   if (!showDetails) {
     return (
       <Box flexDirection="column">
@@ -66,12 +78,12 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
             paddingLeft={2}
           >
             <Box flexShrink={0}>
-              <ThemedGradient>{ICON}</ThemedGradient>
+              <BgiLogo />
             </Box>
-            <Box marginLeft={2} flexDirection="column">
+            <Box marginLeft={3} flexDirection="column" justifyContent="center">
               <Box>
                 <Text bold color={theme.text.primary}>
-                  Gemini CLI
+                  BGI CLI
                 </Text>
                 <Text color={theme.text.secondary}> v{version}</Text>
               </Box>
@@ -87,13 +99,13 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
       {showHeader && (
         <Box flexDirection="row" marginTop={1} marginBottom={1} paddingLeft={2}>
           <Box flexShrink={0}>
-            <ThemedGradient>{ICON}</ThemedGradient>
+            <BgiLogo />
           </Box>
-          <Box marginLeft={2} flexDirection="column">
-            {/* Line 1: Gemini CLI vVersion [Updating] */}
+          <Box marginLeft={3} flexDirection="column" justifyContent="center">
+            {/* Line 1: BGI CLI vVersion [Updating] */}
             <Box>
               <Text bold color={theme.text.primary}>
-                Gemini CLI
+                BGI CLI
               </Text>
               <Text color={theme.text.secondary}> v{version}</Text>
               {updateInfo && (
@@ -105,10 +117,10 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
               )}
             </Box>
 
-            {/* Line 2: Blank */}
+            {/* Blank line */}
             <Box height={1} />
 
-            {/* Lines 3 & 4: User Identity info (Email /auth and Plan /upgrade) */}
+            {/* User Identity info */}
             {settings.merged.ui.showUserIdentity !== false && (
               <UserIdentity config={config} />
             )}
