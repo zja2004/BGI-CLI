@@ -36,7 +36,6 @@ const PROVIDER_LABELS: Partial<Record<AuthType, string>> = {
   [AuthType.USE_KIMI]: 'Kimi (月之暗面 Moonshot)',
   [AuthType.USE_QWEN]: 'Qwen (通义千问 Alibaba)',
   [AuthType.USE_DEEPSEEK]: 'DeepSeek (深度求索)',
-  [AuthType.USE_GEMINI]: 'Gemini',
   [AuthType.USE_CUSTOM]: '自定义 API',
 };
 

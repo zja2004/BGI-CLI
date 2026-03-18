@@ -56,7 +56,6 @@ import {
   getErrorMessage,
   getAllGeminiMdFilenames,
   AuthType,
-  isCustomProviderAuthType,
   clearCachedCredentialFile,
   type ResumedSessionData,
   recordExitFail,
@@ -825,18 +824,12 @@ Logging in with Google... Restarting Gemini CLI to continue.
         }
         await reloadApiKey();
 
-        // Use the selected auth type; fall back to USE_GEMINI
         const rawType = settings.merged.security.auth.selectedType;
-        const authType =
-          rawType &&
-           
-          (rawType === AuthType.USE_GEMINI ||
-            isCustomProviderAuthType(rawType as AuthType))
-            ?  
-              (rawType as AuthType)
-            : AuthType.USE_GEMINI;
-
-        await config.refreshAuth(authType, undefined, baseUrl);
+        if (!rawType) {
+          onAuthError('未选择服务商，请重新选择。');
+          return;
+        }
+        await config.refreshAuth(rawType, undefined, baseUrl);
         setAuthState(AuthState.Authenticated);
       } catch (e) {
         onAuthError(

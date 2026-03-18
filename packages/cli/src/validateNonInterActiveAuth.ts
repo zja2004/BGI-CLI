@@ -35,7 +35,7 @@ export async function validateNonInteractiveAuth(
     }
 
     if (!effectiveAuthType) {
-      const message = `Please set an Auth method in your ${USER_SETTINGS_PATH} or specify one of the following environment variables before running: GEMINI_API_KEY, GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_GENAI_USE_GCA`;
+      const message = `请在 ${USER_SETTINGS_PATH} 中配置 AI 服务商，或通过环境变量 GEMINI_API_KEY 指定 API Key。`;
       throw new Error(message);
     }
 

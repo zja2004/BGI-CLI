@@ -94,7 +94,6 @@ bgi
   ○ Kimi (月之暗面 Moonshot)
   ○ Qwen (通义千问 Alibaba)
   ● DeepSeek (深度求索)          ← 默认选中
-  ○ Gemini API Key
   ○ 自定义 API (Custom URL + API Key)
 ```
 
@@ -124,7 +123,6 @@ API Key：
 | **Kimi (Moonshot)** | [platform.moonshot.cn](https://platform.moonshot.cn)   | `https://api.moonshot.cn/v1`                        |
 | **通义千问 (Qwen)** | [dashscope.aliyun.com](https://dashscope.aliyun.com)   | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | **MiniMax**         | [platform.minimax.chat](https://platform.minimax.chat) | `https://api.minimax.chat/v1`                       |
-| **Gemini**          | [aistudio.google.com](https://aistudio.google.com)     | Google AI Studio                                    |
 | **自定义**          | 任意 OpenAI 兼容接口                                   | 自行填写                                            |
 
 ---
@@ -385,7 +383,6 @@ AI providers natively.
 | Kimi (Moonshot) | `https://api.moonshot.cn/v1`                        |
 | Qwen (Alibaba)  | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 | MiniMax         | `https://api.minimax.chat/v1`                       |
-| Gemini          | Google AI Studio                                    |
 | Custom API      | Any OpenAI-compatible endpoint                      |
 
 ### Bioinformatics Workflows

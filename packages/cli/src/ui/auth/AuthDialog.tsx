@@ -54,11 +54,6 @@ const AUTH_ITEMS = [
     key: AuthType.USE_DEEPSEEK,
   },
   {
-    label: 'Gemini API Key',
-    value: AuthType.USE_GEMINI,
-    key: AuthType.USE_GEMINI,
-  },
-  {
     label: '自定义 API (Custom URL + API Key)',
     value: AuthType.USE_CUSTOM,
     key: AuthType.USE_CUSTOM,
