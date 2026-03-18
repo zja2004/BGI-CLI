@@ -1,0 +1,36 @@
+# System files
+.DS_Store
+__pycache__/
+*.pyc
+
+# Output directories
+data/
+*_results/
+test_results/
+diff_analysis_results/
+test_export/
+test_plots/
+
+# Large files
+*.pkl
+*.pickle
+
+# Generated CSV/reports
+*diff_regions*.csv
+summary_report.md
+
+# Raw result files from ZIP extraction
+raw_results/
+
+# Live API extracts (development artifacts, not needed for mock tests)
+assets/eval/fixtures/raw_extract/
+
+# Temporary
+*.tmp
+*.temp
+
+# Jupyter/IDE
+.ipynb_checkpoints/
+*.ipynb
+.vscode/
+.idea/

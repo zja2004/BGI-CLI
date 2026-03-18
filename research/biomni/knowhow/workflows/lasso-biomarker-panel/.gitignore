@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# R temporary
+Rplots.pdf
+.RData
+.Rhistory
+
+# Data files
+**/*.rds
+**/data/
+
+# Results directories
+**/results/
+**/*_results/
+**/*_output/
+
+# Keep evaluation scripts and data
+!**/assets/eval/**/*.R
+!**/assets/eval/**/*.md
+!**/assets/eval/**/*.rds

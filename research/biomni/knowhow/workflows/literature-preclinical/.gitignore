@@ -1,0 +1,18 @@
+# System files
+.DS_Store
+
+# Data files
+**/*.pkl
+**/data/
+**/*_results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# R temporary
+.RData
+.Rhistory
+.Rproj.user/
