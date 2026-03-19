@@ -1,16 +1,51 @@
 import readline from 'readline';
 import { createInterface } from 'readline';
 import chalk from 'chalk';
-import { existsSync, readdirSync, readFileSync, writeFileSync, statSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync, mkdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
-import { loadConfig, saveConfig, WORKFLOWS_DIR, SKILLS_DIR } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, type Message } from './chat.js';
 import { buildSystemPrompt } from './prompt.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
+
+// ── Bundled data installer ─────────────────────────────────────────────────────
+// When installed via npm, the data/ directory is bundled alongside dist/bgi.js.
+// On first run we copy it to ~/.bgicli/ so the CLI can find workflows/tools/skills.
+
+function installBundledData(): void {
+  // __dirname points to the dist/ folder of the installed npm package
+  const bundledData = join(__dirname, '..', 'data');
+  if (!existsSync(bundledData)) return; // dev mode — data not bundled
+
+  ensureDirs();
+
+  const targets: Array<{ src: string; dest: string; name: string }> = [
+    { src: join(bundledData, 'workflows'), dest: WORKFLOWS_DIR, name: '工作流' },
+    { src: join(bundledData, 'skills'),    dest: SKILLS_DIR,    name: 'OpenClaw Skills' },
+    { src: join(bundledData, 'tools'),     dest: TOOLS_DIR,     name: '工具' },
+  ];
+
+  let installed = false;
+  for (const { src, dest, name } of targets) {
+    if (!existsSync(src)) continue;
+    // Only copy if destination is empty (don't overwrite user customizations)
+    const isEmpty = !existsSync(dest) || readdirSync(dest).length === 0;
+    if (isEmpty) {
+      mkdirSync(dest, { recursive: true });
+      cpSync(src, dest, { recursive: true });
+      if (!installed) {
+        process.stdout.write(chalk.dim('正在初始化内置数据...\n'));
+        installed = true;
+      }
+      process.stdout.write(chalk.green(`  ✓ ${name} 已安装\n`));
+    }
+  }
+  if (installed) console.log();
+}
 
 // ── Banner ────────────────────────────────────────────────────────────────────
 
@@ -526,6 +561,7 @@ async function handleCommand(
 // ── Main loop ─────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
+  installBundledData(); // copy bundled workflows/tools/skills to ~/.bgicli/ if needed
   printBanner();
 
   const rl = createInterface({
