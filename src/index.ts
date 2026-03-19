@@ -8,6 +8,7 @@ import { loadConfig, saveConfig, WORKFLOWS_DIR, SKILLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, type Message } from './chat.js';
 import { buildSystemPrompt } from './prompt.js';
+import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 
 const VERSION = '2.1.0';
 
@@ -41,10 +42,12 @@ function printHelp(): void {
   console.log(`  ${chalk.cyan('/think')} [on|off]     切换思考模式 (Qwen3 /think 前缀)`);
   console.log();
   console.log(chalk.bold.cyan('─── Skills (工作流 + OpenClaw Medical) ──────────────────'));
-  console.log(`  ${chalk.cyan('/sk')}                 列出全部 Skills（工作流 + OpenClaw，889个）`);
+  console.log(`  ${chalk.cyan('/cat')}                按领域浏览技能分类目录`);
+  console.log(`  ${chalk.cyan('/sk')}                 列出全部 Skills（工作流 + OpenClaw）`);
   console.log(`  ${chalk.cyan('/sk')} <关键词>        模糊搜索，匹配则注入，否则列出候选`);
   console.log(`  ${chalk.cyan('/wf')}                 同 /sk，别名`);
-  console.log(chalk.dim('  示例: /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr'));
+  console.log(chalk.dim('  示例: /cat  /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr'));
+  console.log(chalk.dim('  提示: 直接描述任务，AI 会自动识别并激活对应技能'));
   console.log();
   console.log(chalk.bold.cyan('─── 文件 & 目录 ──────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/cd')} <路径>          更改工作目录`);
@@ -447,6 +450,37 @@ async function handleCommand(
       break;
     }
 
+    case 'cat': {
+      // Categorized skill browser
+      console.log(chalk.bold.cyan('\n─── Skill 分类目录 ────────────────────────────────────────'));
+      console.log(chalk.dim('  使用 /sk <id> 激活技能  ·  使用 /sk <关键词> 搜索\n'));
+      const byCategory: Record<string, SkillEntry[]> = {};
+      // Group SKILL_ROUTES by category (these are the "smart-routable" ones)
+      for (const route of SKILL_ROUTES) {
+        (byCategory[route.category] ??= []).push({ id: route.id, dir: '', tag: route.tag });
+      }
+      for (const [catKey, meta] of Object.entries(SKILL_CATEGORIES)) {
+        const items = byCategory[catKey];
+        if (!items || items.length === 0) continue;
+        console.log(`  ${meta.icon}  ${chalk.bold(meta.label)}`);
+        for (const item of items) {
+          const route = SKILL_ROUTES.find((r) => r.id === item.id)!;
+          const tag = item.tag === 'workflow' ? chalk.green('工作流') : chalk.cyan('Skill ');
+          console.log(`     ${tag}  ${chalk.white(item.id)}  ${chalk.dim('— ' + route.name)}`);
+        }
+        console.log();
+      }
+      const routedIds = new Set(SKILL_ROUTES.map((r) => r.id));
+      const allInstalled = collectAllSkills();
+      const unrouted = allInstalled.filter((e) => !routedIds.has(e.id));
+      if (unrouted.length > 0) {
+        console.log(`  📦  ${chalk.bold('更多 OpenClaw Skills')}  ${chalk.dim(`(${unrouted.length} 个，无自动路由)`)}`);
+        console.log(chalk.dim('     使用 /sk <关键词> 搜索，例: /sk ehr  /sk clinical  /sk imaging'));
+        console.log();
+      }
+      break;
+    }
+
 
     case 'cd': {
       if (!arg) {
@@ -520,12 +554,13 @@ async function main(): Promise<void> {
   console.log(`  ${chalk.bold('Skills:')}  ${totalSkills > 0 ? chalk.green(`${totalSkills} 个`) : chalk.yellow('未安装')}  ${chalk.dim('(工作流 + OpenClaw Medical，/sk 搜索)')}`);
   console.log(`  ${chalk.bold('工具:')}    bash · read_file · write_file · list_dir · search_files`);
   console.log(chalk.bold.cyan('─────────────────────────────────────────────────────────'));
-  console.log(chalk.dim('  输入问题开始对话   /help 查看命令   @文件路径 内嵌文件   /wf 工作流   /sk Skill'));
+  console.log(chalk.dim('  输入问题开始对话   /help 查看命令   /cat 技能分类   @文件路径 内嵌文件'));
   console.log();
 
   const systemPrompt = buildSystemPrompt();
   let history: Message[] = [];
   let thinkMode = false;
+  const injectedSkills = new Set<string>(); // track auto-injected skills
 
   while (true) {
     let input: string;
@@ -548,9 +583,30 @@ async function main(): Promise<void> {
     if (trimmed.startsWith('/')) {
       const result = await handleCommand(trimmed, rl, history, thinkMode);
       if (result.exit) break;
-      if (result.clearHistory) history = [];
+      if (result.clearHistory) { history = []; injectedSkills.clear(); }
       if (result.thinkMode !== undefined) thinkMode = result.thinkMode;
       continue;
+    }
+
+    // ── Auto skill routing ─────────────────────────────────────────────────────
+    const { routes: suggestedRoutes, topScore } = routeSkill(trimmed);
+    const newRoutes = suggestedRoutes.filter((r) => !injectedSkills.has(r.id));
+    if (newRoutes.length === 1 && topScore >= 8) {
+      // High-confidence single match → auto-inject silently
+      const r = newRoutes[0];
+      const ok = injectSkill(r.id, history);
+      if (ok) {
+        injectedSkills.add(r.id);
+        console.log(chalk.dim('  (提示: /clear 可清除上下文后切换 Skill)'));
+      }
+    } else if (newRoutes.length >= 2 && topScore >= 4) {
+      // Multiple candidates → show suggestions, let user choose
+      console.log(chalk.dim('\n💡 检测到相关技能，输入 /sk <id> 激活:'));
+      newRoutes.slice(0, 3).forEach((r) => {
+        const tag = r.tag === 'workflow' ? chalk.green('[工作流]') : chalk.cyan('[Skill] ');
+        console.log(chalk.dim(`   /sk ${r.id}  ${tag}  ${r.name}`));
+      });
+      console.log();
     }
 
     // Expand @file references

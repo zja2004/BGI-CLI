@@ -14104,6 +14104,558 @@ cat ${SKILLS_DIR}/<skill-id>/SKILL.md
 \u4F7F\u7528 molecular_biology.py \u7684 design_crispr_knockout_guides()`;
 }
 
+// src/skillRouter.ts
+var SKILL_CATEGORIES = {
+  "\u8F6C\u5F55\u7EC4": { label: "\u8F6C\u5F55\u7EC4\u5B66 (Transcriptomics)", icon: "\u{1F9EC}" },
+  "\u5355\u7EC6\u80DE": { label: "\u5355\u7EC6\u80DE\u7EC4\u5B66 (Single Cell)", icon: "\u{1F52C}" },
+  "\u57FA\u56E0\u7EC4": { label: "\u57FA\u56E0\u7EC4\u5B66 (Genomics)", icon: "\u{1F9EA}" },
+  "\u8868\u89C2\u57FA\u56E0\u7EC4": { label: "\u8868\u89C2\u57FA\u56E0\u7EC4 (Epigenomics)", icon: "\u{1F517}" },
+  "\u4E34\u5E8A": { label: "\u4E34\u5E8A / \u6D41\u884C\u75C5\u5B66 (Clinical)", icon: "\u{1F3E5}" },
+  "\u7EDF\u8BA1": { label: "\u7EDF\u8BA1 / \u751F\u7269\u7EDF\u8BA1 (Biostatistics)", icon: "\u{1F4CA}" },
+  "\u5206\u5B50\u751F\u7269\u5B66": { label: "\u5206\u5B50\u751F\u7269\u5B66 (Molecular Biology)", icon: "\u{1F9EB}" },
+  "\u7ED3\u6784\u751F\u7269\u5B66": { label: "\u7ED3\u6784\u751F\u7269\u5B66 (Structural Biology)", icon: "\u{1F3D7}" },
+  "\u6587\u732E": { label: "\u6587\u732E\u68C0\u7D22 (Literature)", icon: "\u{1F4DA}" },
+  "\u836F\u7269": { label: "\u836F\u7269\u53D1\u73B0 (Drug Discovery)", icon: "\u{1F48A}" },
+  "\u6297\u4F53": { label: "\u6297\u4F53 / \u514D\u75AB\u6CBB\u7597 (Antibody & Cell Therapy)", icon: "\u{1F6E1}" }
+};
+var SKILL_ROUTES = [
+  // ── Transcriptomics ──────────────────────────────────────────────────────────
+  {
+    id: "bulk-rnaseq-counts-to-de-deseq2",
+    name: "DESeq2 \u5DEE\u5F02\u8868\u8FBE\u5206\u6790",
+    category: "\u8F6C\u5F55\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "deseq2",
+      "edger",
+      "rna-seq\u5DEE\u5F02",
+      "rnaseq\u5DEE\u5F02",
+      "\u5DEE\u5F02\u8868\u8FBE\u5206\u6790",
+      "\u5DEE\u5F02\u8868\u8FBE\u57FA\u56E0",
+      "count\u77E9\u9635",
+      "count matrix",
+      "\u539F\u59CBcounts",
+      "raw counts"
+    ]
+  },
+  {
+    id: "bulk-omics-clustering",
+    name: "\u6837\u672C / \u7279\u5F81\u805A\u7C7B",
+    category: "\u8F6C\u5F55\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "wgcna\u805A\u7C7B",
+      "\u5C42\u6B21\u805A\u7C7B",
+      "hierarchical clustering",
+      "kmeans\u805A\u7C7B",
+      "hdbscan",
+      "\u6837\u672C\u805A\u7C7B",
+      "\u7279\u5F81\u805A\u7C7B",
+      "omics clustering"
+    ]
+  },
+  {
+    id: "scrnaseq-scanpy-core-analysis",
+    name: "scRNA-seq (Scanpy / Python)",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "workflow",
+    keywords: [
+      "scanpy",
+      "scrna-seq",
+      "single cell rna",
+      "\u5355\u7EC6\u80DErna\u6D4B\u5E8F",
+      "10x chromium",
+      "leiden\u805A\u7C7B",
+      "python\u5355\u7EC6\u80DE",
+      "anndata\u5206\u6790"
+    ]
+  },
+  {
+    id: "scrnaseq-seurat-core-analysis",
+    name: "scRNA-seq (Seurat / R)",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "workflow",
+    keywords: [
+      "seurat",
+      "r\u8BED\u8A00\u5355\u7EC6\u80DE",
+      "findclusters",
+      "findneighbors",
+      "sctransform",
+      "r\u5355\u7EC6\u80DE\u5206\u6790"
+    ]
+  },
+  {
+    id: "spatial-transcriptomics",
+    name: "\u7A7A\u95F4\u8F6C\u5F55\u7EC4",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "workflow",
+    keywords: [
+      "\u7A7A\u95F4\u8F6C\u5F55\u7EC4",
+      "spatial transcriptomics",
+      "visium",
+      "\u7A7A\u95F4\u89E3\u5377\u79EF",
+      "spatial deconvolution",
+      "\u914D\u4F53\u53D7\u4F53\u5206\u6790",
+      "\u7A7A\u95F4\u57FA\u56E0\u8868\u8FBE",
+      "stereo-seq"
+    ]
+  },
+  {
+    id: "coexpression-network",
+    name: "WGCNA \u5171\u8868\u8FBE\u7F51\u7EDC",
+    category: "\u8F6C\u5F55\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "wgcna",
+      "\u5171\u8868\u8FBE\u7F51\u7EDC",
+      "coexpression network",
+      "\u57FA\u56E0\u5171\u8868\u8FBE\u6A21\u5757",
+      "weighted gene coexpression",
+      "\u4E0E\u8868\u578B\u76F8\u5173\u7684\u57FA\u56E0\u6A21\u5757"
+    ]
+  },
+  {
+    id: "functional-enrichment-from-degs",
+    name: "GO / KEGG / GSEA \u5BCC\u96C6\u5206\u6790",
+    category: "\u8F6C\u5F55\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "\u5BCC\u96C6\u5206\u6790",
+      "go\u5206\u6790",
+      "kegg\u5206\u6790",
+      "gsea",
+      "\u901A\u8DEF\u5206\u6790",
+      "pathway enrichment",
+      "\u57FA\u56E0\u672C\u4F53",
+      "gene ontology",
+      "functional enrichment",
+      "\u529F\u80FD\u5BCC\u96C6",
+      "deg\u5BCC\u96C6",
+      "\u5DEE\u5F02\u57FA\u56E0\u901A\u8DEF"
+    ]
+  },
+  {
+    id: "grn-pyscenic",
+    name: "pySCENIC \u57FA\u56E0\u8C03\u63A7\u7F51\u7EDC",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "workflow",
+    keywords: [
+      "pyscenic",
+      "scenic",
+      "\u57FA\u56E0\u8C03\u63A7\u7F51\u7EDC",
+      "gene regulatory network",
+      "\u8F6C\u5F55\u56E0\u5B50\u8C03\u63A7\u5B50",
+      "tf regulon",
+      "grn\u63A8\u65AD"
+    ]
+  },
+  // ── Genomics ──────────────────────────────────────────────────────────────────
+  {
+    id: "genetic-variant-annotation",
+    name: "\u9057\u4F20\u53D8\u5F02\u6CE8\u91CA",
+    category: "\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "\u53D8\u5F02\u6CE8\u91CA",
+      "variant annotation",
+      "vcf\u6CE8\u91CA",
+      "snv\u6CE8\u91CA",
+      "indel\u6CE8\u91CA",
+      "vep\u6CE8\u91CA",
+      "annovar",
+      "\u53D8\u5F02\u81F4\u75C5\u6027\u9884\u6D4B",
+      "\u53D8\u5F02\u529F\u80FD\u9884\u6D4B",
+      "clinvar\u6CE8\u91CA"
+    ]
+  },
+  {
+    id: "gwas-to-function-twas",
+    name: "GWAS \u2192 TWAS \u529F\u80FD\u89E3\u6790",
+    category: "\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "gwas\u5206\u6790",
+      "twas",
+      "predixcan",
+      "fusion\u5206\u6790",
+      "\u5168\u57FA\u56E0\u7EC4\u5173\u8054\u5206\u6790",
+      "genome-wide association",
+      "\u56E0\u679C\u57FA\u56E0\u9274\u5B9A",
+      "qtl\u6574\u5408"
+    ]
+  },
+  {
+    id: "mendelian-randomization-twosamplemr",
+    name: "\u5B5F\u5FB7\u5C14\u968F\u673A\u5316 (MR)",
+    category: "\u7EDF\u8BA1",
+    tag: "workflow",
+    keywords: [
+      "\u5B5F\u5FB7\u5C14\u968F\u673A\u5316",
+      "mendelian randomization",
+      "twosamplemr",
+      "mr\u56E0\u679C\u63A8\u65AD",
+      "ivw\u65B9\u6CD5",
+      "mr-egger",
+      "\u53CC\u6837\u672Cmr",
+      "\u5DE5\u5177\u53D8\u91CFiv"
+    ]
+  },
+  {
+    id: "polygenic-risk-score-prs-catalog",
+    name: "PRS \u591A\u57FA\u56E0\u98CE\u9669\u8BC4\u5206",
+    category: "\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "prs\u8BC4\u5206",
+      "polygenic risk score",
+      "\u591A\u57FA\u56E0\u98CE\u9669\u8BC4\u5206",
+      "prs-cs",
+      "\u9057\u4F20\u98CE\u9669\u9884\u6D4B",
+      "prs\u8BA1\u7B97"
+    ]
+  },
+  {
+    id: "pooled-crispr-screens",
+    name: "CRISPR \u6587\u5E93\u7B5B\u9009 (MAGeCK/BAGEL2)",
+    category: "\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "crispr\u6587\u5E93\u7B5B\u9009",
+      "crispr screen",
+      "mageck",
+      "bagel2",
+      "sgrna\u7B5B\u9009",
+      "pooled crispr",
+      "crispr hit\u8BC6\u522B"
+    ]
+  },
+  // ── Epigenomics ───────────────────────────────────────────────────────────────
+  {
+    id: "chip-atlas-peak-enrichment",
+    name: "ChIP-seq \u5CF0\u503C\u5BCC\u96C6 (ChIP-Atlas)",
+    category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "chip-atlas",
+      "chip-seq\u5CF0\u503C\u5BCC\u96C6",
+      "peak enrichment chip",
+      "chip atlas\u6570\u636E\u5E93",
+      "histone chip\u5206\u6790"
+    ]
+  },
+  {
+    id: "chip-atlas-diff-analysis",
+    name: "ChIP-seq \u5DEE\u5F02\u7ED3\u5408\u5206\u6790",
+    category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "chip\u5DEE\u5F02\u5206\u6790",
+      "differential binding",
+      "\u5DEE\u5F02chip-seq",
+      "differential peak",
+      "chip-seq\u6761\u4EF6\u6BD4\u8F83"
+    ]
+  },
+  {
+    id: "chip-atlas-target-genes",
+    name: "ChIP-seq \u9776\u57FA\u56E0\u9274\u5B9A",
+    category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
+    tag: "workflow",
+    keywords: [
+      "chip\u9776\u57FA\u56E0",
+      "chip target gene",
+      "\u8F6C\u5F55\u56E0\u5B50\u9776\u57FA\u56E0chip",
+      "tf\u9776\u57FA\u56E0",
+      "peak annotation\u9776\u57FA\u56E0",
+      "chip-seq peak\u6CE8\u91CA"
+    ]
+  },
+  // ── Clinical ──────────────────────────────────────────────────────────────────
+  {
+    id: "clinicaltrials-landscape",
+    name: "\u4E34\u5E8A\u8BD5\u9A8C\u683C\u5C40\u5206\u6790",
+    category: "\u4E34\u5E8A",
+    tag: "workflow",
+    keywords: [
+      "clinicaltrials\u5206\u6790",
+      "clinical trial landscape",
+      "ct.gov\u6570\u636E\u5206\u6790",
+      "\u4E34\u5E8A\u8BD5\u9A8C\u683C\u5C40",
+      "\u4E34\u5E8A\u7814\u7A76\u5206\u6790"
+    ]
+  },
+  {
+    id: "literature-preclinical",
+    name: "\u4E34\u5E8A\u524D\u6587\u732E\u7CFB\u7EDF\u63D0\u53D6",
+    category: "\u6587\u732E",
+    tag: "workflow",
+    keywords: [
+      "\u4E34\u5E8A\u524D\u6587\u732E",
+      "preclinical literature",
+      "\u7CFB\u7EDF\u6587\u732E\u63D0\u53D6",
+      "literature extraction",
+      "\u6587\u732E\u7CFB\u7EDF\u7EFC\u5408"
+    ]
+  },
+  {
+    id: "experimental-design-statistics",
+    name: "\u5B9E\u9A8C\u8BBE\u8BA1\u4E0E\u7EDF\u8BA1\u68C0\u9A8C",
+    category: "\u7EDF\u8BA1",
+    tag: "workflow",
+    keywords: [
+      "\u6837\u672C\u91CF\u8BA1\u7B97",
+      "\u7EDF\u8BA1\u68C0\u9A8C\u9009\u62E9",
+      "sample size calculation",
+      "power analysis\u529F\u6548",
+      "\u968F\u673A\u5316\u8BBE\u8BA1",
+      "\u5B9E\u9A8C\u8BBE\u8BA1\u7EDF\u8BA1",
+      "\u5047\u8BBE\u68C0\u9A8C\u9009\u62E9",
+      "t\u68C0\u9A8C\u8FD8\u662F",
+      "anova\u65B9\u5DEE\u5206\u6790"
+    ]
+  },
+  {
+    id: "lasso-biomarker-panel",
+    name: "LASSO \u751F\u7269\u6807\u5FD7\u7269\u9762\u677F\u7B5B\u9009",
+    category: "\u7EDF\u8BA1",
+    tag: "workflow",
+    keywords: [
+      "lasso\u56DE\u5F52\u7B5B\u9009",
+      "lasso\u751F\u7269\u6807\u5FD7\u7269",
+      "biomarker panel\u7B5B\u9009",
+      "\u6700\u5C0F\u6807\u5FD7\u7269\u9762\u677F",
+      "feature selection lasso",
+      "\u8BCA\u65AD\u6807\u5FD7\u7269\u7B5B\u9009"
+    ]
+  },
+  {
+    id: "pcr-primer-design",
+    name: "PCR / qPCR \u5F15\u7269\u8BBE\u8BA1",
+    category: "\u5206\u5B50\u751F\u7269\u5B66",
+    tag: "workflow",
+    keywords: [
+      "\u5F15\u7269\u8BBE\u8BA1",
+      "primer design",
+      "qpcr\u5F15\u7269",
+      "pcr\u5F15\u7269",
+      "primer3",
+      "qrt-pcr\u8BBE\u8BA1",
+      "\u6269\u589E\u5B50\u8BBE\u8BA1",
+      "\u5F15\u7269\u7279\u5F02\u6027\u9A8C\u8BC1"
+    ]
+  },
+  // ── OpenClaw Key Skills ────────────────────────────────────────────────────────
+  {
+    id: "pubmed-search",
+    name: "PubMed \u6587\u732E\u68C0\u7D22",
+    category: "\u6587\u732E",
+    tag: "skill",
+    keywords: [
+      "pubmed\u68C0\u7D22",
+      "pubmed\u641C\u7D22",
+      "\u6587\u732E\u68C0\u7D22",
+      "\u8BBA\u6587\u641C\u7D22",
+      "\u67E5\u627E\u6587\u732E",
+      "\u68C0\u7D22pubmed",
+      "pubmed\u6587\u732E"
+    ]
+  },
+  {
+    id: "arxiv-search",
+    name: "arXiv \u9884\u5370\u672C\u68C0\u7D22",
+    category: "\u6587\u732E",
+    tag: "skill",
+    keywords: ["arxiv\u68C0\u7D22", "arxiv\u641C\u7D22", "\u9884\u5370\u672C\u68C0\u7D22", "\u9884\u5370\u672C\u8BBA\u6587", "arxiv\u6587\u732E"]
+  },
+  {
+    id: "alphafold",
+    name: "AlphaFold \u86CB\u767D\u8D28\u7ED3\u6784\u9884\u6D4B",
+    category: "\u7ED3\u6784\u751F\u7269\u5B66",
+    tag: "skill",
+    keywords: [
+      "alphafold\u7ED3\u6784\u9884\u6D4B",
+      "alphafold\u8FD0\u884C",
+      "af2",
+      "af3",
+      "\u86CB\u767D\u8D28\u7ED3\u6784\u9884\u6D4B\u4EFB\u52A1",
+      "\u7528alphafold\u9884\u6D4B"
+    ]
+  },
+  {
+    id: "alphafold-database",
+    name: "AlphaFold \u6570\u636E\u5E93\u67E5\u8BE2",
+    category: "\u7ED3\u6784\u751F\u7269\u5B66",
+    tag: "skill",
+    keywords: [
+      "alphafold\u6570\u636E\u5E93",
+      "alphafold db",
+      "uniprot\u7ED3\u6784\u67E5\u8BE2",
+      "\u86CB\u767D\u8D28\u7ED3\u6784\u6570\u636E\u5E93",
+      "af\u6570\u636E\u5E93"
+    ]
+  },
+  {
+    id: "bindcraft",
+    name: "BindCraft \u86CB\u767D\u8D28\u7ED3\u5408\u4F53\u8BBE\u8BA1",
+    category: "\u7ED3\u6784\u751F\u7269\u5B66",
+    tag: "skill",
+    keywords: [
+      "bindcraft",
+      "\u7ED3\u5408\u4F53\u8BBE\u8BA1",
+      "binder design",
+      "protein binder",
+      "\u86CB\u767D\u8D28\u7ED3\u5408\u7269\u8BBE\u8BA1",
+      "de novo binder"
+    ]
+  },
+  {
+    id: "anndata",
+    name: "AnnData \u5355\u7EC6\u80DE\u6570\u636E\u64CD\u4F5C",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "skill",
+    keywords: [
+      "anndata\u64CD\u4F5C",
+      "h5ad\u6587\u4EF6\u5904\u7406",
+      "adata\u5B50\u96C6",
+      "anndata\u683C\u5F0F",
+      "\u5355\u7EC6\u80DEh5ad",
+      "obs var layers"
+    ]
+  },
+  {
+    id: "cellagent-annotation",
+    name: "CellAgent \u7EC6\u80DE\u7C7B\u578B\u81EA\u52A8\u6CE8\u91CA",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "skill",
+    keywords: [
+      "\u7EC6\u80DE\u7C7B\u578B\u6CE8\u91CA",
+      "cell type annotation",
+      "cellagent",
+      "\u81EA\u52A8\u7EC6\u80DE\u6CE8\u91CA",
+      "\u7EC6\u80DE\u6CE8\u91CA\u81EA\u52A8\u5316",
+      "\u5355\u7EC6\u80DE\u6CE8\u91CA"
+    ]
+  },
+  {
+    id: "scvi-tools",
+    name: "scVI \u5355\u7EC6\u80DE\u6DF1\u5EA6\u5B66\u4E60",
+    category: "\u5355\u7EC6\u80DE",
+    tag: "skill",
+    keywords: [
+      "scvi-tools",
+      "scvi\u6A21\u578B",
+      "\u5355\u7EC6\u80DE\u53D8\u5206\u63A8\u65AD",
+      "batch correction scvi",
+      "totalvi",
+      "scvi\u6279\u6B21\u77EB\u6B63"
+    ]
+  },
+  {
+    id: "agentd-drug-discovery",
+    name: "\u836F\u7269\u53D1\u73B0 Agent",
+    category: "\u836F\u7269",
+    tag: "skill",
+    keywords: [
+      "\u836F\u7269\u53D1\u73B0\u6D41\u7A0B",
+      "drug discovery",
+      "\u5019\u9009\u836F\u7269\u7B5B\u9009",
+      "\u5148\u5BFC\u5316\u5408\u7269",
+      "hit\u5316\u5408\u7269",
+      "\u836F\u7269\u9776\u70B9\u53D1\u73B0"
+    ]
+  },
+  {
+    id: "chembl-database",
+    name: "ChEMBL \u5316\u5408\u7269\u6D3B\u6027\u6570\u636E\u5E93",
+    category: "\u836F\u7269",
+    tag: "skill",
+    keywords: [
+      "chembl\u67E5\u8BE2",
+      "chembl\u6570\u636E\u5E93",
+      "\u5316\u5408\u7269\u6D3B\u6027\u6570\u636E",
+      "bioactivity\u6570\u636E",
+      "chembl\u5316\u5408\u7269",
+      "\u9776\u70B9\u6D3B\u6027\u5316\u5408\u7269"
+    ]
+  },
+  {
+    id: "rdkit",
+    name: "RDKit \u5316\u5B66\u4FE1\u606F\u5B66",
+    category: "\u836F\u7269",
+    tag: "skill",
+    keywords: [
+      "rdkit",
+      "\u5316\u5B66\u4FE1\u606F\u5B66",
+      "cheminformatics",
+      "\u5206\u5B50\u63CF\u8FF0\u7B26\u8BA1\u7B97",
+      "\u5206\u5B50\u76F8\u4F3C\u5EA6",
+      "smiles\u5206\u5B50\u64CD\u4F5C",
+      "\u5316\u5B66\u7ED3\u6784\u5904\u7406"
+    ]
+  },
+  {
+    id: "bio-variant-calling",
+    name: "\u53D8\u5F02\u68C0\u6D4B\u6D41\u7A0B (GATK/Mutect2)",
+    category: "\u57FA\u56E0\u7EC4",
+    tag: "skill",
+    keywords: [
+      "\u53D8\u5F02\u68C0\u6D4B\u6D41\u7A0B",
+      "variant calling\u6D41\u7A0B",
+      "somatic\u53D8\u5F02\u68C0\u6D4B",
+      "\u4F53\u7EC6\u80DE\u7A81\u53D8\u68C0\u6D4B",
+      "mutect2",
+      "gatk\u53D8\u5F02\u68C0\u6D4B",
+      "\u80BF\u7624\u53D8\u5F02\u68C0\u6D4B"
+    ]
+  },
+  {
+    id: "antibody-design-agent",
+    name: "\u6297\u4F53\u8BBE\u8BA1 Agent",
+    category: "\u6297\u4F53",
+    tag: "skill",
+    keywords: [
+      "\u6297\u4F53\u8BBE\u8BA1",
+      "antibody design",
+      "\u6297\u4F53\u4F18\u5316",
+      "cdr\u8BBE\u8BA1",
+      "\u5355\u514B\u9686\u6297\u4F53\u8BBE\u8BA1",
+      "\u6297\u4F53\u5DE5\u7A0B\u6539\u9020"
+    ]
+  },
+  {
+    id: "armored-cart-design-agent",
+    name: "Armored CAR-T \u8BBE\u8BA1",
+    category: "\u6297\u4F53",
+    tag: "skill",
+    keywords: [
+      "car-t\u8BBE\u8BA1",
+      "cart\u7EC6\u80DE\u8BBE\u8BA1",
+      "\u5D4C\u5408\u6297\u539F\u53D7\u4F53\u8BBE\u8BA1",
+      "chimeric antigen receptor",
+      "armored cart",
+      "\u514D\u75AB\u7EC6\u80DE\u6CBB\u7597\u8BBE\u8BA1"
+    ]
+  }
+];
+function routeSkill(message) {
+  const lower = message.toLowerCase();
+  const scores = /* @__PURE__ */ new Map();
+  for (const route of SKILL_ROUTES) {
+    let score = 0;
+    for (const kw of route.keywords) {
+      if (lower.includes(kw.toLowerCase())) {
+        score += kw.length;
+      }
+    }
+    if (score > 0) scores.set(route.id, { route, score });
+  }
+  const sorted = Array.from(scores.values()).sort((a2, b2) => b2.score - a2.score).slice(0, 3);
+  return {
+    routes: sorted.map((v2) => v2.route),
+    topScore: sorted[0]?.score ?? 0
+  };
+}
+
 // src/index.ts
 var VERSION2 = "2.1.0";
 function printBanner() {
@@ -14133,10 +14685,12 @@ function printHelp() {
   console.log(`  ${source_default.cyan("/think")} [on|off]     \u5207\u6362\u601D\u8003\u6A21\u5F0F (Qwen3 /think \u524D\u7F00)`);
   console.log();
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 Skills (\u5DE5\u4F5C\u6D41 + OpenClaw Medical) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  console.log(`  ${source_default.cyan("/sk")}                 \u5217\u51FA\u5168\u90E8 Skills\uFF08\u5DE5\u4F5C\u6D41 + OpenClaw\uFF0C889\u4E2A\uFF09`);
+  console.log(`  ${source_default.cyan("/cat")}                \u6309\u9886\u57DF\u6D4F\u89C8\u6280\u80FD\u5206\u7C7B\u76EE\u5F55`);
+  console.log(`  ${source_default.cyan("/sk")}                 \u5217\u51FA\u5168\u90E8 Skills\uFF08\u5DE5\u4F5C\u6D41 + OpenClaw\uFF09`);
   console.log(`  ${source_default.cyan("/sk")} <\u5173\u952E\u8BCD>        \u6A21\u7CCA\u641C\u7D22\uFF0C\u5339\u914D\u5219\u6CE8\u5165\uFF0C\u5426\u5219\u5217\u51FA\u5019\u9009`);
   console.log(`  ${source_default.cyan("/wf")}                 \u540C /sk\uFF0C\u522B\u540D`);
-  console.log(source_default.dim("  \u793A\u4F8B: /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr"));
+  console.log(source_default.dim("  \u793A\u4F8B: /cat  /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr"));
+  console.log(source_default.dim("  \u63D0\u793A: \u76F4\u63A5\u63CF\u8FF0\u4EFB\u52A1\uFF0CAI \u4F1A\u81EA\u52A8\u8BC6\u522B\u5E76\u6FC0\u6D3B\u5BF9\u5E94\u6280\u80FD"));
   console.log();
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u6587\u4EF6 & \u76EE\u5F55 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/cd")} <\u8DEF\u5F84>          \u66F4\u6539\u5DE5\u4F5C\u76EE\u5F55`);
@@ -14487,6 +15041,34 @@ async function handleCommand(input, rl, history, thinkMode) {
       }
       break;
     }
+    case "cat": {
+      console.log(source_default.bold.cyan("\n\u2500\u2500\u2500 Skill \u5206\u7C7B\u76EE\u5F55 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+      console.log(source_default.dim("  \u4F7F\u7528 /sk <id> \u6FC0\u6D3B\u6280\u80FD  \xB7  \u4F7F\u7528 /sk <\u5173\u952E\u8BCD> \u641C\u7D22\n"));
+      const byCategory = {};
+      for (const route of SKILL_ROUTES) {
+        (byCategory[route.category] ??= []).push({ id: route.id, dir: "", tag: route.tag });
+      }
+      for (const [catKey, meta] of Object.entries(SKILL_CATEGORIES)) {
+        const items = byCategory[catKey];
+        if (!items || items.length === 0) continue;
+        console.log(`  ${meta.icon}  ${source_default.bold(meta.label)}`);
+        for (const item of items) {
+          const route = SKILL_ROUTES.find((r2) => r2.id === item.id);
+          const tag = item.tag === "workflow" ? source_default.green("\u5DE5\u4F5C\u6D41") : source_default.cyan("Skill ");
+          console.log(`     ${tag}  ${source_default.white(item.id)}  ${source_default.dim("\u2014 " + route.name)}`);
+        }
+        console.log();
+      }
+      const routedIds = new Set(SKILL_ROUTES.map((r2) => r2.id));
+      const allInstalled = collectAllSkills();
+      const unrouted = allInstalled.filter((e2) => !routedIds.has(e2.id));
+      if (unrouted.length > 0) {
+        console.log(`  \u{1F4E6}  ${source_default.bold("\u66F4\u591A OpenClaw Skills")}  ${source_default.dim(`(${unrouted.length} \u4E2A\uFF0C\u65E0\u81EA\u52A8\u8DEF\u7531)`)}`);
+        console.log(source_default.dim("     \u4F7F\u7528 /sk <\u5173\u952E\u8BCD> \u641C\u7D22\uFF0C\u4F8B: /sk ehr  /sk clinical  /sk imaging"));
+        console.log();
+      }
+      break;
+    }
     case "cd": {
       if (!arg) {
         console.log("\u7528\u6CD5: /cd <\u8DEF\u5F84>");
@@ -14545,11 +15127,12 @@ async function main() {
   console.log(`  ${source_default.bold("Skills:")}  ${totalSkills > 0 ? source_default.green(`${totalSkills} \u4E2A`) : source_default.yellow("\u672A\u5B89\u88C5")}  ${source_default.dim("(\u5DE5\u4F5C\u6D41 + OpenClaw Medical\uFF0C/sk \u641C\u7D22)")}`);
   console.log(`  ${source_default.bold("\u5DE5\u5177:")}    bash \xB7 read_file \xB7 write_file \xB7 list_dir \xB7 search_files`);
   console.log(source_default.bold.cyan("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  console.log(source_default.dim("  \u8F93\u5165\u95EE\u9898\u5F00\u59CB\u5BF9\u8BDD   /help \u67E5\u770B\u547D\u4EE4   @\u6587\u4EF6\u8DEF\u5F84 \u5185\u5D4C\u6587\u4EF6   /wf \u5DE5\u4F5C\u6D41   /sk Skill"));
+  console.log(source_default.dim("  \u8F93\u5165\u95EE\u9898\u5F00\u59CB\u5BF9\u8BDD   /help \u67E5\u770B\u547D\u4EE4   /cat \u6280\u80FD\u5206\u7C7B   @\u6587\u4EF6\u8DEF\u5F84 \u5185\u5D4C\u6587\u4EF6"));
   console.log();
   const systemPrompt = buildSystemPrompt();
   let history = [];
   let thinkMode = false;
+  const injectedSkills = /* @__PURE__ */ new Set();
   while (true) {
     let input;
     const thinkIndicator = thinkMode ? source_default.yellow("[\u601D\u8003]") + " " : "";
@@ -14568,9 +15151,29 @@ async function main() {
     if (trimmed.startsWith("/")) {
       const result = await handleCommand(trimmed, rl, history, thinkMode);
       if (result.exit) break;
-      if (result.clearHistory) history = [];
+      if (result.clearHistory) {
+        history = [];
+        injectedSkills.clear();
+      }
       if (result.thinkMode !== void 0) thinkMode = result.thinkMode;
       continue;
+    }
+    const { routes: suggestedRoutes, topScore } = routeSkill(trimmed);
+    const newRoutes = suggestedRoutes.filter((r2) => !injectedSkills.has(r2.id));
+    if (newRoutes.length === 1 && topScore >= 8) {
+      const r2 = newRoutes[0];
+      const ok = injectSkill(r2.id, history);
+      if (ok) {
+        injectedSkills.add(r2.id);
+        console.log(source_default.dim("  (\u63D0\u793A: /clear \u53EF\u6E05\u9664\u4E0A\u4E0B\u6587\u540E\u5207\u6362 Skill)"));
+      }
+    } else if (newRoutes.length >= 2 && topScore >= 4) {
+      console.log(source_default.dim("\n\u{1F4A1} \u68C0\u6D4B\u5230\u76F8\u5173\u6280\u80FD\uFF0C\u8F93\u5165 /sk <id> \u6FC0\u6D3B:"));
+      newRoutes.slice(0, 3).forEach((r2) => {
+        const tag = r2.tag === "workflow" ? source_default.green("[\u5DE5\u4F5C\u6D41]") : source_default.cyan("[Skill] ");
+        console.log(source_default.dim(`   /sk ${r2.id}  ${tag}  ${r2.name}`));
+      });
+      console.log();
     }
     const expanded = expandFileRefs(trimmed);
     const userContent = thinkMode ? `/think
