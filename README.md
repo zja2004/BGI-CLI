@@ -1,12 +1,13 @@
 # BGI CLI
 
-**BGI CLI** 是一个独立的生物信息学 AI 终端工具，专为中国研究者设计。
+**BGI CLI** 是面向中国生物学研究者的 AI 终端工具，开箱即用，无需额外配置。
 
-- ✅ **独立工具** — 无需安装 OpenCode 或其他 AI 工具
-- ✅ **中国 AI 服务商** — DeepSeek、Kimi、通义千问、MiniMax
-- ✅ **21 个预装工作流** — 覆盖转录组、基因组、表观基因组、临床分析
-- ✅ **真正的工具调用** — 执行 bash 命令、读写文件、运行 R/Python 脚本
-- ✅ **单一命令** — 直接运行 `bgi`
+- ✅ **开箱即用** — `npm install -g @bgicli/bgicli` 即可
+- ✅ **内置 889 个技能** — 21 个生信工作流 + 868 个 OpenClaw 医学技能，自动安装
+- ✅ **智能技能路由** — 描述任务自动激活对应技能，无需手动搜索
+- ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen3.5、DeepSeek、Kimi、MiniMax 等 20+ 模型
+- ✅ **真实工具调用** — 执行 bash、读写文件、运行 R/Python 脚本
+- ✅ **内网支持** — 可接入公司私有化部署的大模型
 
 ---
 
@@ -14,9 +15,173 @@
 
 ```bash
 # 需要 Node.js 18+
-npm install -g @bgicli/bgicli
+npm install -g @bgicli/bgicli --registry https://registry.npmjs.org
+```
 
-# 或从源码安装
+首次运行自动初始化工作流和技能库（约 16MB），无需额外操作。
+
+```bash
+bgi
+```
+
+---
+
+## 卸载
+
+```bash
+# 卸载 npm 包
+npm uninstall -g @bgicli/bgicli
+
+# 删除本地数据（配置、工作流、技能库）
+# Linux / macOS
+rm -rf ~/.bgicli
+
+# Windows PowerShell
+Remove-Item -Recurse -Force "$env:USERPROFILE\.bgicli"
+```
+
+---
+
+## 快速开始
+
+```bash
+bgi                    # 启动
+/connect               # 首次配置 API Key
+/cat                   # 浏览技能分类目录
+/sk deseq2             # 搜索并激活 DESeq2 工作流
+/help                  # 查看全部命令
+```
+
+首次运行提示配置百炼 (DashScope) API Key：
+- 获取地址：[bailian.console.aliyun.com](https://bailian.console.aliyun.com/) → API Key 管理
+
+---
+
+## 支持的 AI 服务商
+
+### 百炼 · 阿里云 (DashScope) — 默认
+通过百炼统一接入多个国内主流模型：
+
+| 模型 | 命令 |
+|------|------|
+| Qwen3.5-plus（默认） | `/model qwen3.5-plus` |
+| Qwen3-235B | `/model qwen3-235b-a22b` |
+| DeepSeek-R1 | `/model deepseek-r1` |
+| DeepSeek-V3 | `/model deepseek-v3` |
+| Kimi-K2.5 | `/model kimi-k2.5` |
+| MiniMax-M2.5 | `/model MiniMax-M2.5` |
+| QwQ-Plus（推理） | `/model qwq-plus` |
+
+获取 API Key：[bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
+
+### 内网私有化部署
+```bash
+/provider intranet     # 切换到内网 Qwen3-235B（无需 Key）
+```
+
+### 自定义 OpenAI 兼容服务
+```bash
+/connect custom        # 配置任意 vLLM / Ollama / FastChat 地址
+```
+
+---
+
+## 命令参考
+
+### 服务商 / 模型
+| 命令 | 说明 |
+|------|------|
+| `/provider <name>` | 切换服务商 (`bailian` / `intranet` / `custom`) |
+| `/model <name>` | 切换模型 |
+| `/models` | 列出当前服务商所有可用模型 |
+| `/providers` | 列出所有服务商 |
+| `/connect [provider]` | 配置 API Key |
+| `/status` | 显示当前配置 |
+
+### 技能与工作流
+| 命令 | 说明 |
+|------|------|
+| `/cat` | 按领域浏览技能分类目录（11个领域） |
+| `/sk` | 列出全部技能（工作流 + OpenClaw Medical） |
+| `/sk <关键词>` | 搜索并激活技能（如 `/sk deseq2`、`/sk alphafold`） |
+| `/wf` | 同 `/sk`，别名 |
+
+> **智能路由**：直接描述任务，BGI CLI 自动识别并激活对应技能。
+
+### 对话管理
+| 命令 | 说明 |
+|------|------|
+| `/clear` | 清空对话历史（重置激活的技能） |
+| `/history` | 查看对话统计（轮次 / Token 估算） |
+| `/save [文件名]` | 保存对话为 Markdown 文件 |
+| `/think [on\|off]` | 切换思考模式（Qwen3 `/think` 前缀） |
+
+### 文件与目录
+| 命令 | 说明 |
+|------|------|
+| `/cd <路径>` | 更改工作目录 |
+| `/cwd` | 显示当前工作目录 |
+| `/tools` | 列出 AI 可调用的工具 |
+| `@路径` | 消息中内嵌文件内容（如 `@data.csv 里有什么?`） |
+
+### 其他
+| 命令 | 说明 |
+|------|------|
+| `/help` | 显示帮助 |
+| `exit` / `quit` / `q` | 退出 |
+
+---
+
+## 内置技能库
+
+### 生物信息学工作流（21个）
+
+#### 转录组学
+| ID | 说明 |
+|----|------|
+| `bulk-rnaseq-counts-to-de-deseq2` | DESeq2 差异表达分析 |
+| `bulk-omics-clustering` | 样本/特征聚类（K-Means / HDBSCAN） |
+| `scrnaseq-scanpy-core-analysis` | 单细胞 RNA-seq（Scanpy/Python） |
+| `scrnaseq-seurat-core-analysis` | 单细胞 RNA-seq（Seurat/R） |
+| `spatial-transcriptomics` | 空间转录组（Visium） |
+| `coexpression-network` | 共表达网络（WGCNA） |
+| `functional-enrichment-from-degs` | 功能富集（GO / KEGG / GSEA） |
+| `grn-pyscenic` | 基因调控网络（pySCENIC） |
+
+#### 基因组学
+| ID | 说明 |
+|----|------|
+| `genetic-variant-annotation` | VCF 变异注释（VEP / ANNOVAR） |
+| `gwas-to-function-twas` | GWAS → TWAS 因果基因 |
+| `mendelian-randomization-twosamplemr` | 孟德尔随机化 |
+| `polygenic-risk-score-prs-catalog` | 多基因风险评分（PRS） |
+| `pooled-crispr-screens` | CRISPR 文库筛选（MAGeCK / BAGEL2） |
+
+#### 表观基因组
+| ID | 说明 |
+|----|------|
+| `chip-atlas-peak-enrichment` | ChIP-seq 峰值富集 |
+| `chip-atlas-diff-analysis` | 差异结合分析 |
+| `chip-atlas-target-genes` | 转录因子靶基因鉴定 |
+
+#### 临床与流行病学
+| ID | 说明 |
+|----|------|
+| `clinicaltrials-landscape` | 临床试验格局分析 |
+| `literature-preclinical` | 临床前文献系统提取 |
+| `experimental-design-statistics` | 实验设计与统计检验 |
+| `lasso-biomarker-panel` | LASSO 生物标志物筛选 |
+| `pcr-primer-design` | PCR/qPCR 引物设计 |
+
+### OpenClaw Medical Skills（868个）
+
+覆盖结构生物学、单细胞、药物发现、抗体设计、文献检索等领域，使用 `/cat` 浏览分类目录。
+
+---
+
+## 从源码安装
+
+```bash
 git clone https://github.com/zja2004/BGI-CLI.git
 cd BGI-CLI
 npm install
@@ -24,108 +189,21 @@ npm run build
 npm link
 ```
 
-## 快速开始
-
-```bash
-bgi
-```
-
-首次运行会提示选择 AI 服务商并输入 API Key。
-
----
-
-## 支持的 AI 服务商
-
-| 服务商 | 命令 | 获取 API Key |
-|--------|------|-------------|
-| **DeepSeek** (默认) | `/provider deepseek` | [platform.deepseek.com](https://platform.deepseek.com/api_keys) |
-| **Kimi** | `/provider kimi` | [platform.moonshot.cn](https://platform.moonshot.cn/console/api-keys) |
-| **通义千问** | `/provider qwen` | [dashscope.aliyuncs.com](https://dashscope.aliyuncs.com) |
-| **MiniMax** | `/provider minimax` | [platform.minimax.chat](https://platform.minimax.chat) |
-
----
-
-## 命令参考
-
-| 命令 | 说明 |
-|------|------|
-| `/provider <name>` | 切换 AI 服务商 |
-| `/model <name>` | 切换模型 |
-| `/models` | 列出当前服务商的可用模型 |
-| `/providers` | 列出所有服务商 |
-| `/connect [provider]` | 配置 API Key |
-| `/status` | 显示当前配置 |
-| `/clear` | 清空对话历史 |
-| `/help` | 显示帮助 |
-| `exit` / `quit` | 退出 |
-
----
-
-## 预装工作流 (21个)
-
-运行分析时，BGI CLI 自动读取对应的 SKILL.md 工作流指南：
-
-### 转录组学
-- `bulk-rnaseq-counts-to-de-deseq2` — DESeq2 差异表达分析
-- `bulk-omics-clustering` — 样本/特征聚类
-- `scrnaseq-scanpy-core-analysis` — 单细胞分析 (Scanpy/Python)
-- `scrnaseq-seurat-core-analysis` — 单细胞分析 (Seurat/R)
-- `spatial-transcriptomics` — 空间转录组
-- `coexpression-network` — 共表达网络 (WGCNA)
-- `functional-enrichment-from-degs` — 功能富集 (GO/KEGG/GSEA)
-- `grn-pyscenic` — 基因调控网络 (pySCENIC)
-
-### 基因组学
-- `genetic-variant-annotation` — 变异注释
-- `gwas-to-function-twas` — GWAS → TWAS
-- `mendelian-randomization-twosamplemr` — 孟德尔随机化
-- `polygenic-risk-score-prs-catalog` — 多基因风险评分
-- `pooled-crispr-screens` — CRISPR 文库筛选
-
-### 表观基因组
-- `chip-atlas-peak-enrichment / diff-analysis / target-genes` — ChIP-Atlas 分析
-
-### 临床与流行病学
-- `clinicaltrials-landscape`, `literature-preclinical`
-- `experimental-design-statistics`, `lasso-biomarker-panel`, `pcr-primer-design`
-
----
-
-## 工作流安装
-
-将 21 个分析工作流部署到 `~/.bgicli/workflows/`：
-
-```bash
-# 从 bgicli-opencode 目录复制（如果已克隆旧仓库）
-cp -r /path/to/old/workflows ~/.bgicli/workflows/
-```
-
-或运行安装脚本（Linux/macOS）：
-
-```bash
-bash install.sh
-```
-
 ---
 
 ## 架构
 
 ```
-bgi (单一二进制)
-├── src/index.ts     — CLI 主入口、命令处理、交互循环
-├── src/chat.ts      — 流式对话引擎（支持工具调用）
-├── src/tools.ts     — 工具实现 (bash, read_file, write_file, list_dir, search_files)
-├── src/prompt.ts    — 嵌入式生物信息学系统提示 + 工作流索引
-├── src/providers.ts — 中国 AI 服务商配置
-└── src/config.ts    — 配置管理 (~/.bgicli/config.json)
+bgi
+├── src/index.ts       — CLI 主入口、命令处理、智能路由
+├── src/chat.ts        — 流式对话引擎（工具调用循环）
+├── src/tools.ts       — 工具实现（bash / read_file / write_file 等）
+├── src/skillRouter.ts — 关键词路由表（35个核心技能自动匹配）
+├── src/prompt.ts      — 生物信息学系统提示
+├── src/providers.ts   — 中国 AI 服务商配置
+├── src/config.ts      — 配置管理（~/.bgicli/config.json）
+└── data/              — 内置数据（工作流 + Skills + Python 工具）
 ```
-
-**工具调用流程**：
-1. 用户提问 → 发给 LLM（带工具定义）
-2. LLM 决定调用工具（bash/read_file 等）
-3. BGI CLI 执行工具，将结果返回给 LLM
-4. LLM 基于执行结果继续回答
-5. 循环直到 LLM 完成回答
 
 ---
 
