@@ -6,7 +6,7 @@ import { join, resolve } from 'path';
 import { homedir } from 'os';
 import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
-import { chat, type Message } from './chat.js';
+import { chat, compactMessages, type Message } from './chat.js';
 import { buildSystemPrompt } from './prompt.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 
@@ -73,6 +73,7 @@ function printHelp(): void {
   console.log(chalk.bold.cyan('─── 对话管理 ─────────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/clear')}              清空对话历史`);
   console.log(`  ${chalk.cyan('/history')}            查看对话统计（轮次 / Token 估算）`);
+  console.log(`  ${chalk.cyan('/compact')}            立即压缩对话历史（超 60k token 自动触发）`);
   console.log(`  ${chalk.cyan('/save')} [文件名]      保存对话为 Markdown 文件`);
   console.log(`  ${chalk.cyan('/think')} [on|off]     切换思考模式 (Qwen3 /think 前缀)`);
   console.log();
@@ -324,6 +325,48 @@ function saveConversation(history: Message[], filename?: string): void {
   console.log(chalk.green(`✓ 对话已保存: ${outPath}`));
 }
 
+// ── Auto-compact ──────────────────────────────────────────────────────────────
+
+const COMPACT_TOKEN_THRESHOLD = 60_000; // ~210k chars; trigger compaction
+const COMPACT_KEEP_RECENT = 8;          // keep last N messages intact
+
+function estimateTokens(messages: Message[]): number {
+  const chars = messages.reduce((n, m) => n + String(m.content ?? '').length, 0);
+  return Math.round(chars / 3.5);
+}
+
+async function maybeCompact(history: Message[], cfg: ReturnType<typeof loadConfig>): Promise<Message[]> {
+  const tokens = estimateTokens(history);
+  if (tokens < COMPACT_TOKEN_THRESHOLD) return history;
+
+  // Keep the most recent messages untouched; summarize everything older
+  const recent = history.slice(-COMPACT_KEEP_RECENT);
+  const old = history.slice(0, -COMPACT_KEEP_RECENT);
+  if (old.length === 0) return history;
+
+  process.stdout.write(chalk.dim(`\n[上下文已达 ~${Math.round(tokens / 1000)}k tokens，正在自动压缩...]\n`));
+  try {
+    const summary = await compactMessages(old, cfg);
+    const compacted: Message[] = [
+      {
+        role: 'user',
+        content: `[对话历史摘要 — 请在此基础上继续]\n\n${summary}`,
+      },
+      {
+        role: 'assistant',
+        content: '✓ 已理解之前的对话摘要，请继续。',
+      },
+      ...recent,
+    ];
+    const saved = estimateTokens(history) - estimateTokens(compacted);
+    process.stdout.write(chalk.dim(`[压缩完成，释放约 ~${Math.round(saved / 1000)}k tokens]\n\n`));
+    return compacted;
+  } catch {
+    // Compaction failed — fall back to simple truncation
+    return history.slice(-COMPACT_KEEP_RECENT * 2);
+  }
+}
+
 // ── Command handlers ──────────────────────────────────────────────────────────
 
 interface CommandResult {
@@ -448,6 +491,36 @@ async function handleCommand(
 
     case 'save': {
       saveConversation(history, arg || undefined);
+      break;
+    }
+
+    case 'compact': {
+      const tokens = estimateTokens(history);
+      if (history.length < 4) {
+        console.log(chalk.dim('对话太短，无需压缩'));
+        break;
+      }
+      console.log(chalk.dim(`当前对话约 ~${Math.round(tokens / 1000)}k tokens，正在压缩...`));
+      try {
+        const currentCfg = loadConfig();
+        const recent = history.slice(-COMPACT_KEEP_RECENT);
+        const old = history.slice(0, -COMPACT_KEEP_RECENT);
+        if (old.length === 0) {
+          console.log(chalk.dim('近期消息不足，无需压缩'));
+          break;
+        }
+        const summary = await compactMessages(old, currentCfg);
+        const newHistory: Message[] = [
+          { role: 'user', content: `[对话历史摘要 — 请在此基础上继续]\n\n${summary}` },
+          { role: 'assistant', content: '✓ 已理解之前的对话摘要，请继续。' },
+          ...recent,
+        ];
+        const after = estimateTokens(newHistory);
+        console.log(chalk.green(`✓ 压缩完成: ${history.length} 条消息 → ${newHistory.length} 条，~${Math.round(after / 1000)}k tokens`));
+        return { injectHistory: newHistory };
+      } catch (err) {
+        console.error(chalk.red(`压缩失败: ${err instanceof Error ? err.message : String(err)}`));
+      }
       break;
     }
 
@@ -620,6 +693,7 @@ async function main(): Promise<void> {
       const result = await handleCommand(trimmed, rl, history, thinkMode);
       if (result.exit) break;
       if (result.clearHistory) { history = []; injectedSkills.clear(); }
+      if (result.injectHistory) history = result.injectHistory;
       if (result.thinkMode !== undefined) thinkMode = result.thinkMode;
       continue;
     }
@@ -655,7 +729,7 @@ async function main(): Promise<void> {
       const currentCfg = loadConfig();
       const reply = await chat(history, currentCfg, systemPrompt);
       history.push({ role: 'assistant', content: reply });
-      if (history.length > 40) history = history.slice(-40);
+      history = await maybeCompact(history, currentCfg);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(chalk.red(`\n错误: ${msg}\n`));

@@ -172,6 +172,47 @@ async function streamOnce(
   };
 }
 
+// ── Compact (summarize old messages) ─────────────────────────────────────────
+
+/**
+ * Summarize `messages` into a single assistant message using the same LLM.
+ * Returns the summary string, or throws on failure.
+ */
+export async function compactMessages(
+  messages: Message[],
+  config: BgiConfig,
+): Promise<string> {
+  const prov = PROVIDERS[config.provider];
+  if (!prov) throw new Error(`Unknown provider: ${config.provider}`);
+
+  const baseURL = config.provider === 'custom' ? config.customUrl! : prov.baseURL;
+  const apiKey = getApiKey(config);
+  const client = new OpenAI({ apiKey: apiKey || 'none', baseURL });
+
+  const transcript = messages
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .map((m) => `[${m.role === 'user' ? '用户' : 'AI'}]: ${String(m.content ?? '').slice(0, 2000)}`)
+    .join('\n\n');
+
+  const resp = await client.chat.completions.create({
+    model: config.model,
+    messages: [
+      {
+        role: 'system',
+        content:
+          '你是一个对话摘要助手。请将以下对话历史压缩为简洁的中文摘要，保留所有关键技术信息：文件路径、命令、分析结果、用户决策、已激活的工作流/技能。摘要应让对话能够无缝继续。',
+      },
+      {
+        role: 'user',
+        content: `请压缩以下对话历史：\n\n${transcript}\n\n输出格式：直接输出摘要文本，不需要任何前缀。`,
+      },
+    ],
+    stream: false,
+  });
+
+  return resp.choices[0]?.message?.content ?? '（对话历史已压缩）';
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getApiKey(cfg: BgiConfig): string | undefined {

@@ -13930,6 +13930,33 @@ async function streamOnce(client, messages, model) {
     finishReason
   };
 }
+async function compactMessages(messages, config) {
+  const prov = PROVIDERS[config.provider];
+  if (!prov) throw new Error(`Unknown provider: ${config.provider}`);
+  const baseURL = config.provider === "custom" ? config.customUrl : prov.baseURL;
+  const apiKey = getApiKey(config);
+  const client = new openai_default({ apiKey: apiKey || "none", baseURL });
+  const transcript = messages.filter((m2) => m2.role === "user" || m2.role === "assistant").map((m2) => `[${m2.role === "user" ? "\u7528\u6237" : "AI"}]: ${String(m2.content ?? "").slice(0, 2e3)}`).join("\n\n");
+  const resp = await client.chat.completions.create({
+    model: config.model,
+    messages: [
+      {
+        role: "system",
+        content: "\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u8BF7\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u5386\u53F2\u538B\u7F29\u4E3A\u7B80\u6D01\u7684\u4E2D\u6587\u6458\u8981\uFF0C\u4FDD\u7559\u6240\u6709\u5173\u952E\u6280\u672F\u4FE1\u606F\uFF1A\u6587\u4EF6\u8DEF\u5F84\u3001\u547D\u4EE4\u3001\u5206\u6790\u7ED3\u679C\u3001\u7528\u6237\u51B3\u7B56\u3001\u5DF2\u6FC0\u6D3B\u7684\u5DE5\u4F5C\u6D41/\u6280\u80FD\u3002\u6458\u8981\u5E94\u8BA9\u5BF9\u8BDD\u80FD\u591F\u65E0\u7F1D\u7EE7\u7EED\u3002"
+      },
+      {
+        role: "user",
+        content: `\u8BF7\u538B\u7F29\u4EE5\u4E0B\u5BF9\u8BDD\u5386\u53F2\uFF1A
+
+${transcript}
+
+\u8F93\u51FA\u683C\u5F0F\uFF1A\u76F4\u63A5\u8F93\u51FA\u6458\u8981\u6587\u672C\uFF0C\u4E0D\u9700\u8981\u4EFB\u4F55\u524D\u7F00\u3002`
+      }
+    ],
+    stream: false
+  });
+  return resp.choices[0]?.message?.content ?? "\uFF08\u5BF9\u8BDD\u5386\u53F2\u5DF2\u538B\u7F29\uFF09";
+}
 function getApiKey(cfg) {
   const prov = PROVIDERS[cfg.provider];
   if (prov?.envKey && process.env[prov.envKey]) return process.env[prov.envKey];
@@ -14657,7 +14684,33 @@ function routeSkill(message) {
 }
 
 // src/index.ts
-var VERSION2 = "2.1.0";
+var VERSION2 = "2.2.0";
+function installBundledData() {
+  const bundledData = (0, import_path4.join)(__dirname, "..", "data");
+  if (!(0, import_fs4.existsSync)(bundledData)) return;
+  ensureDirs();
+  const targets = [
+    { src: (0, import_path4.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "\u5DE5\u4F5C\u6D41" },
+    { src: (0, import_path4.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "OpenClaw Skills" },
+    { src: (0, import_path4.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
+  ];
+  let installed = false;
+  for (const { src, dest, name } of targets) {
+    if (!(0, import_fs4.existsSync)(src)) continue;
+    const isEmpty = !(0, import_fs4.existsSync)(dest) || (0, import_fs4.readdirSync)(dest).length === 0;
+    if (isEmpty) {
+      (0, import_fs4.mkdirSync)(dest, { recursive: true });
+      (0, import_fs4.cpSync)(src, dest, { recursive: true });
+      if (!installed) {
+        process.stdout.write(source_default.dim("\u6B63\u5728\u521D\u59CB\u5316\u5185\u7F6E\u6570\u636E...\n"));
+        installed = true;
+      }
+      process.stdout.write(source_default.green(`  \u2713 ${name} \u5DF2\u5B89\u88C5
+`));
+    }
+  }
+  if (installed) console.log();
+}
 function printBanner() {
   console.log(source_default.cyan.bold(`
   \u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557     \u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2557     \u2588\u2588\u2557
@@ -14681,6 +14734,7 @@ function printHelp() {
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u5BF9\u8BDD\u7BA1\u7406 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/clear")}              \u6E05\u7A7A\u5BF9\u8BDD\u5386\u53F2`);
   console.log(`  ${source_default.cyan("/history")}            \u67E5\u770B\u5BF9\u8BDD\u7EDF\u8BA1\uFF08\u8F6E\u6B21 / Token \u4F30\u7B97\uFF09`);
+  console.log(`  ${source_default.cyan("/compact")}            \u7ACB\u5373\u538B\u7F29\u5BF9\u8BDD\u5386\u53F2\uFF08\u8D85 60k token \u81EA\u52A8\u89E6\u53D1\uFF09`);
   console.log(`  ${source_default.cyan("/save")} [\u6587\u4EF6\u540D]      \u4FDD\u5B58\u5BF9\u8BDD\u4E3A Markdown \u6587\u4EF6`);
   console.log(`  ${source_default.cyan("/think")} [on|off]     \u5207\u6362\u601D\u8003\u6A21\u5F0F (Qwen3 /think \u524D\u7F00)`);
   console.log();
@@ -14908,6 +14962,45 @@ ${msg.content}
   (0, import_fs4.writeFileSync)(outPath, lines.join("\n"), "utf8");
   console.log(source_default.green(`\u2713 \u5BF9\u8BDD\u5DF2\u4FDD\u5B58: ${outPath}`));
 }
+var COMPACT_TOKEN_THRESHOLD = 6e4;
+var COMPACT_KEEP_RECENT = 8;
+function estimateTokens(messages) {
+  const chars = messages.reduce((n2, m2) => n2 + String(m2.content ?? "").length, 0);
+  return Math.round(chars / 3.5);
+}
+async function maybeCompact(history, cfg) {
+  const tokens = estimateTokens(history);
+  if (tokens < COMPACT_TOKEN_THRESHOLD) return history;
+  const recent = history.slice(-COMPACT_KEEP_RECENT);
+  const old = history.slice(0, -COMPACT_KEEP_RECENT);
+  if (old.length === 0) return history;
+  process.stdout.write(source_default.dim(`
+[\u4E0A\u4E0B\u6587\u5DF2\u8FBE ~${Math.round(tokens / 1e3)}k tokens\uFF0C\u6B63\u5728\u81EA\u52A8\u538B\u7F29...]
+`));
+  try {
+    const summary = await compactMessages(old, cfg);
+    const compacted = [
+      {
+        role: "user",
+        content: `[\u5BF9\u8BDD\u5386\u53F2\u6458\u8981 \u2014 \u8BF7\u5728\u6B64\u57FA\u7840\u4E0A\u7EE7\u7EED]
+
+${summary}`
+      },
+      {
+        role: "assistant",
+        content: "\u2713 \u5DF2\u7406\u89E3\u4E4B\u524D\u7684\u5BF9\u8BDD\u6458\u8981\uFF0C\u8BF7\u7EE7\u7EED\u3002"
+      },
+      ...recent
+    ];
+    const saved = estimateTokens(history) - estimateTokens(compacted);
+    process.stdout.write(source_default.dim(`[\u538B\u7F29\u5B8C\u6210\uFF0C\u91CA\u653E\u7EA6 ~${Math.round(saved / 1e3)}k tokens]
+
+`));
+    return compacted;
+  } catch {
+    return history.slice(-COMPACT_KEEP_RECENT * 2);
+  }
+}
 async function handleCommand(input, rl, history, thinkMode) {
   const [cmd, ...rest] = input.slice(1).trim().split(/\s+/);
   const arg = rest.join(" ");
@@ -15011,6 +15104,37 @@ async function handleCommand(input, rl, history, thinkMode) {
       saveConversation(history, arg || void 0);
       break;
     }
+    case "compact": {
+      const tokens = estimateTokens(history);
+      if (history.length < 4) {
+        console.log(source_default.dim("\u5BF9\u8BDD\u592A\u77ED\uFF0C\u65E0\u9700\u538B\u7F29"));
+        break;
+      }
+      console.log(source_default.dim(`\u5F53\u524D\u5BF9\u8BDD\u7EA6 ~${Math.round(tokens / 1e3)}k tokens\uFF0C\u6B63\u5728\u538B\u7F29...`));
+      try {
+        const currentCfg = loadConfig();
+        const recent = history.slice(-COMPACT_KEEP_RECENT);
+        const old = history.slice(0, -COMPACT_KEEP_RECENT);
+        if (old.length === 0) {
+          console.log(source_default.dim("\u8FD1\u671F\u6D88\u606F\u4E0D\u8DB3\uFF0C\u65E0\u9700\u538B\u7F29"));
+          break;
+        }
+        const summary = await compactMessages(old, currentCfg);
+        const newHistory = [
+          { role: "user", content: `[\u5BF9\u8BDD\u5386\u53F2\u6458\u8981 \u2014 \u8BF7\u5728\u6B64\u57FA\u7840\u4E0A\u7EE7\u7EED]
+
+${summary}` },
+          { role: "assistant", content: "\u2713 \u5DF2\u7406\u89E3\u4E4B\u524D\u7684\u5BF9\u8BDD\u6458\u8981\uFF0C\u8BF7\u7EE7\u7EED\u3002" },
+          ...recent
+        ];
+        const after = estimateTokens(newHistory);
+        console.log(source_default.green(`\u2713 \u538B\u7F29\u5B8C\u6210: ${history.length} \u6761\u6D88\u606F \u2192 ${newHistory.length} \u6761\uFF0C~${Math.round(after / 1e3)}k tokens`));
+        return { injectHistory: newHistory };
+      } catch (err) {
+        console.error(source_default.red(`\u538B\u7F29\u5931\u8D25: ${err instanceof Error ? err.message : String(err)}`));
+      }
+      break;
+    }
     case "think": {
       const val = arg.toLowerCase();
       if (val === "on" || val === "1" || val === "true") {
@@ -15105,6 +15229,7 @@ async function handleCommand(input, rl, history, thinkMode) {
   return {};
 }
 async function main() {
+  installBundledData();
   printBanner();
   const rl = (0, import_readline.createInterface)({
     input: process.stdin,
@@ -15155,6 +15280,7 @@ async function main() {
         history = [];
         injectedSkills.clear();
       }
+      if (result.injectHistory) history = result.injectHistory;
       if (result.thinkMode !== void 0) thinkMode = result.thinkMode;
       continue;
     }
@@ -15183,7 +15309,7 @@ ${expanded}` : expanded;
       const currentCfg = loadConfig();
       const reply = await chat(history, currentCfg, systemPrompt);
       history.push({ role: "assistant", content: reply });
-      if (history.length > 40) history = history.slice(-40);
+      history = await maybeCompact(history, currentCfg);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(source_default.red(`
