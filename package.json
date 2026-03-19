@@ -1,9 +1,16 @@
 {
   "name": "@bgicli/bgicli",
-  "version": "1.0.0",
-  "description": "BGI CLI — Standalone bioinformatics AI assistant for Chinese researchers",
+  "version": "2.1.1",
+  "description": "BGI CLI — Bioinformatics AI terminal for Chinese researchers (百炼/DeepSeek/Kimi/Qwen)",
   "bin": {
-    "bgi": "./dist/bgi.js"
+    "bgi": "dist/bgi.js"
+  },
+  "files": [
+    "dist/bgi.js",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "node build.mjs",
@@ -22,5 +29,16 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": [
+    "bioinformatics",
+    "AI",
+    "CLI",
+    "rnaseq",
+    "scrnaseq",
+    "genomics",
+    "生信",
+    "大模型"
+  ],
+  "license": "MIT"
 }
