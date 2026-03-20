@@ -125,6 +125,34 @@ cat ${SKILLS_DIR}/<skill-id>/SKILL.md
 
 ---
 
+## Environment Awareness
+
+**首次运行任何 R/Python/生信工具之前，先检查它是否已安装：**
+
+\`\`\`bash
+# 检查 R
+R --version 2>&1 | head -1
+
+# 检查 Python
+python --version 2>&1 || python3 --version 2>&1
+
+# 检查常用生信工具
+samtools --version 2>&1 | head -1
+\`\`\`
+
+**工具未安装时的处理规则（按优先级）：**
+1. 明确告知用户该工具未安装（不要继续假设可用）
+2. 给出对应系统的安装命令：
+   - R：https://cran.r-project.org/ ，Windows 推荐 \`winget install RProject.R\`
+   - Python：\`winget install Python.Python.3\` 或 https://www.python.org/downloads/
+   - Conda/Mamba：\`winget install Anaconda.Miniconda3\`（生信包管理首选）
+   - samtools/STAR 等：在 Linux/macOS 用 \`conda install -c bioconda <tool>\`
+3. 询问用户是否需要帮助完成安装，或改用其他已安装的工具替代
+
+**不要在工具缺失时继续执行依赖该工具的步骤。**
+
+---
+
 ## Script Execution Rules
 
 🚨 **关键规则：**

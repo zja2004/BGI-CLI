@@ -13789,7 +13789,8 @@ function toolBash(command, workdir, timeoutMs = 3e4) {
   } catch (err) {
     const e2 = err;
     const out = (decodeBuffer(e2.stdout) + "\n" + decodeBuffer(e2.stderr)).trim();
-    return { output: out, error: e2.message ?? String(err) };
+    const cmdLine = (e2.message ?? "Command failed").split("\n")[0];
+    return { output: out, error: cmdLine };
   }
 }
 function toolReadFile(path, maxLines, offset) {
@@ -14113,6 +14114,34 @@ cat ${SKILLS_DIR}/<skill-id>/SKILL.md
 - \u4E34\u5E8A: clinical-*, ehr-fhir-integration, autonomous-oncology-agent
 
 \u5F53\u7528\u6237\u63D0\u5230\u67D0\u4E2A\u4E13\u79D1\u4EFB\u52A1\u65F6\uFF0C\u5EFA\u8BAE\u4ED6\u4EEC\u4F7F\u7528 **/sk <\u5173\u952E\u8BCD>** \u641C\u7D22\u5E76\u52A0\u8F7D\u5BF9\u5E94\u6280\u80FD\u6307\u5357\u3002
+
+---
+
+## Environment Awareness
+
+**\u9996\u6B21\u8FD0\u884C\u4EFB\u4F55 R/Python/\u751F\u4FE1\u5DE5\u5177\u4E4B\u524D\uFF0C\u5148\u68C0\u67E5\u5B83\u662F\u5426\u5DF2\u5B89\u88C5\uFF1A**
+
+\`\`\`bash
+# \u68C0\u67E5 R
+R --version 2>&1 | head -1
+
+# \u68C0\u67E5 Python
+python --version 2>&1 || python3 --version 2>&1
+
+# \u68C0\u67E5\u5E38\u7528\u751F\u4FE1\u5DE5\u5177
+samtools --version 2>&1 | head -1
+\`\`\`
+
+**\u5DE5\u5177\u672A\u5B89\u88C5\u65F6\u7684\u5904\u7406\u89C4\u5219\uFF08\u6309\u4F18\u5148\u7EA7\uFF09\uFF1A**
+1. \u660E\u786E\u544A\u77E5\u7528\u6237\u8BE5\u5DE5\u5177\u672A\u5B89\u88C5\uFF08\u4E0D\u8981\u7EE7\u7EED\u5047\u8BBE\u53EF\u7528\uFF09
+2. \u7ED9\u51FA\u5BF9\u5E94\u7CFB\u7EDF\u7684\u5B89\u88C5\u547D\u4EE4\uFF1A
+   - R\uFF1Ahttps://cran.r-project.org/ \uFF0CWindows \u63A8\u8350 \`winget install RProject.R\`
+   - Python\uFF1A\`winget install Python.Python.3\` \u6216 https://www.python.org/downloads/
+   - Conda/Mamba\uFF1A\`winget install Anaconda.Miniconda3\`\uFF08\u751F\u4FE1\u5305\u7BA1\u7406\u9996\u9009\uFF09
+   - samtools/STAR \u7B49\uFF1A\u5728 Linux/macOS \u7528 \`conda install -c bioconda <tool>\`
+3. \u8BE2\u95EE\u7528\u6237\u662F\u5426\u9700\u8981\u5E2E\u52A9\u5B8C\u6210\u5B89\u88C5\uFF0C\u6216\u6539\u7528\u5176\u4ED6\u5DF2\u5B89\u88C5\u7684\u5DE5\u5177\u66FF\u4EE3
+
+**\u4E0D\u8981\u5728\u5DE5\u5177\u7F3A\u5931\u65F6\u7EE7\u7EED\u6267\u884C\u4F9D\u8D56\u8BE5\u5DE5\u5177\u7684\u6B65\u9AA4\u3002**
 
 ---
 

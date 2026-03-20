@@ -187,7 +187,12 @@ function toolBash(command: string, workdir?: string, timeoutMs = 30_000): ToolRe
   } catch (err: unknown) {
     const e = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
     const out = (decodeBuffer(e.stdout) + '\n' + decodeBuffer(e.stderr)).trim();
-    return { output: out, error: e.message ?? String(err) };
+    // Use only the first line of e.message ("Command failed: <cmd>") — Node.js
+    // embeds raw stderr bytes into the message using the system default encoding
+    // (GBK on Chinese Windows), causing garbled text.  The properly decoded
+    // output is already in `out`.
+    const cmdLine = (e.message ?? 'Command failed').split('\n')[0];
+    return { output: out, error: cmdLine };
   }
 }
 
