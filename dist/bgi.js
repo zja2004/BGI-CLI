@@ -14690,8 +14690,8 @@ function installBundledData() {
   if (!(0, import_fs4.existsSync)(bundledData)) return;
   ensureDirs();
   const targets = [
-    { src: (0, import_path4.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "\u5DE5\u4F5C\u6D41" },
-    { src: (0, import_path4.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "OpenClaw Skills" },
+    { src: (0, import_path4.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u751F\u4FE1\u5DE5\u4F5C\u6D41)" },
+    { src: (0, import_path4.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u533B\u5B66\u4E13\u79D1)" },
     { src: (0, import_path4.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
   ];
   let installed = false;
@@ -14738,9 +14738,9 @@ function printHelp() {
   console.log(`  ${source_default.cyan("/save")} [\u6587\u4EF6\u540D]      \u4FDD\u5B58\u5BF9\u8BDD\u4E3A Markdown \u6587\u4EF6`);
   console.log(`  ${source_default.cyan("/think")} [on|off]     \u5207\u6362\u601D\u8003\u6A21\u5F0F (Qwen3 /think \u524D\u7F00)`);
   console.log();
-  console.log(source_default.bold.cyan("\u2500\u2500\u2500 Skills (\u5DE5\u4F5C\u6D41 + OpenClaw Medical) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  console.log(`  ${source_default.cyan("/cat")}                \u6309\u9886\u57DF\u6D4F\u89C8\u6280\u80FD\u5206\u7C7B\u76EE\u5F55`);
-  console.log(`  ${source_default.cyan("/sk")}                 \u5217\u51FA\u5168\u90E8 Skills\uFF08\u5DE5\u4F5C\u6D41 + OpenClaw\uFF09`);
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("/cat")}                \u6309\u9886\u57DF\u6D4F\u89C8 Skills \u5206\u7C7B\u76EE\u5F55`);
+  console.log(`  ${source_default.cyan("/sk")}                 \u5217\u51FA\u5168\u90E8 Skills`);
   console.log(`  ${source_default.cyan("/sk")} <\u5173\u952E\u8BCD>        \u6A21\u7CCA\u641C\u7D22\uFF0C\u5339\u914D\u5219\u6CE8\u5165\uFF0C\u5426\u5219\u5217\u51FA\u5019\u9009`);
   console.log(`  ${source_default.cyan("/wf")}                 \u540C /sk\uFF0C\u522B\u540D`);
   console.log(source_default.dim("  \u793A\u4F8B: /cat  /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr"));
@@ -14851,13 +14851,13 @@ function collectAllSkills() {
     });
   };
   addFrom(SKILLS_DIR, "skill");
-  addFrom(WORKFLOWS_DIR, "workflow");
+  addFrom(WORKFLOWS_DIR, "skill");
   return entries;
 }
 function listSkills(keyword) {
   const all = collectAllSkills();
   if (all.length === 0) {
-    console.log(source_default.yellow("\u6682\u65E0\u5DF2\u5B89\u88C5\u7684 Skills / \u5DE5\u4F5C\u6D41"));
+    console.log(source_default.yellow("\u6682\u65E0\u5DF2\u5B89\u88C5\u7684 Skills"));
     return;
   }
   const matched = keyword ? all.filter((e2) => e2.id.toLowerCase().includes(keyword.toLowerCase())) : all;
@@ -14866,20 +14866,11 @@ function listSkills(keyword) {
     console.log(source_default.dim("\u63D0\u793A: \u4F7F\u7528\u66F4\u7B80\u77ED\u7684\u5173\u952E\u8BCD\uFF0C\u5982 alphafold\u3001pubmed\u3001rnaseq\u3001crispr\u3001deseq2"));
     return;
   }
-  const title = keyword ? `\u641C\u7D22\u7ED3\u679C "${keyword}" (${matched.length} \u4E2A) \u2014 \u4F7F\u7528 /sk <id> \u52A0\u8F7D:` : `\u5168\u90E8 Skills + \u5DE5\u4F5C\u6D41 (${matched.length} \u4E2A) \u2014 \u4F7F\u7528 /sk <id> \u52A0\u8F7D:`;
+  const title = keyword ? `\u641C\u7D22\u7ED3\u679C "${keyword}" (${matched.length} \u4E2A) \u2014 \u4F7F\u7528 /sk <id> \u52A0\u8F7D:` : `\u5168\u90E8 Skills (${matched.length} \u4E2A) \u2014 \u4F7F\u7528 /sk <id> \u52A0\u8F7D:`;
   console.log(source_default.bold(title));
-  const workflows = matched.filter((e2) => e2.tag === "workflow");
-  const skills = matched.filter((e2) => e2.tag === "skill");
-  if (workflows.length > 0) {
-    console.log(source_default.dim("  \u2500\u2500 \u751F\u7269\u4FE1\u606F\u5B66\u5DE5\u4F5C\u6D41 \u2500\u2500"));
-    workflows.forEach((e2) => console.log(`  ${source_default.green(e2.id)}`));
-  }
-  if (skills.length > 0) {
-    console.log(source_default.dim("  \u2500\u2500 OpenClaw Medical Skills \u2500\u2500"));
-    const show = skills.slice(0, 35);
-    show.forEach((e2) => console.log(`  ${source_default.cyan(e2.id)}`));
-    if (skills.length > 35) console.log(source_default.dim(`  ... \u8FD8\u6709 ${skills.length - 35} \u4E2A\uFF0C\u8BF7\u7528\u5173\u952E\u8BCD\u7B5B\u9009`));
-  }
+  const show = matched.slice(0, 50);
+  show.forEach((e2) => console.log(`  ${source_default.cyan(e2.id)}`));
+  if (matched.length > 50) console.log(source_default.dim(`  ... \u8FD8\u6709 ${matched.length - 50} \u4E2A\uFF0C\u8BF7\u7528\u5173\u952E\u8BCD\u7B5B\u9009`));
   console.log();
 }
 function injectSkill(id, history) {
@@ -14896,10 +14887,9 @@ function injectSkill(id, history) {
     return false;
   }
   const content = (0, import_fs4.readFileSync)(skillPath, "utf8");
-  const label = match.tag === "workflow" ? "\u751F\u7269\u4FE1\u606F\u5B66\u5DE5\u4F5C\u6D41" : "OpenClaw Skill";
   history.push({
     role: "user",
-    content: `[${label}\u5DF2\u52A0\u8F7D: ${match.id}]
+    content: `[Skill \u5DF2\u52A0\u8F7D: ${match.id}]
 
 \u4EE5\u4E0B\u662F\u8BE5\u6280\u80FD\u7684\u64CD\u4F5C\u6307\u5357\uFF0C\u8BF7\u4E25\u683C\u6309\u7167\u8BF4\u660E\u6267\u884C\uFF1A
 
@@ -14907,9 +14897,9 @@ ${content}`
   });
   history.push({
     role: "assistant",
-    content: `\u2713 ${label} **${match.id}** \u5DF2\u52A0\u8F7D\u3002\u6211\u5DF2\u9605\u8BFB\u6307\u5357\uFF0C\u968F\u65F6\u53EF\u4EE5\u5F00\u59CB\u3002\u8BF7\u544A\u8BC9\u6211\u60A8\u7684\u5177\u4F53\u6570\u636E\u548C\u9700\u6C42\u3002`
+    content: `\u2713 Skill **${match.id}** \u5DF2\u52A0\u8F7D\u3002\u6211\u5DF2\u9605\u8BFB\u6307\u5357\uFF0C\u968F\u65F6\u53EF\u4EE5\u5F00\u59CB\u3002\u8BF7\u544A\u8BC9\u6211\u60A8\u7684\u5177\u4F53\u6570\u636E\u548C\u9700\u6C42\u3002`
   });
-  console.log(source_default.green(`\u2713 ${match.tag === "workflow" ? "\u5DE5\u4F5C\u6D41" : "Skill"} ${match.id} \u5DF2\u6CE8\u5165\u5230\u5F53\u524D\u5BF9\u8BDD\u4E0A\u4E0B\u6587`));
+  console.log(source_default.green(`\u2713 Skill ${match.id} \u5DF2\u6CE8\u5165\u5230\u5F53\u524D\u5BF9\u8BDD\u4E0A\u4E0B\u6587`));
   return true;
 }
 function expandFileRefs(input) {
@@ -15178,8 +15168,7 @@ ${summary}` },
         console.log(`  ${meta.icon}  ${source_default.bold(meta.label)}`);
         for (const item of items) {
           const route = SKILL_ROUTES.find((r2) => r2.id === item.id);
-          const tag = item.tag === "workflow" ? source_default.green("\u5DE5\u4F5C\u6D41") : source_default.cyan("Skill ");
-          console.log(`     ${tag}  ${source_default.white(item.id)}  ${source_default.dim("\u2014 " + route.name)}`);
+          console.log(`     ${source_default.cyan(item.id)}  ${source_default.dim("\u2014 " + route.name)}`);
         }
         console.log();
       }
@@ -15187,8 +15176,8 @@ ${summary}` },
       const allInstalled = collectAllSkills();
       const unrouted = allInstalled.filter((e2) => !routedIds.has(e2.id));
       if (unrouted.length > 0) {
-        console.log(`  \u{1F4E6}  ${source_default.bold("\u66F4\u591A OpenClaw Skills")}  ${source_default.dim(`(${unrouted.length} \u4E2A\uFF0C\u65E0\u81EA\u52A8\u8DEF\u7531)`)}`);
-        console.log(source_default.dim("     \u4F7F\u7528 /sk <\u5173\u952E\u8BCD> \u641C\u7D22\uFF0C\u4F8B: /sk ehr  /sk clinical  /sk imaging"));
+        console.log(`  \u{1F4E6}  ${source_default.bold("\u66F4\u591A Skills")}  ${source_default.dim(`(${unrouted.length} \u4E2A\uFF0C\u4F7F\u7528\u5173\u952E\u8BCD\u641C\u7D22)`)}`);
+        console.log(source_default.dim("     /sk <\u5173\u952E\u8BCD>\uFF0C\u4F8B: /sk ehr  /sk clinical  /sk imaging"));
         console.log();
       }
       break;
@@ -15249,7 +15238,7 @@ async function main() {
   console.log(source_default.bold.cyan("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.bold("\u670D\u52A1\u5546:")}  ${prov?.name ?? cfg.provider}`);
   console.log(`  ${source_default.bold("\u6A21\u578B:")}    ${source_default.green(cfg.model)}`);
-  console.log(`  ${source_default.bold("Skills:")}  ${totalSkills > 0 ? source_default.green(`${totalSkills} \u4E2A`) : source_default.yellow("\u672A\u5B89\u88C5")}  ${source_default.dim("(\u5DE5\u4F5C\u6D41 + OpenClaw Medical\uFF0C/sk \u641C\u7D22)")}`);
+  console.log(`  ${source_default.bold("Skills:")}  ${totalSkills > 0 ? source_default.green(`${totalSkills} \u4E2A`) : source_default.yellow("\u672A\u5B89\u88C5")}  ${source_default.dim("(/sk \u641C\u7D22  /cat \u5206\u7C7B\u76EE\u5F55)")}`);
   console.log(`  ${source_default.bold("\u5DE5\u5177:")}    bash \xB7 read_file \xB7 write_file \xB7 list_dir \xB7 search_files`);
   console.log(source_default.bold.cyan("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(source_default.dim("  \u8F93\u5165\u95EE\u9898\u5F00\u59CB\u5BF9\u8BDD   /help \u67E5\u770B\u547D\u4EE4   /cat \u6280\u80FD\u5206\u7C7B   @\u6587\u4EF6\u8DEF\u5F84 \u5185\u5D4C\u6587\u4EF6"));
@@ -15296,8 +15285,7 @@ async function main() {
     } else if (newRoutes.length >= 2 && topScore >= 4) {
       console.log(source_default.dim("\n\u{1F4A1} \u68C0\u6D4B\u5230\u76F8\u5173\u6280\u80FD\uFF0C\u8F93\u5165 /sk <id> \u6FC0\u6D3B:"));
       newRoutes.slice(0, 3).forEach((r2) => {
-        const tag = r2.tag === "workflow" ? source_default.green("[\u5DE5\u4F5C\u6D41]") : source_default.cyan("[Skill] ");
-        console.log(source_default.dim(`   /sk ${r2.id}  ${tag}  ${r2.name}`));
+        console.log(source_default.dim(`   /sk ${r2.id}  \u2014 ${r2.name}`));
       });
       console.log();
     }
