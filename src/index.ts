@@ -7,6 +7,7 @@ import { homedir } from 'os';
 import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message } from './chat.js';
+import { executeTool } from './tools.js';
 import { buildSystemPrompt } from './prompt.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 
@@ -83,8 +84,14 @@ function printHelp(): void {
   console.log(`  ${chalk.cyan('/sk')}                 列出全部 Skills`);
   console.log(`  ${chalk.cyan('/sk')} <关键词>        模糊搜索，匹配则注入，否则列出候选`);
   console.log(`  ${chalk.cyan('/wf')}                 同 /sk，别名`);
-  console.log(chalk.dim('  示例: /cat  /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr'));
-  console.log(chalk.dim('  提示: 直接描述任务，AI 会自动识别并激活对应技能'));
+  console.log(`  ${chalk.cyan('/skills')}             查看当前会话已加载的 Skills`);
+  console.log(`  ${chalk.cyan('/unload')} <id>        从当前会话卸载指定 Skill`);
+  console.log(chalk.dim('  示例: /cat  /sk deseq2  /skills  /unload deseq2'));
+  console.log(chalk.dim('  提示: 直接描述任务，AI 会自动识别并激活对应技能（加载前会询问确认）'));
+  console.log();
+  console.log(chalk.bold.cyan('─── 直接执行 ─────────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('!<命令>')}             绕过 AI 直接执行 Shell 命令（实时输出）`);
+  console.log(chalk.dim('  示例: !ls -la  !Rscript analysis.R  !python script.py  !samtools view -h a.bam'));
   console.log();
   console.log(chalk.bold.cyan('─── 文件 & 目录 ──────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/cd')} <路径>          更改工作目录`);
@@ -241,7 +248,28 @@ function listSkills(keyword?: string): void {
   console.log();
 }
 
-function injectSkill(id: string, history: Message[]): boolean {
+/** Parse name and short-description from a SKILL.md frontmatter block. */
+function parseSkillMeta(content: string): { name: string; shortDesc: string } {
+  // Support both YAML-style (---\n...\n---) and HTML-comment style frontmatter
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/) ||
+                  content.match(/<!--[\s\S]*?-->\s*([\s\S]*?)(?=\n#|\n\n)/);
+  if (!fmMatch) return { name: '', shortDesc: '' };
+  const fm = fmMatch[1];
+  const nameMatch = fm.match(/^name:\s*['"]?(.+?)['"]?\s*$/m);
+  const descMatch = fm.match(/^short-description:\s*(.+)$/m);
+  return {
+    name:      nameMatch?.[1]?.trim()  ?? '',
+    shortDesc: descMatch?.[1]?.trim()  ?? '',
+  };
+}
+
+async function injectSkill(
+  id: string,
+  history: Message[],
+  injectedSkills: Map<string, string>,
+  rl: readline.Interface,
+  skipConfirm = false,
+): Promise<boolean> {
   const all = collectAllSkills();
   const match =
     all.find((e) => e.id === id) ||
@@ -258,7 +286,42 @@ function injectSkill(id: string, history: Message[]): boolean {
     console.log(chalk.red(`${match.id} 缺少 SKILL.md`));
     return false;
   }
+
   const content = readFileSync(skillPath, 'utf8');
+  const { name, shortDesc } = parseSkillMeta(content);
+  const displayName = name || match.id;
+
+  // ── Confirmation prompt (unless skipConfirm) ──────────────────────────────
+  if (!skipConfirm) {
+    console.log();
+    console.log(chalk.bold.cyan('┌─ 即将加载 Skill ────────────────────────────────────────'));
+    console.log(`│  ${chalk.bold('ID:')}    ${chalk.cyan(match.id)}`);
+    console.log(`│  ${chalk.bold('名称:')}  ${displayName}`);
+    if (shortDesc) {
+      // Word-wrap at 60 chars
+      const words = shortDesc.split(' ');
+      let line = '│  功能:  ';
+      for (const w of words) {
+        if (line.length + w.length > 70) {
+          console.log(chalk.dim(line));
+          line = '│         ' + w + ' ';
+        } else {
+          line += w + ' ';
+        }
+      }
+      if (line.trim() !== '│') console.log(chalk.dim(line));
+    }
+    console.log(chalk.bold.cyan('└────────────────────────────────────────────────────────'));
+    console.log();
+
+    const ans = await question(rl, chalk.cyan('  确认加载此 Skill？[Y/n] › '));
+    const confirmed = ans.trim() === '' || ans.trim().toLowerCase() === 'y';
+    if (!confirmed) {
+      console.log(chalk.dim('  已取消'));
+      return false;
+    }
+  }
+
   history.push({
     role: 'user',
     content: `[Skill 已加载: ${match.id}]\n\n以下是该技能的操作指南，请严格按照说明执行：\n\n${content}`,
@@ -267,7 +330,9 @@ function injectSkill(id: string, history: Message[]): boolean {
     role: 'assistant',
     content: `✓ Skill **${match.id}** 已加载。我已阅读指南，随时可以开始。请告诉我您的具体数据和需求。`,
   });
-  console.log(chalk.green(`✓ Skill ${match.id} 已注入到当前对话上下文`));
+
+  injectedSkills.set(match.id, displayName);
+  console.log(chalk.green(`✓ Skill "${match.id}" 已加载到当前对话上下文`));
   return true;
 }
 
@@ -396,6 +461,7 @@ async function handleCommand(
   rl: readline.Interface,
   history: Message[],
   thinkMode: boolean,
+  injectedSkills: Map<string, string>,  // id → name
 ): Promise<CommandResult> {
   const [cmd, ...rest] = input.slice(1).trim().split(/\s+/);
   const arg = rest.join(' ');
@@ -544,6 +610,57 @@ async function handleCommand(
       break;
     }
 
+    case 'skills': {
+      // Show currently loaded skills in this session
+      if (injectedSkills.size === 0) {
+        console.log(chalk.dim('当前会话未加载任何 Skill'));
+        console.log(chalk.dim('使用 /sk <关键词> 加载，或直接描述任务自动激活'));
+      } else {
+        console.log(chalk.bold(`\n当前已加载的 Skills (${injectedSkills.size} 个):\n`));
+        for (const [id, name] of injectedSkills) {
+          console.log(`  ${chalk.green('●')} ${chalk.cyan(id)}  ${chalk.dim('— ' + name)}`);
+          console.log(chalk.dim(`       /unload ${id}  可卸载此 Skill`));
+        }
+        console.log();
+        console.log(chalk.dim('提示: /clear 清空全部对话和 Skills | /unload <id> 卸载单个'));
+      }
+      break;
+    }
+
+    case 'unload': {
+      if (!arg) {
+        console.log('用法: /unload <skill-id>');
+        console.log(chalk.dim('使用 /skills 查看当前已加载的 Skills'));
+        break;
+      }
+      // Find the skill id (exact or partial match among loaded skills)
+      const loadedIds = Array.from(injectedSkills.keys());
+      const targetId = loadedIds.find((id) => id === arg || id.includes(arg));
+      if (!targetId) {
+        console.log(chalk.yellow(`未找到已加载的 Skill: "${arg}"`));
+        console.log(chalk.dim('使用 /skills 查看当前已加载的 Skills'));
+        break;
+      }
+      // Remove all messages injected by this skill from history
+      const SKILL_MARKER = `[Skill 已加载: ${targetId}]`;
+      let removed = 0;
+      // Remove the user injection message and the assistant ack that follows it
+      for (let i = history.length - 1; i >= 0; i--) {
+        const content = typeof history[i].content === 'string' ? history[i].content as string : '';
+        if (history[i].role === 'user' && content.startsWith(SKILL_MARKER)) {
+          // Remove this message and the assistant ack right after it
+          const toRemove = (i + 1 < history.length && history[i + 1].role === 'assistant') ? 2 : 1;
+          history.splice(i, toRemove);
+          removed += toRemove;
+          break;
+        }
+      }
+      injectedSkills.delete(targetId);
+      console.log(chalk.green(`✓ Skill "${targetId}" 已卸载`));
+      if (removed > 0) console.log(chalk.dim(`  已从对话历史中移除 ${removed} 条注入消息`));
+      break;
+    }
+
     case 'think': {
       const val = arg.toLowerCase();
       if (val === 'on' || val === '1' || val === 'true') {
@@ -573,7 +690,7 @@ async function handleCommand(
       const allSkills = collectAllSkills();
       const idMatch = allSkills.find((e) => e.id === arg || e.id.startsWith(arg) || e.id.includes(arg));
       if (idMatch) {
-        injectSkill(arg, history);
+        await injectSkill(arg, history, injectedSkills, rl);
         break;
       }
 
@@ -588,7 +705,7 @@ async function handleCommand(
       if (routes.length === 1 || topScore >= 10) {
         // Single or highly confident match — auto-inject
         console.log(chalk.dim(`根据描述匹配到: ${routes[0].id}`));
-        injectSkill(routes[0].id, history);
+        await injectSkill(routes[0].id, history, injectedSkills, rl);
       } else {
         // Multiple candidates — show ranked list and inject the best one
         console.log(chalk.bold(`\n根据描述推荐以下 Skills:\n`));
@@ -599,7 +716,7 @@ async function handleCommand(
         });
         console.log();
         console.log(chalk.dim('已自动激活第一个，如需切换请使用上方命令'));
-        injectSkill(routes[0].id, history);
+        await injectSkill(routes[0].id, history, injectedSkills, rl);
       }
       break;
     }
@@ -715,7 +832,7 @@ async function main(): Promise<void> {
   const systemPrompt = buildSystemPrompt();
   let history: Message[] = [];
   let thinkMode = false;
-  const injectedSkills = new Set<string>(); // track auto-injected skills
+  const injectedSkills = new Map<string, string>(); // id → display name
 
   while (true) {
     let input: string;
@@ -736,11 +853,33 @@ async function main(): Promise<void> {
     }
 
     if (trimmed.startsWith('/')) {
-      const result = await handleCommand(trimmed, rl, history, thinkMode);
+      const result = await handleCommand(trimmed, rl, history, thinkMode, injectedSkills);
       if (result.exit) break;
       if (result.clearHistory) { history = []; injectedSkills.clear(); }
       if (result.injectHistory) history = result.injectHistory;
       if (result.thinkMode !== undefined) thinkMode = result.thinkMode;
+      continue;
+    }
+
+    // ── ! prefix: bypass LLM, execute bash directly ────────────────────────────
+    if (trimmed.startsWith('!')) {
+      const cmd = trimmed.slice(1).trim();
+      if (!cmd) {
+        console.log(chalk.yellow('用法: !<命令>  例: !ls -la  !Rscript analysis.R  !python script.py'));
+        continue;
+      }
+      console.log(chalk.dim(`[直接执行] ${cmd}`));
+      const t0 = Date.now();
+      const result = await executeTool('bash', { command: cmd }, (chunk) => {
+        process.stdout.write(chalk.dim('  │ ') + chunk);
+      });
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      if (result.error) {
+        console.log(chalk.yellow(`\n  ✗ ${result.error} ${chalk.dim('(' + elapsed + 's)')}`));
+      } else {
+        console.log(chalk.green(`\n  ✓ 完成 ${chalk.dim('(' + elapsed + 's)')}`));
+      }
+      console.log();
       continue;
     }
 
@@ -750,9 +889,8 @@ async function main(): Promise<void> {
     if (newRoutes.length === 1 && topScore >= 8) {
       // High-confidence single match → auto-inject silently
       const r = newRoutes[0];
-      const ok = injectSkill(r.id, history);
+      const ok = await injectSkill(r.id, history, injectedSkills, rl, true);
       if (ok) {
-        injectedSkills.add(r.id);
         console.log(chalk.dim('  (提示: /clear 可清除上下文后切换 Skill)'));
       }
     } else if (newRoutes.length >= 2 && topScore >= 4) {
@@ -775,6 +913,12 @@ async function main(): Promise<void> {
       const reply = await chat(history, currentCfg, systemPrompt);
       history.push({ role: 'assistant', content: reply });
       history = await maybeCompact(history, currentCfg);
+
+      // ── Show active Skills footer ──────────────────────────────────────────
+      if (injectedSkills.size > 0) {
+        const ids = Array.from(injectedSkills.keys()).join(chalk.dim(' · '));
+        console.log(chalk.dim(`\n  [激活 Skill: ${ids}]`));
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(chalk.red(`\n错误: ${msg}\n`));
