@@ -13731,11 +13731,11 @@ var TOOL_DEFINITIONS = [
     }
   }
 ];
-function executeTool(name, args) {
+async function executeTool(name, args) {
   try {
     switch (name) {
       case "bash":
-        return toolBash(
+        return await toolBash(
           args["command"],
           args["workdir"],
           args["timeout_ms"] ?? 3e4
@@ -13751,7 +13751,7 @@ function executeTool(name, args) {
       case "list_dir":
         return toolListDir(args["path"]);
       case "search_files":
-        return toolSearchFiles(
+        return await toolSearchFiles(
           args["pattern"],
           args["path"] ?? process.cwd()
         );
@@ -13775,23 +13775,45 @@ function decodeBuffer(buf) {
     }
   }
 }
-function toolBash(command, workdir, timeoutMs = 3e4) {
-  try {
-    const buf = (0, import_child_process.execSync)(command, {
+async function toolBash(command, workdir, timeoutMs = 3e4) {
+  return new Promise((resolve3) => {
+    const isWin = process.platform === "win32";
+    const child = (0, import_child_process.spawn)(isWin ? "cmd" : "/bin/sh", isWin ? ["/c", command] : ["-c", command], {
       cwd: workdir ?? process.cwd(),
-      timeout: timeoutMs,
-      encoding: "buffer",
-      stdio: ["pipe", "pipe", "pipe"],
-      maxBuffer: 10 * 1024 * 1024,
-      env: { ...process.env, PYTHONIOENCODING: "utf-8" }
+      env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+      stdio: ["pipe", "pipe", "pipe"]
     });
-    return { output: decodeBuffer(buf).trim() };
-  } catch (err) {
-    const e2 = err;
-    const out = (decodeBuffer(e2.stdout) + "\n" + decodeBuffer(e2.stderr)).trim();
-    const cmdLine = (e2.message ?? "Command failed").split("\n")[0];
-    return { output: out, error: cmdLine };
-  }
+    const outChunks = [];
+    const errChunks = [];
+    const MAX = 10 * 1024 * 1024;
+    let total = 0;
+    child.stdout?.on("data", (c2) => {
+      if ((total += c2.length) <= MAX) outChunks.push(c2);
+    });
+    child.stderr?.on("data", (c2) => {
+      if ((total += c2.length) <= MAX) errChunks.push(c2);
+    });
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill();
+    }, timeoutMs);
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      const out = (decodeBuffer(Buffer.concat(outChunks)) + "\n" + decodeBuffer(Buffer.concat(errChunks))).trim();
+      if (timedOut) {
+        resolve3({ output: out, error: `Command timed out after ${timeoutMs / 1e3}s` });
+      } else if (code !== 0) {
+        resolve3({ output: out, error: `Command failed (exit ${code})` });
+      } else {
+        resolve3({ output: out });
+      }
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve3({ output: "", error: err.message });
+    });
+  });
 }
 function toolReadFile(path, maxLines, offset) {
   const resolved = (0, import_path3.resolve)(path.replace(/^~/, (0, import_os2.homedir)()));
@@ -13820,16 +13842,10 @@ function toolListDir(path) {
   });
   return { output: entries.join("\n") };
 }
-function toolSearchFiles(pattern, rootPath) {
+async function toolSearchFiles(pattern, rootPath) {
   const resolved = (0, import_path3.resolve)(rootPath.replace(/^~/, (0, import_os2.homedir)()));
   const isWin = process.platform === "win32";
-  let command;
-  if (isWin) {
-    command = `dir /s /b "${resolved}\\${pattern}" 2>nul`;
-  } else {
-    const name = pattern.includes("/") ? pattern : `"${pattern}"`;
-    command = `find "${resolved}" -name ${name} 2>/dev/null | head -50`;
-  }
+  const command = isWin ? `dir /s /b "${resolved}\\${pattern}" 2>nul` : `find "${resolved}" -name ${pattern.includes("/") ? pattern : `"${pattern}"`} 2>/dev/null | head -50`;
   return toolBash(command, resolved, 1e4);
 }
 
@@ -13869,12 +13885,26 @@ async function streamLoop(client, messages, model) {
           function: { name: tc.name, arguments: tc.args }
         }))
       });
+      const SPIN_FRAMES = ["\u280B", "\u2819", "\u2839", "\u2838", "\u283C", "\u2834", "\u2826", "\u2827", "\u2807", "\u280F"];
       for (const tc of toolCalls) {
         const args = parseArgs(tc.args);
-        process.stdout.write(source_default.dim(`
-[\u5DE5\u5177: ${tc.name}(${summarizeArgs(args)})]
-`));
-        const result = executeTool(tc.name, args);
+        const label = source_default.dim(`[\u5DE5\u5177: ${tc.name}(${summarizeArgs(args)})]`);
+        const t0 = Date.now();
+        let frame = 0;
+        process.stdout.write(`
+${label} `);
+        const spin = setInterval(() => {
+          const secs = ((Date.now() - t0) / 1e3).toFixed(1);
+          process.stdout.write(
+            `\r${label} ${source_default.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${source_default.dim(secs + "s")}`
+          );
+        }, 80);
+        const result = await executeTool(tc.name, args);
+        clearInterval(spin);
+        const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
+        const doneIcon = result.error ? source_default.yellow("\u2717") : source_default.green("\u2713");
+        process.stdout.write(`\r\x1B[2K${label} ${doneIcon} ${source_default.dim(elapsed + "s")}
+`);
         if (result.error) {
           process.stdout.write(source_default.yellow(`  \u26A0 ${result.error}
 `));
@@ -14726,7 +14756,7 @@ function routeSkill(message) {
 }
 
 // src/index.ts
-var VERSION2 = "2.2.6";
+var VERSION2 = "2.2.7";
 function installBundledData() {
   const bundledData = (0, import_path4.join)(__dirname, "..", "data");
   if (!(0, import_fs4.existsSync)(bundledData)) return;

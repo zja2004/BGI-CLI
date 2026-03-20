@@ -68,17 +68,33 @@ async function streamLoop(
       });
 
       // Execute each tool and add results
+      const SPIN_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
       for (const tc of toolCalls) {
         const args = parseArgs(tc.args);
-        process.stdout.write(chalk.dim(`\n[工具: ${tc.name}(${summarizeArgs(args)})]\n`));
 
-        const result = executeTool(tc.name, args);
+        // Spinner + elapsed-time display
+        const label = chalk.dim(`[工具: ${tc.name}(${summarizeArgs(args)})]`);
+        const t0 = Date.now();
+        let frame = 0;
+        process.stdout.write(`\n${label} `);
+        const spin = setInterval(() => {
+          const secs = ((Date.now() - t0) / 1000).toFixed(1);
+          process.stdout.write(
+            `\r${label} ${chalk.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${chalk.dim(secs + 's')}`,
+          );
+        }, 80);
+
+        const result = await executeTool(tc.name, args);
+
+        clearInterval(spin);
+        const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+        const doneIcon = result.error ? chalk.yellow('✗') : chalk.green('✓');
+        process.stdout.write(`\r\x1b[2K${label} ${doneIcon} ${chalk.dim(elapsed + 's')}\n`);
 
         if (result.error) {
           process.stdout.write(chalk.yellow(`  ⚠ ${result.error}\n`));
         }
         if (result.output) {
-          // Show first 3 lines of output as a preview
           const preview = result.output.split('\n').slice(0, 3).join('\n');
           const more = result.output.split('\n').length > 3;
           process.stdout.write(chalk.dim(`  ${preview}${more ? '\n  ...' : ''}\n`));

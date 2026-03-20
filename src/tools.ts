@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import {
   readFileSync,
   writeFileSync,
@@ -126,11 +126,11 @@ export interface ToolResult {
   error?: string;
 }
 
-export function executeTool(name: string, args: Record<string, unknown>): ToolResult {
+export async function executeTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {
   try {
     switch (name) {
       case 'bash':
-        return toolBash(
+        return await toolBash(
           args['command'] as string,
           args['workdir'] as string | undefined,
           (args['timeout_ms'] as number | undefined) ?? 30_000,
@@ -146,7 +146,7 @@ export function executeTool(name: string, args: Record<string, unknown>): ToolRe
       case 'list_dir':
         return toolListDir(args['path'] as string);
       case 'search_files':
-        return toolSearchFiles(
+        return await toolSearchFiles(
           args['pattern'] as string,
           (args['path'] as string | undefined) ?? process.cwd(),
         );
@@ -173,27 +173,40 @@ function decodeBuffer(buf: Buffer | string | null | undefined): string {
   }
 }
 
-function toolBash(command: string, workdir?: string, timeoutMs = 30_000): ToolResult {
-  try {
-    const buf = execSync(command, {
+async function toolBash(command: string, workdir?: string, timeoutMs = 30_000): Promise<ToolResult> {
+  return new Promise((resolve) => {
+    const isWin = process.platform === 'win32';
+    const child = spawn(isWin ? 'cmd' : '/bin/sh', isWin ? ['/c', command] : ['-c', command], {
       cwd: workdir ?? process.cwd(),
-      timeout: timeoutMs,
-      encoding: 'buffer',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 10 * 1024 * 1024,
       env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+      stdio: ['pipe', 'pipe', 'pipe'],
     });
-    return { output: decodeBuffer(buf).trim() };
-  } catch (err: unknown) {
-    const e = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
-    const out = (decodeBuffer(e.stdout) + '\n' + decodeBuffer(e.stderr)).trim();
-    // Use only the first line of e.message ("Command failed: <cmd>") — Node.js
-    // embeds raw stderr bytes into the message using the system default encoding
-    // (GBK on Chinese Windows), causing garbled text.  The properly decoded
-    // output is already in `out`.
-    const cmdLine = (e.message ?? 'Command failed').split('\n')[0];
-    return { output: out, error: cmdLine };
-  }
+
+    const outChunks: Buffer[] = [];
+    const errChunks: Buffer[] = [];
+    const MAX = 10 * 1024 * 1024;
+    let total = 0;
+
+    child.stdout?.on('data', (c: Buffer) => { if ((total += c.length) <= MAX) outChunks.push(c); });
+    child.stderr?.on('data', (c: Buffer) => { if ((total += c.length) <= MAX) errChunks.push(c); });
+
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; child.kill(); }, timeoutMs);
+
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      const out = (decodeBuffer(Buffer.concat(outChunks)) + '\n' + decodeBuffer(Buffer.concat(errChunks))).trim();
+      if (timedOut) {
+        resolve({ output: out, error: `Command timed out after ${timeoutMs / 1000}s` });
+      } else if (code !== 0) {
+        resolve({ output: out, error: `Command failed (exit ${code})` });
+      } else {
+        resolve({ output: out });
+      }
+    });
+
+    child.on('error', (err) => { clearTimeout(timer); resolve({ output: '', error: err.message }); });
+  });
 }
 
 function toolReadFile(path: string, maxLines: number, offset: number): ToolResult {
@@ -225,16 +238,11 @@ function toolListDir(path: string): ToolResult {
   return { output: entries.join('\n') };
 }
 
-function toolSearchFiles(pattern: string, rootPath: string): ToolResult {
+async function toolSearchFiles(pattern: string, rootPath: string): Promise<ToolResult> {
   const resolved = resolve(rootPath.replace(/^~/, homedir()));
-  // Use find command on Unix, dir on Windows
   const isWin = process.platform === 'win32';
-  let command: string;
-  if (isWin) {
-    command = `dir /s /b "${resolved}\\${pattern}" 2>nul`;
-  } else {
-    const name = pattern.includes('/') ? pattern : `"${pattern}"`;
-    command = `find "${resolved}" -name ${name} 2>/dev/null | head -50`;
-  }
+  const command = isWin
+    ? `dir /s /b "${resolved}\\${pattern}" 2>nul`
+    : `find "${resolved}" -name ${pattern.includes('/') ? pattern : `"${pattern}"`} 2>/dev/null | head -50`;
   return toolBash(command, resolved, 10_000);
 }
