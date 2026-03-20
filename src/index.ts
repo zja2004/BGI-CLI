@@ -881,7 +881,7 @@ async function handleCommand(
 
     // ── Checkpoints ──────────────────────────────────────────────────────────
     case 'checkpoint': {
-      const sessionId = SESSION_CTX.id || undefined ?? 'default';
+      const sessionId = SESSION_CTX.id || 'default';
       const sub = arg.split(/\s+/)[0]?.toLowerCase();
       const subArg = arg.split(/\s+/).slice(1).join(' ');
 

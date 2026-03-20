@@ -6368,18 +6368,18 @@ function createFileFromPath(path, { mtimeMs, size }, filenameOrOptions, options 
   });
 }
 function fileFromPathSync(path, filenameOrOptions, options = {}) {
-  const stats = (0, import_fs2.statSync)(path);
+  const stats = (0, import_fs.statSync)(path);
   return createFileFromPath(path, stats, filenameOrOptions, options);
 }
 async function fileFromPath2(path, filenameOrOptions, options) {
-  const stats = await import_fs2.promises.stat(path);
+  const stats = await import_fs.promises.stat(path);
   return createFileFromPath(path, stats, filenameOrOptions, options);
 }
-var import_fs2, import_path2, import_node_domexception, __classPrivateFieldSet4, __classPrivateFieldGet5, _FileFromPath_path, _FileFromPath_start, MESSAGE, FileFromPath;
+var import_fs, import_path, import_node_domexception, __classPrivateFieldSet4, __classPrivateFieldGet5, _FileFromPath_path, _FileFromPath_start, MESSAGE, FileFromPath;
 var init_fileFromPath = __esm({
   "node_modules/formdata-node/lib/esm/fileFromPath.js"() {
-    import_fs2 = require("fs");
-    import_path2 = require("path");
+    import_fs = require("fs");
+    import_path = require("path");
     import_node_domexception = __toESM(require_node_domexception(), 1);
     init_File();
     init_isPlainObject();
@@ -6402,7 +6402,7 @@ var init_fileFromPath = __esm({
         _FileFromPath_start.set(this, void 0);
         __classPrivateFieldSet4(this, _FileFromPath_path, input.path, "f");
         __classPrivateFieldSet4(this, _FileFromPath_start, input.start || 0, "f");
-        this.name = (0, import_path2.basename)(__classPrivateFieldGet5(this, _FileFromPath_path, "f"));
+        this.name = (0, import_path.basename)(__classPrivateFieldGet5(this, _FileFromPath_path, "f"));
         this.size = input.size;
         this.lastModified = input.lastModified;
       }
@@ -6415,12 +6415,12 @@ var init_fileFromPath = __esm({
         });
       }
       async *stream() {
-        const { mtimeMs } = await import_fs2.promises.stat(__classPrivateFieldGet5(this, _FileFromPath_path, "f"));
+        const { mtimeMs } = await import_fs.promises.stat(__classPrivateFieldGet5(this, _FileFromPath_path, "f"));
         if (mtimeMs > this.lastModified) {
           throw new import_node_domexception.default(MESSAGE, "NotReadableError");
         }
         if (this.size) {
-          yield* (0, import_fs2.createReadStream)(__classPrivateFieldGet5(this, _FileFromPath_path, "f"), {
+          yield* (0, import_fs.createReadStream)(__classPrivateFieldGet5(this, _FileFromPath_path, "f"), {
             start: __classPrivateFieldGet5(this, _FileFromPath_start, "f"),
             end: __classPrivateFieldGet5(this, _FileFromPath_start, "f") + this.size - 1
           });
@@ -6932,104 +6932,9 @@ var chalkStderr = createChalk({ level: stderrColor ? stderrColor.level : 0 });
 var source_default = chalk;
 
 // src/index.ts
-var import_fs4 = require("fs");
-var import_path4 = require("path");
+var import_fs5 = require("fs");
+var import_path5 = require("path");
 var import_os3 = require("os");
-
-// src/config.ts
-var import_fs = require("fs");
-var import_os = require("os");
-var import_path = require("path");
-
-// src/providers.ts
-var PROVIDERS = {
-  bailian: {
-    name: "\u767E\u70BC \xB7 \u963F\u91CC\u4E91 (DashScope)",
-    baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    envKey: "DASHSCOPE_API_KEY",
-    models: [
-      // ── Qwen3.5 (最新旗舰) ────────────────────────────────
-      "qwen3.5-397b-a17b",
-      "qwen3.5-122b-a10b",
-      "qwen3.5-plus",
-      "qwen3.5-flash",
-      // ── Qwen3 ─────────────────────────────────────────────
-      "qwen3-235b-a22b",
-      "qwen3-max",
-      "qwen3-32b",
-      "qwen3-14b",
-      "qwen3-8b",
-      // ── Qwen3 代码模型 ────────────────────────────────────
-      "qwen3-coder-plus",
-      "qwen3-coder-flash",
-      "qwen3-coder-480b-a35b-instruct",
-      // ── 经典 Qwen ─────────────────────────────────────────
-      "qwen-max",
-      "qwen-plus",
-      "qwen-turbo",
-      "qwen-long",
-      "qwen-flash",
-      // ── 推理模型 ──────────────────────────────────────────
-      "qwq-plus",
-      "deepseek-r1",
-      "deepseek-v3",
-      "deepseek-v3.2",
-      // ── 第三方 (DashScope 聚合) ───────────────────────────
-      "kimi-k2.5",
-      "kimi-k2-thinking",
-      "MiniMax-M2.5",
-      "glm-5"
-    ],
-    defaultModel: "qwen3.5-plus"
-  },
-  intranet: {
-    name: "\u5185\u7F51 Qwen3-235B (172.16.224.137)",
-    baseURL: "http://172.16.224.137:1024/v1",
-    models: ["Qwen3-235B-A22B"],
-    defaultModel: "Qwen3-235B-A22B",
-    envKey: ""
-    // no auth required
-  },
-  custom: {
-    name: "\u81EA\u5B9A\u4E49 (Custom URL)",
-    baseURL: "",
-    // filled from config.customUrl at runtime
-    models: [],
-    // filled from config.customModel at runtime
-    defaultModel: "",
-    envKey: "CUSTOM_API_KEY"
-  }
-};
-var DEFAULT_PROVIDER = "bailian";
-
-// src/config.ts
-var BGI_DIR = (0, import_path.join)((0, import_os.homedir)(), ".bgicli");
-var WORKFLOWS_DIR = (0, import_path.join)(BGI_DIR, "workflows");
-var TOOLS_DIR = (0, import_path.join)(BGI_DIR, "tools");
-var SKILLS_DIR = (0, import_path.join)(BGI_DIR, "skills");
-var CONFIG_FILE = (0, import_path.join)(BGI_DIR, "config.json");
-function ensureDirs() {
-  for (const dir of [BGI_DIR, WORKFLOWS_DIR, TOOLS_DIR, SKILLS_DIR]) {
-    if (!(0, import_fs.existsSync)(dir)) (0, import_fs.mkdirSync)(dir, { recursive: true });
-  }
-}
-function loadConfig() {
-  ensureDirs();
-  if (!(0, import_fs.existsSync)(CONFIG_FILE)) {
-    const def = {
-      provider: DEFAULT_PROVIDER,
-      model: PROVIDERS[DEFAULT_PROVIDER].defaultModel,
-      apiKeys: {}
-    };
-    saveConfig(def);
-    return def;
-  }
-  return JSON.parse((0, import_fs.readFileSync)(CONFIG_FILE, "utf8"));
-}
-function saveConfig(cfg) {
-  ensureDirs();
-  (0, import_fs.writeFileSync)(CONFIG_FILE, JSON.stringify(cfg, null, 2), "utf8");
-}
 
 // node_modules/openai/internal/qs/formats.mjs
 var default_format = "RFC3986";
@@ -13627,11 +13532,108 @@ OpenAI.Containers = Containers;
 OpenAI.ContainerListResponsesPage = ContainerListResponsesPage;
 var openai_default = OpenAI;
 
+// src/config.ts
+var import_fs2 = require("fs");
+var import_os = require("os");
+var import_path2 = require("path");
+
+// src/providers.ts
+var PROVIDERS = {
+  bailian: {
+    name: "\u767E\u70BC \xB7 \u963F\u91CC\u4E91 (DashScope)",
+    baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    envKey: "DASHSCOPE_API_KEY",
+    models: [
+      // ── Qwen3.5 (最新旗舰) ────────────────────────────────
+      "qwen3.5-397b-a17b",
+      "qwen3.5-122b-a10b",
+      "qwen3.5-plus",
+      "qwen3.5-flash",
+      // ── Qwen3 ─────────────────────────────────────────────
+      "qwen3-235b-a22b",
+      "qwen3-max",
+      "qwen3-32b",
+      "qwen3-14b",
+      "qwen3-8b",
+      // ── Qwen3 代码模型 ────────────────────────────────────
+      "qwen3-coder-plus",
+      "qwen3-coder-flash",
+      "qwen3-coder-480b-a35b-instruct",
+      // ── 经典 Qwen ─────────────────────────────────────────
+      "qwen-max",
+      "qwen-plus",
+      "qwen-turbo",
+      "qwen-long",
+      "qwen-flash",
+      // ── 推理模型 ──────────────────────────────────────────
+      "qwq-plus",
+      "deepseek-r1",
+      "deepseek-v3",
+      "deepseek-v3.2",
+      // ── 第三方 (DashScope 聚合) ───────────────────────────
+      "kimi-k2.5",
+      "kimi-k2-thinking",
+      "MiniMax-M2.5",
+      "glm-5"
+    ],
+    defaultModel: "qwen3.5-plus"
+  },
+  intranet: {
+    name: "\u5185\u7F51 Qwen3-235B (172.16.224.137)",
+    baseURL: "http://172.16.224.137:1024/v1",
+    models: ["Qwen3-235B-A22B"],
+    defaultModel: "Qwen3-235B-A22B",
+    envKey: ""
+    // no auth required
+  },
+  custom: {
+    name: "\u81EA\u5B9A\u4E49 (Custom URL)",
+    baseURL: "",
+    // filled from config.customUrl at runtime
+    models: [],
+    // filled from config.customModel at runtime
+    defaultModel: "",
+    envKey: "CUSTOM_API_KEY"
+  }
+};
+var DEFAULT_PROVIDER = "bailian";
+
+// src/config.ts
+var BGI_DIR = (0, import_path2.join)((0, import_os.homedir)(), ".bgicli");
+var WORKFLOWS_DIR = (0, import_path2.join)(BGI_DIR, "workflows");
+var TOOLS_DIR = (0, import_path2.join)(BGI_DIR, "tools");
+var SKILLS_DIR = (0, import_path2.join)(BGI_DIR, "skills");
+var CONFIG_FILE = (0, import_path2.join)(BGI_DIR, "config.json");
+function ensureDirs() {
+  for (const dir of [BGI_DIR, WORKFLOWS_DIR, TOOLS_DIR, SKILLS_DIR]) {
+    if (!(0, import_fs2.existsSync)(dir)) (0, import_fs2.mkdirSync)(dir, { recursive: true });
+  }
+}
+function loadConfig() {
+  ensureDirs();
+  if (!(0, import_fs2.existsSync)(CONFIG_FILE)) {
+    const def = {
+      provider: DEFAULT_PROVIDER,
+      model: PROVIDERS[DEFAULT_PROVIDER].defaultModel,
+      apiKeys: {}
+    };
+    saveConfig(def);
+    return def;
+  }
+  return JSON.parse((0, import_fs2.readFileSync)(CONFIG_FILE, "utf8"));
+}
+function saveConfig(cfg) {
+  ensureDirs();
+  (0, import_fs2.writeFileSync)(CONFIG_FILE, JSON.stringify(cfg, null, 2), "utf8");
+}
+
 // src/tools.ts
 var import_child_process = require("child_process");
 var import_fs3 = require("fs");
 var import_path3 = require("path");
 var import_os2 = require("os");
+var import_https = require("https");
+var import_http = require("http");
 var TOOL_DEFINITIONS = [
   {
     type: "function",
@@ -13651,7 +13653,7 @@ var TOOL_DEFINITIONS = [
           },
           timeout_ms: {
             type: "number",
-            description: "Timeout in milliseconds (default 30000, max 300000 for long jobs)"
+            description: "Timeout in milliseconds (default 300000 / 5 min, max 1800000 / 30 min for long jobs like STAR alignment)"
           }
         },
         required: ["command"]
@@ -13669,7 +13671,7 @@ var TOOL_DEFINITIONS = [
           path: { type: "string", description: "Absolute or relative file path" },
           max_lines: {
             type: "number",
-            description: "Maximum number of lines to return (default: 200)"
+            description: "Maximum number of lines to return (default: 500)"
           },
           offset: {
             type: "number",
@@ -13729,21 +13731,43 @@ var TOOL_DEFINITIONS = [
         required: ["pattern"]
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "fetch_geo",
+      description: "Query NCBI GEO database by accession number (GSE, GDS, GPL, GSM). Returns dataset metadata, sample info, organism, platform, and download links. Use this BEFORE asking the user to manually download data \u2014 always try fetch_geo first when a GEO accession is mentioned.",
+      parameters: {
+        type: "object",
+        properties: {
+          accession: {
+            type: "string",
+            description: 'GEO accession number, e.g. "GSE12345", "GDS1234", "GPL570"'
+          },
+          include_samples: {
+            type: "boolean",
+            description: "Whether to include individual sample (GSM) metadata (default: false, set true for small datasets)"
+          }
+        },
+        required: ["accession"]
+      }
+    }
   }
 ];
-async function executeTool(name, args) {
+async function executeTool(name, args, onStream) {
   try {
     switch (name) {
       case "bash":
         return await toolBash(
           args["command"],
           args["workdir"],
-          args["timeout_ms"] ?? 3e4
+          args["timeout_ms"] ?? 3e5,
+          onStream
         );
       case "read_file":
         return toolReadFile(
           args["path"],
-          args["max_lines"] ?? 200,
+          args["max_lines"] ?? 500,
           args["offset"] ?? 0
         );
       case "write_file":
@@ -13754,6 +13778,11 @@ async function executeTool(name, args) {
         return await toolSearchFiles(
           args["pattern"],
           args["path"] ?? process.cwd()
+        );
+      case "fetch_geo":
+        return await toolFetchGeo(
+          args["accession"],
+          args["include_samples"] ?? false
         );
       default:
         return { output: "", error: `Unknown tool: ${name}` };
@@ -13775,7 +13804,32 @@ function decodeBuffer(buf) {
     }
   }
 }
-async function toolBash(command, workdir, timeoutMs = 3e4) {
+var DANGEROUS_PATTERNS = [
+  { pattern: /rm\s+-rf\s+\/(?!\S)/, reason: "\u5220\u9664\u6839\u76EE\u5F55 (rm -rf /)" },
+  { pattern: /rm\s+-rf\s+~(?!\S)/, reason: "\u5220\u9664 home \u76EE\u5F55 (rm -rf ~)" },
+  { pattern: /rm\s+-rf\s+\$HOME(?!\S)/, reason: "\u5220\u9664 $HOME \u76EE\u5F55" },
+  { pattern: /dd\s+if=\/dev\/(?:zero|random|urandom)\s+of=\/dev\//, reason: "\u8986\u5199\u78C1\u76D8\u8BBE\u5907 (dd)" },
+  { pattern: /mkfs\b/, reason: "\u683C\u5F0F\u5316\u6587\u4EF6\u7CFB\u7EDF (mkfs)" },
+  { pattern: />\s*\/dev\/sd[a-z]/, reason: "\u76F4\u63A5\u5199\u5165\u78C1\u76D8\u8BBE\u5907" },
+  { pattern: /chmod\s+-R\s+777\s+\/(?!\S)/, reason: "\u9012\u5F52\u4FEE\u6539\u6839\u76EE\u5F55\u6743\u9650" },
+  { pattern: /:\(\)\s*\{.*\}.*:/, reason: "Fork bomb \u68C0\u6D4B" }
+];
+function checkDangerousCommand(command) {
+  for (const { pattern, reason } of DANGEROUS_PATTERNS) {
+    if (pattern.test(command)) return reason;
+  }
+  return null;
+}
+async function toolBash(command, workdir, timeoutMs = 3e5, onStream) {
+  const danger = checkDangerousCommand(command);
+  if (danger) {
+    return {
+      output: "",
+      error: `\u26A0\uFE0F  \u5B89\u5168\u62E6\u622A\uFF1A\u68C0\u6D4B\u5230\u5371\u9669\u547D\u4EE4\uFF08${danger}\uFF09\u3002
+\u547D\u4EE4\u5DF2\u88AB\u963B\u6B62\uFF0C\u8BF7\u786E\u8BA4\u4F60\u7684\u610F\u56FE\u540E\u624B\u52A8\u6267\u884C\u3002
+\u88AB\u62E6\u622A\u7684\u547D\u4EE4: ${command}`
+    };
+  }
   return new Promise((resolve3) => {
     const isWin = process.platform === "win32";
     const child = (0, import_child_process.spawn)(isWin ? "cmd" : "/bin/sh", isWin ? ["/c", command] : ["-c", command], {
@@ -13788,10 +13842,16 @@ async function toolBash(command, workdir, timeoutMs = 3e4) {
     const MAX = 10 * 1024 * 1024;
     let total = 0;
     child.stdout?.on("data", (c2) => {
-      if ((total += c2.length) <= MAX) outChunks.push(c2);
+      if ((total += c2.length) <= MAX) {
+        outChunks.push(c2);
+        if (onStream) onStream(decodeBuffer(c2));
+      }
     });
     child.stderr?.on("data", (c2) => {
-      if ((total += c2.length) <= MAX) errChunks.push(c2);
+      if ((total += c2.length) <= MAX) {
+        errChunks.push(c2);
+        if (onStream) onStream(decodeBuffer(c2));
+      }
     });
     let timedOut = false;
     const timer = setTimeout(() => {
@@ -13848,6 +13908,121 @@ async function toolSearchFiles(pattern, rootPath) {
   const command = isWin ? `dir /s /b "${resolved}\\${pattern}" 2>nul` : `find "${resolved}" -name ${pattern.includes("/") ? pattern : `"${pattern}"`} 2>/dev/null | head -50`;
   return toolBash(command, resolved, 1e4);
 }
+function httpFetch(url, timeoutMs = 15e3) {
+  return new Promise((resolve3, reject) => {
+    const getter = url.startsWith("https") ? import_https.get : import_http.get;
+    const req = getter(url, { headers: { "User-Agent": "BGI-CLI/1.0" } }, (res) => {
+      if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
+        httpFetch(res.headers.location, timeoutMs).then(resolve3).catch(reject);
+        return;
+      }
+      if (res.statusCode && res.statusCode >= 400) {
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+      const chunks = [];
+      res.on("data", (c2) => chunks.push(c2));
+      res.on("end", () => resolve3(Buffer.concat(chunks).toString("utf8")));
+      res.on("error", reject);
+    });
+    req.setTimeout(timeoutMs, () => {
+      req.destroy();
+      reject(new Error("Request timed out"));
+    });
+    req.on("error", reject);
+  });
+}
+async function toolFetchGeo(accession, includeSamples) {
+  const acc = accession.trim().toUpperCase();
+  if (!/^(GSE|GDS|GPL|GSM)\d+$/.test(acc)) {
+    return {
+      output: "",
+      error: `\u65E0\u6548\u7684 GEO \u7F16\u53F7: "${acc}"\u3002\u652F\u6301\u683C\u5F0F: GSE12345, GDS1234, GPL570, GSM123456`
+    };
+  }
+  const accType = acc.slice(0, 3);
+  try {
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=${acc}[Accession]&retmode=json&retmax=1`;
+    const searchRaw = await httpFetch(searchUrl);
+    const searchJson = JSON.parse(searchRaw);
+    const idList = searchJson.esearchresult?.idlist ?? [];
+    if (idList.length === 0) {
+      return { output: "", error: `\u672A\u627E\u5230 GEO \u8BB0\u5F55: ${acc}\u3002\u8BF7\u786E\u8BA4\u7F16\u53F7\u662F\u5426\u6B63\u786E\u3002` };
+    }
+    const uid = idList[0];
+    const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&id=${uid}&retmode=json`;
+    const summaryRaw = await httpFetch(summaryUrl);
+    const summaryJson = JSON.parse(summaryRaw);
+    const rec = summaryJson.result?.[uid];
+    if (!rec) {
+      return { output: "", error: `\u65E0\u6CD5\u83B7\u53D6 ${acc} \u7684\u8BE6\u7EC6\u4FE1\u606F` };
+    }
+    const lines = [];
+    lines.push(`=== GEO \u6570\u636E\u96C6: ${acc} ===`);
+    lines.push("");
+    if (rec.title) lines.push(`\u6807\u9898:     ${rec.title}`);
+    if (rec.taxon || rec.organism)
+      lines.push(`\u7269\u79CD:     ${rec.taxon ?? rec.organism}`);
+    if (rec.gdstype || rec.ptechtype)
+      lines.push(`\u7C7B\u578B:     ${rec.gdstype ?? rec.ptechtype}`);
+    if (rec.gpl) lines.push(`\u5E73\u53F0:     GPL${rec.gpl}`);
+    if (rec.n_samples) lines.push(`\u6837\u672C\u6570:   ${rec.n_samples}`);
+    if (rec.summary) {
+      const shortSummary = rec.summary.length > 500 ? rec.summary.slice(0, 500) + "..." : rec.summary;
+      lines.push("");
+      lines.push(`\u6458\u8981:
+${shortSummary}`);
+    }
+    lines.push("");
+    lines.push("=== \u4E0B\u8F7D\u94FE\u63A5 ===");
+    lines.push(`GEO \u9875\u9762:   https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${acc}`);
+    if (accType === "GSE") {
+      lines.push(`\u77E9\u9635\u6587\u4EF6:   https://ftp.ncbi.nlm.nih.gov/geo/series/${acc.slice(0, -3)}nnn/${acc}/matrix/`);
+      lines.push(`\u539F\u59CB\u6570\u636E:   https://ftp.ncbi.nlm.nih.gov/geo/series/${acc.slice(0, -3)}nnn/${acc}/suppl/`);
+      lines.push("");
+      lines.push("=== R \u4E0B\u8F7D\u4EE3\u7801 ===");
+      lines.push("```r");
+      lines.push("# \u65B9\u6CD51: GEOquery\uFF08\u63A8\u8350\uFF0C\u81EA\u52A8\u89E3\u6790\uFF09");
+      lines.push('if (!require("GEOquery")) BiocManager::install("GEOquery")');
+      lines.push(`gse <- getGEO("${acc}", GSEMatrix = TRUE, getGPL = FALSE)`);
+      lines.push("expr_matrix <- exprs(gse[[1]])   # \u8868\u8FBE\u77E9\u9635");
+      lines.push("pheno_data  <- pData(gse[[1]])   # \u6837\u672C\u5143\u6570\u636E");
+      lines.push("");
+      lines.push("# \u65B9\u6CD52: \u76F4\u63A5\u4E0B\u8F7D\u77E9\u9635\u6587\u4EF6");
+      lines.push(`url <- "https://ftp.ncbi.nlm.nih.gov/geo/series/${acc.slice(0, -3)}nnn/${acc}/matrix/${acc}_series_matrix.txt.gz"`);
+      lines.push('download.file(url, destfile = "series_matrix.txt.gz")');
+      lines.push("```");
+      lines.push("");
+      lines.push("=== Python \u4E0B\u8F7D\u4EE3\u7801 ===");
+      lines.push("```python");
+      lines.push("import GEOparse");
+      lines.push(`gse = GEOparse.get_GEO(geo="${acc}", destdir="./data")`);
+      lines.push("# gse.gsms  \u2014 \u6837\u672C\u5B57\u5178");
+      lines.push("# gse.gpls  \u2014 \u5E73\u53F0\u4FE1\u606F");
+      lines.push("```");
+    }
+    if (rec.suppfile) {
+      lines.push("");
+      lines.push(`\u8865\u5145\u6587\u4EF6:   ${rec.suppfile}`);
+    }
+    if (includeSamples && rec.samples && rec.samples.length > 0) {
+      lines.push("");
+      lines.push(`=== \u6837\u672C\u5217\u8868 (${rec.samples.length} \u4E2A) ===`);
+      const showSamples = rec.samples.slice(0, 20);
+      showSamples.forEach((s2) => lines.push(`  ${s2.accession}: ${s2.title}`));
+      if (rec.samples.length > 20) {
+        lines.push(`  ... \u8FD8\u6709 ${rec.samples.length - 20} \u4E2A\u6837\u672C`);
+      }
+    }
+    return { output: lines.join("\n") };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      output: `GEO \u9875\u9762: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${acc}`,
+      error: `\u7F51\u7EDC\u8BF7\u6C42\u5931\u8D25 (${msg})\u3002\u8BF7\u68C0\u67E5\u7F51\u7EDC\u8FDE\u63A5\uFF0C\u6216\u76F4\u63A5\u8BBF\u95EE\u4E0A\u65B9\u94FE\u63A5\u3002`
+    };
+  }
+}
 
 // src/chat.ts
 async function chat(messages, config, systemPrompt) {
@@ -13872,6 +14047,7 @@ async function chat(messages, config, systemPrompt) {
 async function streamLoop(client, messages, model) {
   let finalText = "";
   for (let round = 0; round < 20; round++) {
+    messages = deduplicateSkillInjections(trimToolOutputs(messages));
     const { text, toolCalls, finishReason } = await streamOnce(client, messages, model);
     if (text) finalText = text;
     if (finishReason === "tool_calls" && toolCalls.length > 0) {
@@ -13888,28 +14064,63 @@ async function streamLoop(client, messages, model) {
       const SPIN_FRAMES = ["\u280B", "\u2819", "\u2839", "\u2838", "\u283C", "\u2834", "\u2826", "\u2827", "\u2807", "\u280F"];
       for (const tc of toolCalls) {
         const args = parseArgs(tc.args);
+        const isBash = tc.name === "bash";
         const label = source_default.dim(`[\u5DE5\u5177: ${tc.name}(${summarizeArgs(args)})]`);
         const t0 = Date.now();
-        let frame = 0;
         process.stdout.write(`
-${label} `);
-        const spin = setInterval(() => {
-          const secs = ((Date.now() - t0) / 1e3).toFixed(1);
-          process.stdout.write(
-            `\r${label} ${source_default.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${source_default.dim(secs + "s")}`
-          );
-        }, 80);
-        const result = await executeTool(tc.name, args);
-        clearInterval(spin);
+${label}
+`);
+        let streamedLines = 0;
+        let lastLineWasEmpty = false;
+        const MAX_STREAM_LINES = 200;
+        let spin = null;
+        let frame = 0;
+        const onStream = isBash ? (chunk) => {
+          if (streamedLines >= MAX_STREAM_LINES) return;
+          const lines = chunk.split("\n");
+          for (let i2 = 0; i2 < lines.length; i2++) {
+            const line = lines[i2];
+            if (line.trim() === "") {
+              if (lastLineWasEmpty) continue;
+              lastLineWasEmpty = true;
+            } else {
+              lastLineWasEmpty = false;
+            }
+            if (i2 < lines.length - 1 || line.length > 0) {
+              process.stdout.write(source_default.dim("  \u2502 ") + line + (i2 < lines.length - 1 ? "\n" : ""));
+              streamedLines++;
+              if (streamedLines >= MAX_STREAM_LINES) {
+                process.stdout.write(source_default.dim("\n  \u2502 ... (\u8F93\u51FA\u8FC7\u957F\uFF0C\u5DF2\u622A\u65AD)\n"));
+                break;
+              }
+            }
+          }
+        } : void 0;
+        if (!isBash) {
+          spin = setInterval(() => {
+            const secs = ((Date.now() - t0) / 1e3).toFixed(1);
+            process.stdout.write(
+              `\r  ${source_default.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${source_default.dim(secs + "s")}`
+            );
+          }, 80);
+        }
+        const result = await executeTool(tc.name, args, onStream);
+        if (spin) {
+          clearInterval(spin);
+          process.stdout.write("\r\x1B[2K");
+        }
         const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
         const doneIcon = result.error ? source_default.yellow("\u2717") : source_default.green("\u2713");
-        process.stdout.write(`\r\x1B[2K${label} ${doneIcon} ${source_default.dim(elapsed + "s")}
+        if (isBash && streamedLines > 0) {
+          process.stdout.write("\n");
+        }
+        process.stdout.write(`  ${doneIcon} ${source_default.dim("\u5B8C\u6210 " + elapsed + "s")}
 `);
         if (result.error) {
           process.stdout.write(source_default.yellow(`  \u26A0 ${result.error}
 `));
         }
-        if (result.output) {
+        if (!isBash && result.output) {
           const preview = result.output.split("\n").slice(0, 3).join("\n");
           const more = result.output.split("\n").length > 3;
           process.stdout.write(source_default.dim(`  ${preview}${more ? "\n  ..." : ""}
@@ -13973,6 +14184,52 @@ async function streamOnce(client, messages, model) {
     toolCalls: Object.values(toolCallMap),
     finishReason
   };
+}
+function estimateTokens(messages) {
+  const chars = messages.reduce((n2, m2) => {
+    const content = m2.content;
+    if (typeof content === "string") return n2 + content.length;
+    if (Array.isArray(content)) {
+      return n2 + content.reduce((s2, c2) => s2 + (typeof c2 === "object" && "text" in c2 ? c2.text.length : 0), 0);
+    }
+    return n2;
+  }, 0);
+  return Math.round(chars / 3.5);
+}
+var MAX_TOOL_OUTPUT_CHARS = 8e3;
+function trimToolOutputs(messages) {
+  return messages.map((m2) => {
+    if (m2.role !== "tool") return m2;
+    const content = typeof m2.content === "string" ? m2.content : "";
+    if (content.length <= MAX_TOOL_OUTPUT_CHARS) return m2;
+    const head = content.slice(0, MAX_TOOL_OUTPUT_CHARS / 2);
+    const tail = content.slice(-MAX_TOOL_OUTPUT_CHARS / 2);
+    const trimmed = `${head}
+
+... [\u8F93\u51FA\u8FC7\u957F\uFF0C\u5DF2\u622A\u65AD ${content.length - MAX_TOOL_OUTPUT_CHARS} \u5B57\u7B26] ...
+
+${tail}`;
+    return { ...m2, content: trimmed };
+  });
+}
+function deduplicateSkillInjections(messages) {
+  const SKILL_MARKER = "[Skill \u5DF2\u52A0\u8F7D:";
+  const seenSkills = /* @__PURE__ */ new Set();
+  const result = [];
+  for (let i2 = messages.length - 1; i2 >= 0; i2--) {
+    const m2 = messages[i2];
+    const content = typeof m2.content === "string" ? m2.content : "";
+    if (m2.role === "user" && content.startsWith(SKILL_MARKER)) {
+      const idMatch = content.match(/\[Skill 已加载: ([^\]]+)\]/);
+      const skillId = idMatch?.[1];
+      if (skillId) {
+        if (seenSkills.has(skillId)) continue;
+        seenSkills.add(skillId);
+      }
+    }
+    result.unshift(m2);
+  }
+  return result;
 }
 async function compactMessages(messages, config) {
   const prov = PROVIDERS[config.provider];
@@ -14040,6 +14297,7 @@ You have access to these tools:
 - **write_file**: Create or update files
 - **list_dir**: List directory contents
 - **search_files**: Find files by pattern (glob)
+- **fetch_geo**: Query NCBI GEO database by accession (GSE/GDS/GPL/GSM). Returns metadata, sample info, organism, platform, and ready-to-use R/Python download code. **Always call this first when the user mentions a GEO accession number \u2014 never ask them to download manually.**
 
 **MANDATORY WORKFLOW**: When the user gives you a bioinformatics task:
 1. Check if a matching pre-built workflow exists (see Workflow Library below)
@@ -14092,6 +14350,7 @@ cat ${WORKFLOWS_DIR}/<workflow-id>/SKILL.md
 
 | ID | Use When |
 |----|----------|
+| \`survival-analysis-clinical\` | \u751F\u5B58\u5206\u6790\uFF1AKM \u66F2\u7EBF\u3001log-rank \u68C0\u9A8C\u3001Cox \u56DE\u5F52\u3001\u7ADE\u4E89\u98CE\u9669\uFF08OS/PFS/DFS\uFF09 |
 | \`clinicaltrials-landscape\` | ClinicalTrials.gov \u6570\u636E\u5206\u6790 |
 | \`literature-preclinical\` | \u4E34\u5E8A\u524D\u6587\u732E\u7CFB\u7EDF\u63D0\u53D6\u4E0E\u7EFC\u5408 |
 | \`experimental-design-statistics\` | \u7EDF\u8BA1\u68C0\u9A8C\u9009\u62E9\u3001\u6837\u672C\u91CF\u8BA1\u7B97\u3001\u968F\u673A\u5316\u65B9\u6848 |
@@ -14175,6 +14434,62 @@ samtools --version 2>&1 | head -1
 
 ---
 
+## Data Integrity Rules\uFF08\u5206\u6790\u524D\u5FC5\u987B\u6267\u884C\uFF09
+
+\u{1F52C} **\u5728\u4EFB\u4F55\u7EDF\u8BA1\u5206\u6790\u5F00\u59CB\u524D\uFF0C\u5FC5\u987B\u5B8C\u6210\u4EE5\u4E0B\u68C0\u67E5\uFF1A**
+
+### 1. \u6837\u672C ID \u4E00\u81F4\u6027
+\`\`\`r
+# R: \u68C0\u67E5 count \u77E9\u9635\u5217\u540D\u4E0E metadata \u884C\u540D\u662F\u5426\u5B8C\u5168\u4E00\u81F4
+stopifnot(all(colnames(counts) == rownames(metadata)))
+# \u5982\u679C\u4E0D\u4E00\u81F4\uFF0C\u5148\u5BF9\u9F50\u518D\u5206\u6790\uFF1A
+metadata <- metadata[colnames(counts), , drop = FALSE]
+\`\`\`
+\`\`\`python
+# Python: \u68C0\u67E5 AnnData obs_names \u4E0E metadata index \u662F\u5426\u4E00\u81F4
+assert list(adata.obs_names) == list(metadata.index), "\u6837\u672C ID \u4E0D\u5339\u914D\uFF01"
+\`\`\`
+
+### 2. \u91CD\u590D\u884C/\u5217\u540D\u68C0\u6D4B
+\`\`\`r
+# \u68C0\u67E5\u91CD\u590D\u57FA\u56E0\u540D\uFF08\u884C\u540D\uFF09
+if (any(duplicated(rownames(counts)))) {
+  warning("\u53D1\u73B0\u91CD\u590D\u57FA\u56E0\u540D\uFF0C\u5C06\u805A\u5408\u91CD\u590D\u884C\uFF08\u53D6\u5747\u503C\uFF09")
+  counts <- aggregate(counts, by = list(rownames(counts)), FUN = mean)
+}
+\`\`\`
+
+### 3. \u7F3A\u5931\u503C\u62A5\u544A
+\`\`\`r
+na_pct <- sum(is.na(counts)) / prod(dim(counts)) * 100
+message(sprintf("\u7F3A\u5931\u503C\u6BD4\u4F8B: %.2f%%", na_pct))
+if (na_pct > 5) warning("\u7F3A\u5931\u503C\u8D85\u8FC7 5%\uFF0C\u8BF7\u68C0\u67E5\u6570\u636E\u8D28\u91CF")
+\`\`\`
+
+### 4. \u5DEE\u5F02\u8868\u8FBE\u5206\u6790\uFF1A\u5FC5\u987B\u4F7F\u7528 padj\uFF0C\u7981\u6B62\u4F7F\u7528\u539F\u59CB pvalue
+\`\`\`r
+# \u2705 \u6B63\u786E\uFF1A\u4F7F\u7528 FDR \u6821\u6B63\u540E\u7684 p \u503C
+sig_genes <- res[!is.na(res$padj) & res$padj <= 0.05 & abs(res$log2FoldChange) >= 1, ]
+
+# \u274C \u9519\u8BEF\uFF1A\u4E0D\u8981\u7528\u539F\u59CB pvalue \u7B5B\u9009 DEG
+# sig_genes <- res[res$pvalue < 0.05, ]  # \u8FD9\u662F\u9519\u7684\uFF01
+\`\`\`
+
+**\u6807\u51C6\u9608\u503C**\uFF08\u9664\u975E\u7528\u6237\u660E\u786E\u6307\u5B9A\u5176\u4ED6\u503C\uFF09\uFF1A
+- \u663E\u8457\u6027\uFF1A**padj \u2264 0.05**\uFF08FDR \u6821\u6B63\uFF0CBenjamini-Hochberg\uFF09
+- \u6548\u5E94\u91CF\uFF1A**|log2FoldChange| \u2265 1**\uFF08\u5373 2 \u500D\u5DEE\u5F02\uFF09
+
+### 5. \u7ED3\u679C\u9A8C\u8BC1
+\u6BCF\u4E2A\u5206\u6790\u5B8C\u6210\u540E\uFF0C\u8F93\u51FA\u5173\u952E\u7EDF\u8BA1\u6458\u8981\uFF1A
+\`\`\`r
+message(sprintf("\u603B\u57FA\u56E0\u6570: %d | \u663E\u8457 DEG: %d (\u4E0A\u8C03: %d, \u4E0B\u8C03: %d)",
+  nrow(res), nrow(sig_genes),
+  sum(sig_genes$log2FoldChange > 0),
+  sum(sig_genes$log2FoldChange < 0)))
+\`\`\`
+
+---
+
 ## Script Execution Rules
 
 \u{1F6A8} **\u5173\u952E\u89C4\u5219\uFF1A**
@@ -14200,7 +14515,25 @@ samtools --version 2>&1 | head -1
 \u4F7F\u7528 functional-enrichment-from-degs \u5DE5\u4F5C\u6D41
 
 **\u7528\u6237\u8BF4 "\u8BBE\u8BA1 CRISPR guide RNA" \u2192**
-\u4F7F\u7528 molecular_biology.py \u7684 design_crispr_knockout_guides()`;
+\u4F7F\u7528 molecular_biology.py \u7684 design_crispr_knockout_guides()
+
+**\u7528\u6237\u8BF4 "\u54EA\u4E9B\u57FA\u56E0\u5728\u80BF\u7624\u91CC\u8868\u8FBE\u91CF\u9AD8" / "\u627E\u4E0A\u8C03\u57FA\u56E0" \u2192**
+\u2192 \u5DEE\u5F02\u8868\u8FBE\u5206\u6790\uFF08DESeq2\uFF09\uFF0C\u4F7F\u7528 bulk-rnaseq-counts-to-de-deseq2 \u5DE5\u4F5C\u6D41
+
+**\u7528\u6237\u8BF4 "\u5148\u505A\u5DEE\u5F02\u8868\u8FBE\uFF0C\u518D\u505A\u5BCC\u96C6\u5206\u6790" \u2192**
+\u2192 \u8BC6\u522B\u4E3A\u591A\u4EFB\u52A1\uFF1A\u4F9D\u6B21\u6267\u884C bulk-rnaseq-counts-to-de-deseq2 + functional-enrichment-from-degs
+
+**\u7528\u6237\u8BF4 "\u8FD9\u4E9B\u57FA\u56E0\u53C2\u4E0E\u4EC0\u4E48\u901A\u8DEF" / "\u57FA\u56E0\u529F\u80FD\u662F\u4EC0\u4E48" \u2192**
+\u2192 \u529F\u80FD\u5BCC\u96C6\u5206\u6790\uFF0C\u4F7F\u7528 functional-enrichment-from-degs \u5DE5\u4F5C\u6D41
+
+**\u7528\u6237\u8BF4 "\u5206\u6790\u5355\u7EC6\u80DE\u6570\u636E" / "10X\u6570\u636E\u5206\u6790" \u2192**
+\u5148\u95EE\uFF1APython \u8FD8\u662F R\uFF1F\u2192 Scanpy \u6216 Seurat
+
+**\u7528\u6237\u8BF4 "\u753B\u751F\u5B58\u66F2\u7EBF" / "\u5206\u6790\u60A3\u8005\u9884\u540E" / "OS/PFS \u5206\u6790" \u2192**
+\u2192 \u751F\u5B58\u5206\u6790\uFF0C\u4F7F\u7528 survival-analysis-clinical \u5DE5\u4F5C\u6D41
+
+**\u7528\u6237\u8BF4 "\u5E2E\u6211\u5206\u6790 GSE12345" / "\u4E0B\u8F7D GEO \u6570\u636E" \u2192**
+\u2192 \u7ACB\u5373\u8C03\u7528 fetch_geo("GSE12345") \u83B7\u53D6\u5143\u6570\u636E\u548C\u4E0B\u8F7D\u4EE3\u7801\uFF0C\u65E0\u9700\u8BA9\u7528\u6237\u624B\u52A8\u4E0B\u8F7D`;
 }
 
 // src/skillRouter.ts
@@ -14225,8 +14558,11 @@ var SKILL_ROUTES = [
     category: "\u8F6C\u5F55\u7EC4",
     tag: "workflow",
     keywords: [
+      // exact tool names
       "deseq2",
       "edger",
+      "limma-voom",
+      // explicit analysis terms
       "rna-seq\u5DEE\u5F02",
       "rnaseq\u5DEE\u5F02",
       "\u5DEE\u5F02\u8868\u8FBE\u5206\u6790",
@@ -14234,7 +14570,21 @@ var SKILL_ROUTES = [
       "count\u77E9\u9635",
       "count matrix",
       "\u539F\u59CBcounts",
-      "raw counts"
+      "raw counts",
+      // natural-language synonyms (the main gap in the original)
+      "\u54EA\u4E9B\u57FA\u56E0\u8868\u8FBE\u91CF\u9AD8",
+      "\u54EA\u4E9B\u57FA\u56E0\u4E0A\u8C03",
+      "\u54EA\u4E9B\u57FA\u56E0\u4E0B\u8C03",
+      "\u57FA\u56E0\u8868\u8FBE\u5DEE\u5F02",
+      "\u8F6C\u5F55\u7EC4\u5DEE\u5F02",
+      "\u8868\u8FBE\u91CF\u5DEE\u5F02",
+      "\u4E0A\u8C03\u57FA\u56E0",
+      "\u4E0B\u8C03\u57FA\u56E0",
+      "deg\u5206\u6790",
+      "differentially expressed",
+      "\u5DEE\u5F02\u5206\u6790",
+      "\u6BD4\u8F83\u4E24\u7EC4\u57FA\u56E0\u8868\u8FBE",
+      "\u80BF\u7624vs\u6B63\u5E38"
     ]
   },
   {
@@ -14250,7 +14600,16 @@ var SKILL_ROUTES = [
       "hdbscan",
       "\u6837\u672C\u805A\u7C7B",
       "\u7279\u5F81\u805A\u7C7B",
-      "omics clustering"
+      "omics clustering",
+      // natural-language synonyms
+      "\u6837\u672C\u5206\u7EC4",
+      "\u6837\u672C\u5206\u7C7B",
+      "\u805A\u7C7B\u5206\u6790",
+      "\u65E0\u76D1\u7763\u805A\u7C7B",
+      "\u70ED\u56FE\u805A\u7C7B",
+      "pca\u5206\u6790",
+      "\u4E3B\u6210\u5206\u5206\u6790",
+      "umap\u964D\u7EF4"
     ]
   },
   {
@@ -14266,7 +14625,16 @@ var SKILL_ROUTES = [
       "10x chromium",
       "leiden\u805A\u7C7B",
       "python\u5355\u7EC6\u80DE",
-      "anndata\u5206\u6790"
+      "anndata\u5206\u6790",
+      // natural-language synonyms
+      "\u5355\u7EC6\u80DE\u6D4B\u5E8F",
+      "\u5355\u7EC6\u80DE\u5206\u6790",
+      "\u5355\u7EC6\u80DE\u6570\u636E",
+      "10x\u6570\u636E",
+      "\u7EC6\u80DE\u805A\u7C7B",
+      "\u7EC6\u80DE\u7C7B\u578B\u9274\u5B9A",
+      "scrna",
+      "sc-rna"
     ]
   },
   {
@@ -14280,7 +14648,11 @@ var SKILL_ROUTES = [
       "findclusters",
       "findneighbors",
       "sctransform",
-      "r\u5355\u7EC6\u80DE\u5206\u6790"
+      "r\u5355\u7EC6\u80DE\u5206\u6790",
+      // natural-language synonyms
+      "r\u505A\u5355\u7EC6\u80DE",
+      "seurat\u5206\u6790",
+      "\u7528r\u5206\u6790\u5355\u7EC6\u80DE"
     ]
   },
   {
@@ -14296,7 +14668,13 @@ var SKILL_ROUTES = [
       "spatial deconvolution",
       "\u914D\u4F53\u53D7\u4F53\u5206\u6790",
       "\u7A7A\u95F4\u57FA\u56E0\u8868\u8FBE",
-      "stereo-seq"
+      "stereo-seq",
+      // natural-language synonyms
+      "\u7A7A\u95F4\u7EC4\u5B66",
+      "\u7EC4\u7EC7\u5207\u7247\u6D4B\u5E8F",
+      "\u7A7A\u95F4\u5206\u8FA8\u7387\u8F6C\u5F55\u7EC4",
+      "\u7EC6\u80DE\u7A7A\u95F4\u5206\u5E03",
+      "\u7A7A\u95F4\u5355\u7EC6\u80DE"
     ]
   },
   {
@@ -14310,7 +14688,12 @@ var SKILL_ROUTES = [
       "coexpression network",
       "\u57FA\u56E0\u5171\u8868\u8FBE\u6A21\u5757",
       "weighted gene coexpression",
-      "\u4E0E\u8868\u578B\u76F8\u5173\u7684\u57FA\u56E0\u6A21\u5757"
+      "\u4E0E\u8868\u578B\u76F8\u5173\u7684\u57FA\u56E0\u6A21\u5757",
+      // natural-language synonyms
+      "\u57FA\u56E0\u6A21\u5757",
+      "\u5171\u8868\u8FBE",
+      "\u57FA\u56E0\u7F51\u7EDC",
+      "\u57FA\u56E0\u76F8\u5173\u6027\u7F51\u7EDC"
     ]
   },
   {
@@ -14330,7 +14713,19 @@ var SKILL_ROUTES = [
       "functional enrichment",
       "\u529F\u80FD\u5BCC\u96C6",
       "deg\u5BCC\u96C6",
-      "\u5DEE\u5F02\u57FA\u56E0\u901A\u8DEF"
+      "\u5DEE\u5F02\u57FA\u56E0\u901A\u8DEF",
+      // natural-language synonyms
+      "\u8FD9\u4E9B\u57FA\u56E0\u53C2\u4E0E\u4EC0\u4E48\u901A\u8DEF",
+      "\u57FA\u56E0\u529F\u80FD\u6CE8\u91CA",
+      "\u4FE1\u53F7\u901A\u8DEF",
+      "\u751F\u7269\u5B66\u8FC7\u7A0B",
+      "\u5206\u5B50\u529F\u80FD",
+      "\u7EC6\u80DE\u7EC4\u5206",
+      "go\u5BCC\u96C6",
+      "\u901A\u8DEF\u5BCC\u96C6",
+      "\u57FA\u56E0\u96C6\u5206\u6790",
+      "ora\u5206\u6790",
+      "gsea\u5206\u6790"
     ]
   },
   {
@@ -14345,7 +14740,12 @@ var SKILL_ROUTES = [
       "gene regulatory network",
       "\u8F6C\u5F55\u56E0\u5B50\u8C03\u63A7\u5B50",
       "tf regulon",
-      "grn\u63A8\u65AD"
+      "grn\u63A8\u65AD",
+      // natural-language synonyms
+      "\u8F6C\u5F55\u56E0\u5B50\u5206\u6790",
+      "\u8F6C\u5F55\u56E0\u5B50\u9776\u57FA\u56E0",
+      "tf\u6D3B\u6027",
+      "\u8C03\u63A7\u7F51\u7EDC\u63A8\u65AD"
     ]
   },
   // ── Genomics ──────────────────────────────────────────────────────────────────
@@ -14364,7 +14764,14 @@ var SKILL_ROUTES = [
       "annovar",
       "\u53D8\u5F02\u81F4\u75C5\u6027\u9884\u6D4B",
       "\u53D8\u5F02\u529F\u80FD\u9884\u6D4B",
-      "clinvar\u6CE8\u91CA"
+      "clinvar\u6CE8\u91CA",
+      // natural-language synonyms
+      "\u7A81\u53D8\u6CE8\u91CA",
+      "\u53D8\u5F02\u89E3\u8BFB",
+      "vcf\u6587\u4EF6\u5206\u6790",
+      "\u9057\u4F20\u53D8\u5F02\u89E3\u6790",
+      "\u81F4\u75C5\u6027\u8BC4\u4F30",
+      "\u53D8\u5F02\u5F71\u54CD\u9884\u6D4B"
     ]
   },
   {
@@ -14380,7 +14787,14 @@ var SKILL_ROUTES = [
       "\u5168\u57FA\u56E0\u7EC4\u5173\u8054\u5206\u6790",
       "genome-wide association",
       "\u56E0\u679C\u57FA\u56E0\u9274\u5B9A",
-      "qtl\u6574\u5408"
+      "qtl\u6574\u5408",
+      // natural-language synonyms
+      "gwas\u7ED3\u679C\u89E3\u8BFB",
+      "gwas\u529F\u80FD\u6CE8\u91CA",
+      "\u5173\u8054\u4F4D\u70B9\u57FA\u56E0",
+      "snp\u529F\u80FD",
+      "gwas\u4FE1\u53F7",
+      "\u9057\u4F20\u5173\u8054\u5206\u6790"
     ]
   },
   {
@@ -14396,7 +14810,12 @@ var SKILL_ROUTES = [
       "ivw\u65B9\u6CD5",
       "mr-egger",
       "\u53CC\u6837\u672Cmr",
-      "\u5DE5\u5177\u53D8\u91CFiv"
+      "\u5DE5\u5177\u53D8\u91CFiv",
+      // natural-language synonyms
+      "\u56E0\u679C\u63A8\u65AD",
+      "\u66B4\u9732\u4E0E\u7ED3\u5C40",
+      "\u9057\u4F20\u5DE5\u5177\u53D8\u91CF",
+      "mr\u5206\u6790"
     ]
   },
   {
@@ -14410,7 +14829,11 @@ var SKILL_ROUTES = [
       "\u591A\u57FA\u56E0\u98CE\u9669\u8BC4\u5206",
       "prs-cs",
       "\u9057\u4F20\u98CE\u9669\u9884\u6D4B",
-      "prs\u8BA1\u7B97"
+      "prs\u8BA1\u7B97",
+      // natural-language synonyms
+      "\u9057\u4F20\u98CE\u9669\u8BC4\u5206",
+      "\u591A\u57FA\u56E0\u8BC4\u5206",
+      "\u75BE\u75C5\u9057\u4F20\u98CE\u9669"
     ]
   },
   {
@@ -14425,7 +14848,13 @@ var SKILL_ROUTES = [
       "bagel2",
       "sgrna\u7B5B\u9009",
       "pooled crispr",
-      "crispr hit\u8BC6\u522B"
+      "crispr hit\u8BC6\u522B",
+      // natural-language synonyms
+      "crispr\u7B5B\u9009",
+      "\u529F\u80FD\u57FA\u56E0\u7EC4\u7B5B\u9009",
+      "\u5FC5\u9700\u57FA\u56E0\u7B5B\u9009",
+      "crispr\u6572\u9664\u7B5B\u9009",
+      "crispr\u6587\u5E93"
     ]
   },
   // ── Epigenomics ───────────────────────────────────────────────────────────────
@@ -14439,7 +14868,13 @@ var SKILL_ROUTES = [
       "chip-seq\u5CF0\u503C\u5BCC\u96C6",
       "peak enrichment chip",
       "chip atlas\u6570\u636E\u5E93",
-      "histone chip\u5206\u6790"
+      "histone chip\u5206\u6790",
+      // natural-language synonyms
+      "chip-seq\u5206\u6790",
+      "chip\u6570\u636E",
+      "\u7EC4\u86CB\u767D\u4FEE\u9970",
+      "h3k27ac",
+      "h3k4me3"
     ]
   },
   {
@@ -14452,7 +14887,11 @@ var SKILL_ROUTES = [
       "differential binding",
       "\u5DEE\u5F02chip-seq",
       "differential peak",
-      "chip-seq\u6761\u4EF6\u6BD4\u8F83"
+      "chip-seq\u6761\u4EF6\u6BD4\u8F83",
+      // natural-language synonyms
+      "\u5DEE\u5F02\u5CF0",
+      "\u5DEE\u5F02\u7ED3\u5408\u4F4D\u70B9",
+      "chip-seq\u5DEE\u5F02"
     ]
   },
   {
@@ -14466,7 +14905,12 @@ var SKILL_ROUTES = [
       "\u8F6C\u5F55\u56E0\u5B50\u9776\u57FA\u56E0chip",
       "tf\u9776\u57FA\u56E0",
       "peak annotation\u9776\u57FA\u56E0",
-      "chip-seq peak\u6CE8\u91CA"
+      "chip-seq peak\u6CE8\u91CA",
+      // natural-language synonyms
+      "peak\u6CE8\u91CA",
+      "\u5CF0\u503C\u6CE8\u91CA",
+      "\u8F6C\u5F55\u56E0\u5B50\u7ED3\u5408\u4F4D\u70B9",
+      "chip\u9776\u70B9"
     ]
   },
   // ── Clinical ──────────────────────────────────────────────────────────────────
@@ -14480,7 +14924,12 @@ var SKILL_ROUTES = [
       "clinical trial landscape",
       "ct.gov\u6570\u636E\u5206\u6790",
       "\u4E34\u5E8A\u8BD5\u9A8C\u683C\u5C40",
-      "\u4E34\u5E8A\u7814\u7A76\u5206\u6790"
+      "\u4E34\u5E8A\u7814\u7A76\u5206\u6790",
+      // natural-language synonyms
+      "\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u5728\u7814\u836F\u7269",
+      "\u4E34\u5E8A\u7BA1\u7EBF",
+      "\u4E34\u5E8A\u7814\u7A76\u73B0\u72B6"
     ]
   },
   {
@@ -14493,7 +14942,12 @@ var SKILL_ROUTES = [
       "preclinical literature",
       "\u7CFB\u7EDF\u6587\u732E\u63D0\u53D6",
       "literature extraction",
-      "\u6587\u732E\u7CFB\u7EDF\u7EFC\u5408"
+      "\u6587\u732E\u7CFB\u7EDF\u7EFC\u5408",
+      // natural-language synonyms
+      "\u6587\u732E\u7EFC\u8FF0",
+      "\u7CFB\u7EDF\u7EFC\u8FF0",
+      "\u6587\u732E\u6574\u7406",
+      "\u6587\u732E\u6316\u6398"
     ]
   },
   {
@@ -14510,7 +14964,16 @@ var SKILL_ROUTES = [
       "\u5B9E\u9A8C\u8BBE\u8BA1\u7EDF\u8BA1",
       "\u5047\u8BBE\u68C0\u9A8C\u9009\u62E9",
       "t\u68C0\u9A8C\u8FD8\u662F",
-      "anova\u65B9\u5DEE\u5206\u6790"
+      "anova\u65B9\u5DEE\u5206\u6790",
+      // natural-language synonyms
+      "\u7528\u4EC0\u4E48\u7EDF\u8BA1\u65B9\u6CD5",
+      "\u7EDF\u8BA1\u663E\u8457\u6027",
+      "\u68C0\u9A8C\u65B9\u6CD5",
+      "\u9700\u8981\u591A\u5C11\u6837\u672C",
+      "\u529F\u6548\u5206\u6790",
+      "\u7EDF\u8BA1\u529F\u6548",
+      "p\u503C",
+      "\u663E\u8457\u6027\u68C0\u9A8C"
     ]
   },
   {
@@ -14524,7 +14987,14 @@ var SKILL_ROUTES = [
       "biomarker panel\u7B5B\u9009",
       "\u6700\u5C0F\u6807\u5FD7\u7269\u9762\u677F",
       "feature selection lasso",
-      "\u8BCA\u65AD\u6807\u5FD7\u7269\u7B5B\u9009"
+      "\u8BCA\u65AD\u6807\u5FD7\u7269\u7B5B\u9009",
+      // natural-language synonyms
+      "\u751F\u7269\u6807\u5FD7\u7269\u7B5B\u9009",
+      "\u6807\u5FD7\u7269\u7EC4\u5408",
+      "\u8BCA\u65AD\u6A21\u578B",
+      "\u9884\u6D4B\u6A21\u578B\u7279\u5F81\u7B5B\u9009",
+      "biomarker",
+      "\u7279\u5F81\u9009\u62E9"
     ]
   },
   {
@@ -14540,7 +15010,64 @@ var SKILL_ROUTES = [
       "primer3",
       "qrt-pcr\u8BBE\u8BA1",
       "\u6269\u589E\u5B50\u8BBE\u8BA1",
-      "\u5F15\u7269\u7279\u5F02\u6027\u9A8C\u8BC1"
+      "\u5F15\u7269\u7279\u5F02\u6027\u9A8C\u8BC1",
+      // natural-language synonyms
+      "\u8BBE\u8BA1\u5F15\u7269",
+      "\u6269\u589E\u5F15\u7269",
+      "rt-pcr\u5F15\u7269",
+      "\u5B9A\u91CFpcr"
+    ]
+  },
+  // ── Survival Analysis ─────────────────────────────────────────────────────────
+  {
+    id: "survival-analysis-clinical",
+    name: "\u4E34\u5E8A\u751F\u5B58\u5206\u6790 (KM + Cox)",
+    category: "\u4E34\u5E8A",
+    tag: "workflow",
+    keywords: [
+      // exact method names
+      "kaplan-meier",
+      "kaplan meier",
+      "km\u66F2\u7EBF",
+      "cox\u56DE\u5F52",
+      "cox regression",
+      "\u751F\u5B58\u5206\u6790",
+      "survival analysis",
+      "\u751F\u5B58\u66F2\u7EBF",
+      "log-rank",
+      // outcome types
+      "\u603B\u751F\u5B58\u671F",
+      "overall survival",
+      "os\u5206\u6790",
+      "\u65E0\u8FDB\u5C55\u751F\u5B58",
+      "progression-free survival",
+      "pfs\u5206\u6790",
+      "\u65E0\u75C5\u751F\u5B58",
+      "disease-free survival",
+      "dfs\u5206\u6790",
+      "\u590D\u53D1\u751F\u5B58",
+      "relapse-free survival",
+      "rfs\u5206\u6790",
+      // natural-language synonyms
+      "\u60A3\u8005\u9884\u540E",
+      "\u9884\u540E\u5206\u6790",
+      "\u751F\u5B58\u9884\u540E",
+      "\u4E34\u5E8A\u9884\u540E",
+      "\u5220\u5931\u6570\u636E",
+      "\u53F3\u5220\u5931",
+      "censored data",
+      "\u98CE\u9669\u6BD4",
+      "hazard ratio",
+      "hr\u503C",
+      "\u7ADE\u4E89\u98CE\u9669",
+      "competing risk",
+      "fine-gray",
+      "\u4E2D\u4F4D\u751F\u5B58\u65F6\u95F4",
+      "5\u5E74\u751F\u5B58\u7387",
+      "3\u5E74\u751F\u5B58\u7387",
+      "\u9AD8\u8868\u8FBE\u9884\u540E\u5DEE",
+      "\u57FA\u56E0\u8868\u8FBE\u4E0E\u9884\u540E",
+      "\u7A81\u53D8\u4E0E\u9884\u540E"
     ]
   },
   // ── OpenClaw Key Skills ────────────────────────────────────────────────────────
@@ -14743,36 +15270,166 @@ function routeSkill(message) {
     let score = 0;
     for (const kw of route.keywords) {
       if (lower.includes(kw.toLowerCase())) {
-        score += kw.length;
+        score += 1 + kw.length * 0.1;
       }
     }
     if (score > 0) scores.set(route.id, { route, score });
   }
-  const sorted = Array.from(scores.values()).sort((a2, b2) => b2.score - a2.score).slice(0, 3);
+  const sorted = Array.from(scores.values()).sort((a2, b2) => b2.score - a2.score).slice(0, 5);
   return {
     routes: sorted.map((v2) => v2.route),
     topScore: sorted[0]?.score ?? 0
   };
 }
 
+// src/sessions.ts
+var import_fs4 = require("fs");
+var import_path4 = require("path");
+var SESSIONS_DIR = (0, import_path4.join)(BGI_DIR, "sessions");
+var CHECKPOINTS_DIR = (0, import_path4.join)(BGI_DIR, "checkpoints");
+function ensureSessionDirs() {
+  for (const d2 of [SESSIONS_DIR, CHECKPOINTS_DIR]) {
+    if (!(0, import_fs4.existsSync)(d2)) (0, import_fs4.mkdirSync)(d2, { recursive: true });
+  }
+}
+function sessionPath(id) {
+  return (0, import_path4.join)(SESSIONS_DIR, `${id}.json`);
+}
+function newSessionId() {
+  const now = /* @__PURE__ */ new Date();
+  const date = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const rand = Math.random().toString(36).slice(2, 6);
+  return `${date}-${rand}`;
+}
+function saveSession(id, name, messages, skills, createdAt) {
+  ensureSessionDirs();
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const firstUser = messages.find((m2) => m2.role === "user");
+  const rawPreview = typeof firstUser?.content === "string" ? firstUser.content : "";
+  const preview = rawPreview.replace(/\[Skill 已加载[^\]]*\][\s\S]*/, "").trim().slice(0, 80);
+  const session = {
+    id,
+    name,
+    createdAt,
+    updatedAt: now,
+    messageCount: messages.length,
+    skills,
+    preview,
+    messages
+  };
+  (0, import_fs4.writeFileSync)(sessionPath(id), JSON.stringify(session, null, 2), "utf8");
+}
+function loadSession(id) {
+  ensureSessionDirs();
+  const p2 = sessionPath(id);
+  if (!(0, import_fs4.existsSync)(p2)) return null;
+  try {
+    return JSON.parse((0, import_fs4.readFileSync)(p2, "utf8"));
+  } catch {
+    return null;
+  }
+}
+function listSessions() {
+  ensureSessionDirs();
+  const files = (0, import_fs4.readdirSync)(SESSIONS_DIR).filter((f2) => f2.endsWith(".json"));
+  const metas = [];
+  for (const f2 of files) {
+    try {
+      const raw = JSON.parse((0, import_fs4.readFileSync)((0, import_path4.join)(SESSIONS_DIR, f2), "utf8"));
+      metas.push({
+        id: raw.id,
+        name: raw.name,
+        createdAt: raw.createdAt,
+        updatedAt: raw.updatedAt,
+        messageCount: raw.messageCount,
+        skills: raw.skills ?? [],
+        preview: raw.preview ?? ""
+      });
+    } catch {
+    }
+  }
+  return metas.sort((a2, b2) => b2.updatedAt.localeCompare(a2.updatedAt));
+}
+function deleteSession(id) {
+  const p2 = sessionPath(id);
+  if (!(0, import_fs4.existsSync)(p2)) return false;
+  (0, import_fs4.unlinkSync)(p2);
+  return true;
+}
+function getLastSession() {
+  const all = listSessions();
+  return all[0] ?? null;
+}
+function checkpointPath(id) {
+  return (0, import_path4.join)(CHECKPOINTS_DIR, `${id}.json`);
+}
+function saveCheckpoint(sessionId, label, messages, skills) {
+  ensureSessionDirs();
+  const id = `${sessionId}-cp${Date.now()}`;
+  const cp = {
+    id,
+    sessionId,
+    label,
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    messageCount: messages.length,
+    messages,
+    skills
+  };
+  (0, import_fs4.writeFileSync)(checkpointPath(id), JSON.stringify(cp, null, 2), "utf8");
+  return id;
+}
+function listCheckpoints(sessionId) {
+  ensureSessionDirs();
+  const files = (0, import_fs4.readdirSync)(CHECKPOINTS_DIR).filter((f2) => f2.endsWith(".json"));
+  const cps = [];
+  for (const f2 of files) {
+    try {
+      const cp = JSON.parse((0, import_fs4.readFileSync)((0, import_path4.join)(CHECKPOINTS_DIR, f2), "utf8"));
+      if (!sessionId || cp.sessionId === sessionId) cps.push(cp);
+    } catch {
+    }
+  }
+  return cps.sort((a2, b2) => b2.createdAt.localeCompare(a2.createdAt));
+}
+function deleteCheckpoint(id) {
+  const p2 = checkpointPath(id);
+  if (!(0, import_fs4.existsSync)(p2)) return false;
+  (0, import_fs4.unlinkSync)(p2);
+  return true;
+}
+function clearCheckpoints(sessionId) {
+  const cps = listCheckpoints(sessionId);
+  let count = 0;
+  for (const cp of cps) {
+    if (deleteCheckpoint(cp.id)) count++;
+  }
+  return count;
+}
+
 // src/index.ts
-var VERSION2 = "2.2.7";
+var import_fs6 = require("fs");
+var VERSION2 = "2.2.8";
+var SESSION_CTX = {
+  id: "",
+  createdAt: "",
+  wdirSnapshot: null
+};
 function installBundledData() {
-  const bundledData = (0, import_path4.join)(__dirname, "..", "data");
-  if (!(0, import_fs4.existsSync)(bundledData)) return;
+  const bundledData = (0, import_path5.join)(__dirname, "..", "data");
+  if (!(0, import_fs5.existsSync)(bundledData)) return;
   ensureDirs();
   const targets = [
-    { src: (0, import_path4.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u751F\u4FE1\u5DE5\u4F5C\u6D41)" },
-    { src: (0, import_path4.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u533B\u5B66\u4E13\u79D1)" },
-    { src: (0, import_path4.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
+    { src: (0, import_path5.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u751F\u4FE1\u5DE5\u4F5C\u6D41)" },
+    { src: (0, import_path5.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u533B\u5B66\u4E13\u79D1)" },
+    { src: (0, import_path5.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
   ];
   let installed = false;
   for (const { src, dest, name } of targets) {
-    if (!(0, import_fs4.existsSync)(src)) continue;
-    const isEmpty = !(0, import_fs4.existsSync)(dest) || (0, import_fs4.readdirSync)(dest).length === 0;
+    if (!(0, import_fs5.existsSync)(src)) continue;
+    const isEmpty = !(0, import_fs5.existsSync)(dest) || (0, import_fs5.readdirSync)(dest).length === 0;
     if (isEmpty) {
-      (0, import_fs4.mkdirSync)(dest, { recursive: true });
-      (0, import_fs4.cpSync)(src, dest, { recursive: true });
+      (0, import_fs5.mkdirSync)(dest, { recursive: true });
+      (0, import_fs5.cpSync)(src, dest, { recursive: true });
       if (!installed) {
         process.stdout.write(source_default.dim("\u6B63\u5728\u521D\u59CB\u5316\u5185\u7F6E\u6570\u636E...\n"));
         installed = true;
@@ -14807,22 +15464,49 @@ function printHelp() {
   console.log(`  ${source_default.cyan("/clear")}              \u6E05\u7A7A\u5BF9\u8BDD\u5386\u53F2`);
   console.log(`  ${source_default.cyan("/history")}            \u67E5\u770B\u5BF9\u8BDD\u7EDF\u8BA1\uFF08\u8F6E\u6B21 / Token \u4F30\u7B97\uFF09`);
   console.log(`  ${source_default.cyan("/compact")}            \u7ACB\u5373\u538B\u7F29\u5BF9\u8BDD\u5386\u53F2\uFF08\u8D85 60k token \u81EA\u52A8\u89E6\u53D1\uFF09`);
-  console.log(`  ${source_default.cyan("/save")} [\u6587\u4EF6\u540D]      \u4FDD\u5B58\u5BF9\u8BDD\u4E3A Markdown \u6587\u4EF6`);
+  console.log(`  ${source_default.cyan("/save")} [\u540D\u79F0]        \u4FDD\u5B58\u5BF9\u8BDD\u4E3A Markdown \u6587\u4EF6`);
   console.log(`  ${source_default.cyan("/think")} [on|off]     \u5207\u6362\u601D\u8003\u6A21\u5F0F (Qwen3 /think \u524D\u7F00)`);
+  console.log();
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u4F1A\u8BDD\u6301\u4E45\u5316 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("/sessions")}           \u5217\u51FA\u5386\u53F2\u4F1A\u8BDD`);
+  console.log(`  ${source_default.cyan("/resume")} [id]        \u6062\u590D\u4E0A\u6B21\uFF08\u6216\u6307\u5B9A\uFF09\u4F1A\u8BDD`);
+  console.log(`  ${source_default.cyan("/session-save")} [\u540D\u79F0] \u624B\u52A8\u547D\u540D\u4FDD\u5B58\u5F53\u524D\u4F1A\u8BDD`);
+  console.log(`  ${source_default.cyan("/session-del")} <id>   \u5220\u9664\u6307\u5B9A\u4F1A\u8BDD`);
+  console.log();
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u65AD\u70B9\u7EED\u4F20 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("/checkpoint")}         \u4FDD\u5B58\u5F53\u524D\u5BF9\u8BDD\u65AD\u70B9`);
+  console.log(`  ${source_default.cyan("/checkpoint list")}    \u5217\u51FA\u5F53\u524D\u4F1A\u8BDD\u6240\u6709\u65AD\u70B9`);
+  console.log(`  ${source_default.cyan("/checkpoint restore")} <id>  \u6062\u590D\u5230\u6307\u5B9A\u65AD\u70B9`);
+  console.log(`  ${source_default.cyan("/checkpoint clear")}   \u6E05\u9664\u5F53\u524D\u4F1A\u8BDD\u6240\u6709\u65AD\u70B9`);
   console.log();
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/cat")}                \u6309\u9886\u57DF\u6D4F\u89C8 Skills \u5206\u7C7B\u76EE\u5F55`);
   console.log(`  ${source_default.cyan("/sk")}                 \u5217\u51FA\u5168\u90E8 Skills`);
   console.log(`  ${source_default.cyan("/sk")} <\u5173\u952E\u8BCD>        \u6A21\u7CCA\u641C\u7D22\uFF0C\u5339\u914D\u5219\u6CE8\u5165\uFF0C\u5426\u5219\u5217\u51FA\u5019\u9009`);
   console.log(`  ${source_default.cyan("/wf")}                 \u540C /sk\uFF0C\u522B\u540D`);
-  console.log(source_default.dim("  \u793A\u4F8B: /cat  /sk deseq2  /sk pubmed  /sk alphafold  /sk crispr"));
-  console.log(source_default.dim("  \u63D0\u793A: \u76F4\u63A5\u63CF\u8FF0\u4EFB\u52A1\uFF0CAI \u4F1A\u81EA\u52A8\u8BC6\u522B\u5E76\u6FC0\u6D3B\u5BF9\u5E94\u6280\u80FD"));
+  console.log(`  ${source_default.cyan("/skills")}             \u67E5\u770B\u5F53\u524D\u4F1A\u8BDD\u5DF2\u52A0\u8F7D\u7684 Skills`);
+  console.log(`  ${source_default.cyan("/unload")} <id>        \u4ECE\u5F53\u524D\u4F1A\u8BDD\u5378\u8F7D\u6307\u5B9A Skill`);
+  console.log(source_default.dim("  \u793A\u4F8B: /cat  /sk deseq2  /skills  /unload deseq2"));
+  console.log(source_default.dim("  \u63D0\u793A: \u76F4\u63A5\u63CF\u8FF0\u4EFB\u52A1\uFF0CAI \u4F1A\u81EA\u52A8\u8BC6\u522B\u5E76\u6FC0\u6D3B\u5BF9\u5E94\u6280\u80FD\uFF08\u52A0\u8F7D\u524D\u4F1A\u8BE2\u95EE\u786E\u8BA4\uFF09"));
+  console.log();
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u76F4\u63A5\u6267\u884C \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("!<\u547D\u4EE4>")}             \u7ED5\u8FC7 AI \u76F4\u63A5\u6267\u884C Shell \u547D\u4EE4\uFF08\u5B9E\u65F6\u8F93\u51FA\uFF09`);
+  console.log(source_default.dim("  \u793A\u4F8B: !ls -la  !Rscript analysis.R  !python script.py  !samtools view -h a.bam"));
+  console.log();
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u5DE5\u4F5C\u6D41\u5411\u5BFC \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("/run")} <skill-id>     \u4EA4\u4E92\u5F0F\u53C2\u6570\u5411\u5BFC\uFF0C\u81EA\u52A8\u751F\u6210\u5E76\u6267\u884C\u5206\u6790\u811A\u672C`);
+  console.log(`  ${source_default.cyan("/check-env")} [id]     \u68C0\u6D4B Skill \u6240\u9700 R/Python \u5305\u662F\u5426\u5DF2\u5B89\u88C5`);
+  console.log(`  ${source_default.cyan("/install")} <url>      \u4ECE GitHub \u5B89\u88C5\u7B2C\u4E09\u65B9 Skill`);
+  console.log(`  ${source_default.cyan("/uninstall")} <id>     \u5378\u8F7D\u5DF2\u5B89\u88C5\u7684\u7B2C\u4E09\u65B9 Skill`);
   console.log();
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u6587\u4EF6 & \u76EE\u5F55 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/cd")} <\u8DEF\u5F84>          \u66F4\u6539\u5DE5\u4F5C\u76EE\u5F55`);
   console.log(`  ${source_default.cyan("/cwd")}                \u663E\u793A\u5F53\u524D\u5DE5\u4F5C\u76EE\u5F55`);
+  console.log(`  ${source_default.cyan("/diff")}               \u663E\u793A\u672C\u6B21\u4F1A\u8BDD\u65B0\u589E/\u4FEE\u6539\u7684\u6587\u4EF6`);
   console.log(`  ${source_default.cyan("/tools")}              \u5217\u51FA AI \u53EF\u8C03\u7528\u7684\u5DE5\u5177`);
   console.log(`  ${source_default.cyan("@\u8DEF\u5F84")}               \u6D88\u606F\u4E2D\u5185\u5D4C\u6587\u4EF6\u5185\u5BB9 (\u4F8B: @data.csv \u91CC\u6709\u4EC0\u4E48?)`);
+  console.log(`  ${source_default.cyan("@\u76EE\u5F55/")}              \u5185\u5D4C\u76EE\u5F55\u4E0B\u6240\u6709\u6587\u4EF6\u6458\u8981 (\u4F8B: @results/)`);
+  console.log(`  ${source_default.cyan("@*.csv")}              \u901A\u914D\u7B26\u5185\u5D4C\u591A\u4E2A\u6587\u4EF6 (\u4F8B: @*.csv @*.tsv)`);
   console.log();
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u5176\u4ED6 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/help")}               \u663E\u793A\u672C\u5E2E\u52A9`);
@@ -14914,10 +15598,10 @@ async function firstRunIfNeeded(rl) {
 function collectAllSkills() {
   const entries = [];
   const addFrom = (dir, tag) => {
-    if (!(0, import_fs4.existsSync)(dir)) return;
-    (0, import_fs4.readdirSync)(dir).forEach((f2) => {
+    if (!(0, import_fs5.existsSync)(dir)) return;
+    (0, import_fs5.readdirSync)(dir).forEach((f2) => {
       try {
-        if ((0, import_fs4.statSync)((0, import_path4.join)(dir, f2)).isDirectory()) entries.push({ id: f2, dir, tag });
+        if ((0, import_fs5.statSync)((0, import_path5.join)(dir, f2)).isDirectory()) entries.push({ id: f2, dir, tag });
       } catch {
       }
     });
@@ -14945,7 +15629,72 @@ function listSkills(keyword) {
   if (matched.length > 50) console.log(source_default.dim(`  ... \u8FD8\u6709 ${matched.length - 50} \u4E2A\uFF0C\u8BF7\u7528\u5173\u952E\u8BCD\u7B5B\u9009`));
   console.log();
 }
-function injectSkill(id, history) {
+async function llmRecommendSkills(userQuery) {
+  const cfg = loadConfig();
+  const prov = PROVIDERS[cfg.provider];
+  if (!prov) return [];
+  const apiKey = cfg.apiKeys[cfg.provider] ?? (prov.envKey ? process.env[prov.envKey] : void 0);
+  const requiresKey = prov.envKey !== "";
+  if (requiresKey && !apiKey) return [];
+  const baseURL = cfg.provider === "custom" ? cfg.customUrl ?? prov.baseURL : prov.baseURL;
+  const model = cfg.provider === "custom" ? cfg.customModel ?? cfg.model : cfg.model;
+  const all = collectAllSkills();
+  const catalogLines = [];
+  for (const entry of all) {
+    const skillPath = (0, import_path5.join)(entry.dir, entry.id, "SKILL.md");
+    if (!(0, import_fs5.existsSync)(skillPath)) continue;
+    const raw = (0, import_fs5.readFileSync)(skillPath, "utf8");
+    const { name, shortDesc } = parseSkillMeta(raw);
+    const displayName = name || entry.id;
+    const desc = shortDesc ? ` \u2014 ${shortDesc}` : "";
+    catalogLines.push(`${entry.id}|${displayName}${desc}`);
+  }
+  if (catalogLines.length === 0) return [];
+  const catalog = catalogLines.join("\n");
+  const systemMsg = `\u4F60\u662F\u4E00\u4E2A\u751F\u7269\u4FE1\u606F\u5B66 Skill \u63A8\u8350\u52A9\u624B\u3002
+\u7528\u6237\u4F1A\u63CF\u8FF0\u4ED6\u4EEC\u60F3\u505A\u7684\u5206\u6790\u4EFB\u52A1\uFF0C\u4F60\u9700\u8981\u4ECE\u4E0B\u9762\u7684 Skill \u76EE\u5F55\u4E2D\u63A8\u8350\u6700\u76F8\u5173\u7684 5 \u4E2A\uFF08\u6216\u66F4\u5C11\uFF09\u3002
+
+Skill \u76EE\u5F55\uFF08\u683C\u5F0F: id|\u540D\u79F0 \u2014 \u7B80\u4ECB\uFF09\uFF1A
+${catalog}
+
+\u8BF7\u4E25\u683C\u6309\u7167\u4EE5\u4E0B JSON \u683C\u5F0F\u56DE\u590D\uFF0C\u4E0D\u8981\u8F93\u51FA\u4EFB\u4F55\u5176\u4ED6\u5185\u5BB9\uFF1A
+[
+  {"id": "skill-id", "name": "Skill \u540D\u79F0", "reason": "\u4E00\u53E5\u8BDD\u8BF4\u660E\u4E3A\u4EC0\u4E48\u63A8\u8350"},
+  ...
+]`;
+  try {
+    const client = new openai_default({ apiKey: apiKey || "none", baseURL });
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: systemMsg },
+        { role: "user", content: userQuery }
+      ],
+      temperature: 0.2,
+      max_tokens: 800
+    });
+    const text = resp.choices[0]?.message?.content ?? "";
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+    const parsed = JSON.parse(jsonMatch[0]);
+    const validIds = new Set(all.map((e2) => e2.id));
+    return parsed.filter((r2) => r2.id && validIds.has(r2.id)).slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+function parseSkillMeta(content) {
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/) || content.match(/<!--[\s\S]*?-->\s*([\s\S]*?)(?=\n#|\n\n)/);
+  if (!fmMatch) return { name: "", shortDesc: "" };
+  const fm = fmMatch[1];
+  const nameMatch = fm.match(/^name:\s*['"]?(.+?)['"]?\s*$/m);
+  const descMatch = fm.match(/^short-description:\s*(.+)$/m);
+  return {
+    name: nameMatch?.[1]?.trim() ?? "",
+    shortDesc: descMatch?.[1]?.trim() ?? ""
+  };
+}
+async function injectSkill(id, history, injectedSkills, rl, skipConfirm = false) {
   const all = collectAllSkills();
   const match = all.find((e2) => e2.id === id) || all.find((e2) => e2.id.startsWith(id)) || all.find((e2) => e2.id.includes(id));
   if (!match) {
@@ -14953,12 +15702,41 @@ function injectSkill(id, history) {
     console.log(source_default.dim("\u4F7F\u7528 /sk <\u5173\u952E\u8BCD> \u641C\u7D22"));
     return false;
   }
-  const skillPath = (0, import_path4.join)(match.dir, match.id, "SKILL.md");
-  if (!(0, import_fs4.existsSync)(skillPath)) {
+  const skillPath = (0, import_path5.join)(match.dir, match.id, "SKILL.md");
+  if (!(0, import_fs5.existsSync)(skillPath)) {
     console.log(source_default.red(`${match.id} \u7F3A\u5C11 SKILL.md`));
     return false;
   }
-  const content = (0, import_fs4.readFileSync)(skillPath, "utf8");
+  const content = (0, import_fs5.readFileSync)(skillPath, "utf8");
+  const { name, shortDesc } = parseSkillMeta(content);
+  const displayName = name || match.id;
+  if (!skipConfirm) {
+    console.log();
+    console.log(source_default.bold.cyan("\u250C\u2500 \u5373\u5C06\u52A0\u8F7D Skill \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    console.log(`\u2502  ${source_default.bold("ID:")}    ${source_default.cyan(match.id)}`);
+    console.log(`\u2502  ${source_default.bold("\u540D\u79F0:")}  ${displayName}`);
+    if (shortDesc) {
+      const words = shortDesc.split(" ");
+      let line = "\u2502  \u529F\u80FD:  ";
+      for (const w2 of words) {
+        if (line.length + w2.length > 70) {
+          console.log(source_default.dim(line));
+          line = "\u2502         " + w2 + " ";
+        } else {
+          line += w2 + " ";
+        }
+      }
+      if (line.trim() !== "\u2502") console.log(source_default.dim(line));
+    }
+    console.log(source_default.bold.cyan("\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    console.log();
+    const ans = await question(rl, source_default.cyan("  \u786E\u8BA4\u52A0\u8F7D\u6B64 Skill\uFF1F[Y/n] \u203A "));
+    const confirmed = ans.trim() === "" || ans.trim().toLowerCase() === "y";
+    if (!confirmed) {
+      console.log(source_default.dim("  \u5DF2\u53D6\u6D88"));
+      return false;
+    }
+  }
   history.push({
     role: "user",
     content: `[Skill \u5DF2\u52A0\u8F7D: ${match.id}]
@@ -14971,29 +15749,127 @@ ${content}`
     role: "assistant",
     content: `\u2713 Skill **${match.id}** \u5DF2\u52A0\u8F7D\u3002\u6211\u5DF2\u9605\u8BFB\u6307\u5357\uFF0C\u968F\u65F6\u53EF\u4EE5\u5F00\u59CB\u3002\u8BF7\u544A\u8BC9\u6211\u60A8\u7684\u5177\u4F53\u6570\u636E\u548C\u9700\u6C42\u3002`
   });
-  console.log(source_default.green(`\u2713 Skill ${match.id} \u5DF2\u6CE8\u5165\u5230\u5F53\u524D\u5BF9\u8BDD\u4E0A\u4E0B\u6587`));
+  injectedSkills.set(match.id, displayName);
+  console.log(source_default.green(`\u2713 Skill "${match.id}" \u5DF2\u52A0\u8F7D\u5230\u5F53\u524D\u5BF9\u8BDD\u4E0A\u4E0B\u6587`));
   return true;
 }
-function expandFileRefs(input) {
-  return input.replace(/@"([^"]+)"|@'([^']+)'|@([\w./\\~:-]+)/g, (_2, q1, q2, q3) => {
-    const rawPath = q1 ?? q2 ?? q3;
-    try {
-      const resolved = (0, import_path4.resolve)(rawPath.replace(/^~/, (0, import_os3.homedir)()));
-      if (!(0, import_fs4.existsSync)(resolved)) return _2;
-      const content = (0, import_fs4.readFileSync)(resolved, "utf8");
-      const lines = content.split("\n");
-      const preview = lines.length > 100 ? lines.slice(0, 100).join("\n") + `
-... (\u5171 ${lines.length} \u884C\uFF0C\u5DF2\u622A\u65AD\u663E\u793A\u524D 100 \u884C)` : content;
+var FILE_SIZE_LIMIT = 100 * 1024;
+var DIR_FILE_LIMIT = 20;
+function listDirFiles(dirPath) {
+  try {
+    return (0, import_fs6.readdirSync)(dirPath).map((f2) => (0, import_path5.join)(dirPath, f2)).filter((p2) => {
+      try {
+        return (0, import_fs6.statSync)(p2).isFile();
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return [];
+  }
+}
+function expandSingleFile(resolved) {
+  try {
+    const stat = (0, import_fs6.statSync)(resolved);
+    if (!stat.isFile()) return `[${resolved}: \u4E0D\u662F\u6587\u4EF6]`;
+    if (stat.size > FILE_SIZE_LIMIT) {
       return `
+\`\`\`
+[\u6587\u4EF6: ${resolved}]
+(\u6587\u4EF6\u8FC7\u5927 ${Math.round(stat.size / 1024)}KB\uFF0C\u5DF2\u8DF3\u8FC7)
+\`\`\`
+`;
+    }
+    const content = (0, import_fs5.readFileSync)(resolved, "utf8");
+    const lines = content.split("\n");
+    const preview = lines.length > 150 ? lines.slice(0, 150).join("\n") + `
+... (\u5171 ${lines.length} \u884C\uFF0C\u5DF2\u622A\u65AD)` : content;
+    return `
 \`\`\`
 [\u6587\u4EF6: ${resolved}]
 ${preview}
 \`\`\`
 `;
-    } catch {
-      return _2;
+  } catch {
+    return `[\u65E0\u6CD5\u8BFB\u53D6: ${resolved}]`;
+  }
+}
+function expandFileRefs(input) {
+  return input.replace(/@"([^"]+)"|@'([^']+)'|@([\/\w.*?~:-]+)/g, (match, q1, q2, q3) => {
+    const rawPath = q1 ?? q2 ?? q3;
+    const expanded = rawPath.replace(/^~/, (0, import_os3.homedir)());
+    if (rawPath.endsWith("/") || rawPath.endsWith("\\")) {
+      const dirResolved = (0, import_path5.resolve)(expanded);
+      if (!(0, import_fs5.existsSync)(dirResolved)) return match;
+      const files = listDirFiles(dirResolved).slice(0, DIR_FILE_LIMIT);
+      if (files.length === 0) return `[\u76EE\u5F55 ${dirResolved} \u4E3A\u7A7A]`;
+      const parts = [`
+[\u76EE\u5F55: ${dirResolved}  \u5171 ${files.length} \u4E2A\u6587\u4EF6]`];
+      for (const f2 of files) parts.push(expandSingleFile(f2));
+      return parts.join("\n");
     }
+    if (rawPath.includes("*") || rawPath.includes("?")) {
+      const { globSync } = (() => {
+        try {
+          return require("glob");
+        } catch {
+          return { globSync: null };
+        }
+      })();
+      let matched = [];
+      if (globSync) {
+        matched = globSync(expanded, { absolute: true }).slice(0, DIR_FILE_LIMIT);
+      } else {
+        const ext = rawPath.replace(/^.*\./, ".");
+        matched = listDirFiles(process.cwd()).filter((f2) => f2.endsWith(ext)).slice(0, DIR_FILE_LIMIT);
+      }
+      if (matched.length === 0) return `[\u672A\u627E\u5230\u5339\u914D: ${rawPath}]`;
+      const parts = [`
+[\u901A\u914D\u7B26\u5339\u914D: ${rawPath}  \u5171 ${matched.length} \u4E2A\u6587\u4EF6]`];
+      for (const f2 of matched) parts.push(expandSingleFile(f2));
+      return parts.join("\n");
+    }
+    const resolved = (0, import_path5.resolve)(expanded);
+    if (!(0, import_fs5.existsSync)(resolved)) return match;
+    return expandSingleFile(resolved);
   });
+}
+function snapshotWorkdir(dir) {
+  const snap = /* @__PURE__ */ new Map();
+  function walk(d2, depth = 0) {
+    if (depth > 3) return;
+    try {
+      for (const entry of (0, import_fs5.readdirSync)(d2)) {
+        if (entry.startsWith(".") || entry === "node_modules") continue;
+        const full = (0, import_path5.join)(d2, entry);
+        try {
+          const st2 = (0, import_fs5.statSync)(full);
+          if (st2.isDirectory()) {
+            walk(full, depth + 1);
+          } else {
+            snap.set(full, { path: full, mtime: st2.mtimeMs, size: st2.size });
+          }
+        } catch {
+        }
+      }
+    } catch {
+    }
+  }
+  walk(dir);
+  return snap;
+}
+function diffWorkdir(before, after) {
+  const added = [];
+  const modified = [];
+  for (const [path, snap] of after) {
+    const prev = before.get(path);
+    if (!prev) {
+      added.push(path);
+    } else if (snap.mtime !== prev.mtime || snap.size !== prev.size) {
+      modified.push(path);
+    }
+  }
+  return { added, modified };
 }
 function saveConversation(history, filename) {
   if (history.length === 0) {
@@ -15002,7 +15878,7 @@ function saveConversation(history, filename) {
   }
   const now = /* @__PURE__ */ new Date();
   const stamp = now.toISOString().slice(0, 16).replace("T", "-").replace(":", "-");
-  const outPath = (0, import_path4.resolve)(filename || `bgicli-chat-${stamp}.md`);
+  const outPath = (0, import_path5.resolve)(filename || `bgicli-chat-${stamp}.md`);
   const lines = [`# BGI CLI \u5BF9\u8BDD\u8BB0\u5F55
 `, `> \u5BFC\u51FA\u65F6\u95F4: ${now.toLocaleString("zh-CN")}
 `];
@@ -15021,24 +15897,41 @@ ${msg.content}
 `);
     }
   }
-  (0, import_fs4.writeFileSync)(outPath, lines.join("\n"), "utf8");
+  (0, import_fs5.writeFileSync)(outPath, lines.join("\n"), "utf8");
   console.log(source_default.green(`\u2713 \u5BF9\u8BDD\u5DF2\u4FDD\u5B58: ${outPath}`));
 }
-var COMPACT_TOKEN_THRESHOLD = 6e4;
+var COMPACT_TOKEN_THRESHOLD = 4e4;
 var COMPACT_KEEP_RECENT = 8;
-function estimateTokens(messages) {
-  const chars = messages.reduce((n2, m2) => n2 + String(m2.content ?? "").length, 0);
-  return Math.round(chars / 3.5);
-}
+var WARN_TOKEN_THRESHOLD = 3e4;
+var estimateTokens2 = estimateTokens;
 async function maybeCompact(history, cfg) {
-  const tokens = estimateTokens(history);
-  if (tokens < COMPACT_TOKEN_THRESHOLD) return history;
-  const recent = history.slice(-COMPACT_KEEP_RECENT);
-  const old = history.slice(0, -COMPACT_KEEP_RECENT);
-  if (old.length === 0) return history;
-  process.stdout.write(source_default.dim(`
-[\u4E0A\u4E0B\u6587\u5DF2\u8FBE ~${Math.round(tokens / 1e3)}k tokens\uFF0C\u6B63\u5728\u81EA\u52A8\u538B\u7F29...]
-`));
+  let cleaned = deduplicateSkillInjections(trimToolOutputs(history));
+  const tokensBefore = estimateTokens2(history);
+  const tokensAfter = estimateTokens2(cleaned);
+  if (tokensAfter < tokensBefore) {
+    const saved = tokensBefore - tokensAfter;
+    process.stdout.write(source_default.dim(
+      `
+[\u4E0A\u4E0B\u6587\u4F18\u5316: \u53BB\u91CD/\u622A\u65AD\u8282\u7701 ~${Math.round(saved / 1e3)}k tokens]
+`
+    ));
+  }
+  if (tokensAfter >= WARN_TOKEN_THRESHOLD && tokensAfter < COMPACT_TOKEN_THRESHOLD) {
+    process.stdout.write(source_default.dim(
+      `[\u63D0\u793A: \u4E0A\u4E0B\u6587\u5DF2\u8FBE ~${Math.round(tokensAfter / 1e3)}k tokens\uFF0C\u63A5\u8FD1\u538B\u7F29\u9608\u503C ${Math.round(COMPACT_TOKEN_THRESHOLD / 1e3)}k]
+`
+    ));
+    return cleaned;
+  }
+  if (tokensAfter < COMPACT_TOKEN_THRESHOLD) return cleaned;
+  const recent = cleaned.slice(-COMPACT_KEEP_RECENT);
+  const old = cleaned.slice(0, -COMPACT_KEEP_RECENT);
+  if (old.length === 0) return cleaned;
+  process.stdout.write(source_default.dim(
+    `
+[\u4E0A\u4E0B\u6587\u5DF2\u8FBE ~${Math.round(tokensAfter / 1e3)}k tokens\uFF0C\u6B63\u5728\u81EA\u52A8\u538B\u7F29\u5386\u53F2...]
+`
+  ));
   try {
     const summary = await compactMessages(old, cfg);
     const compacted = [
@@ -15054,16 +15947,31 @@ ${summary}`
       },
       ...recent
     ];
-    const saved = estimateTokens(history) - estimateTokens(compacted);
-    process.stdout.write(source_default.dim(`[\u538B\u7F29\u5B8C\u6210\uFF0C\u91CA\u653E\u7EA6 ~${Math.round(saved / 1e3)}k tokens]
+    const finalTokens = estimateTokens2(compacted);
+    const totalSaved = tokensBefore - finalTokens;
+    process.stdout.write(source_default.dim(
+      `[\u538B\u7F29\u5B8C\u6210: ~${Math.round(tokensBefore / 1e3)}k \u2192 ~${Math.round(finalTokens / 1e3)}k tokens\uFF0C\u8282\u7701 ~${Math.round(totalSaved / 1e3)}k]
 
-`));
+`
+    ));
     return compacted;
   } catch {
-    return history.slice(-COMPACT_KEEP_RECENT * 2);
+    process.stdout.write(source_default.yellow("[\u538B\u7F29\u5931\u8D25\uFF0C\u56DE\u9000\u5230\u622A\u65AD\u6A21\u5F0F]\n"));
+    return cleaned.slice(-COMPACT_KEEP_RECENT * 2);
   }
 }
-async function handleCommand(input, rl, history, thinkMode) {
+function formatAge(isoDate) {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(diff / 6e4);
+  const hours = Math.floor(diff / 36e5);
+  const days = Math.floor(diff / 864e5);
+  if (mins < 1) return "\u521A\u521A";
+  if (mins < 60) return `${mins} \u5206\u949F\u524D`;
+  if (hours < 24) return `${hours} \u5C0F\u65F6\u524D`;
+  if (days < 30) return `${days} \u5929\u524D`;
+  return new Date(isoDate).toLocaleDateString("zh-CN");
+}
+async function handleCommand(input, rl, history, thinkMode, injectedSkills) {
   const [cmd, ...rest] = input.slice(1).trim().split(/\s+/);
   const arg = rest.join(" ");
   const cfg = loadConfig();
@@ -15154,20 +16062,370 @@ async function handleCommand(input, rl, history, thinkMode) {
       return { clearHistory: true };
     case "history": {
       const turns = Math.floor(history.length / 2);
-      const chars = history.reduce((n2, m2) => n2 + String(m2.content ?? "").length, 0);
-      const estTokens = Math.round(chars / 3.5);
+      const estTokens = estimateTokens2(history);
+      const pct = Math.round(estTokens / COMPACT_TOKEN_THRESHOLD * 100);
+      const bar = "\u2588".repeat(Math.min(20, Math.round(pct / 5))) + "\u2591".repeat(Math.max(0, 20 - Math.round(pct / 5)));
       console.log(source_default.bold("\u5BF9\u8BDD\u7EDF\u8BA1:"));
       console.log(`  \u8F6E\u6B21:        ${turns}`);
       console.log(`  \u6D88\u606F\u603B\u6570:    ${history.length}`);
       console.log(`  \u4F30\u7B97 Token:  ~${estTokens.toLocaleString()}`);
+      console.log(`  \u4E0A\u4E0B\u6587\u7528\u91CF:  [${pct >= 80 ? source_default.red(bar) : pct >= 50 ? source_default.yellow(bar) : source_default.green(bar)}] ${pct}%`);
+      console.log(`  \u538B\u7F29\u9608\u503C:    ~${Math.round(COMPACT_TOKEN_THRESHOLD / 1e3)}k tokens`);
+      if (pct >= 80) console.log(source_default.yellow("  \u26A0 \u63A5\u8FD1\u4E0A\u9650\uFF0C\u5EFA\u8BAE\u8FD0\u884C /compact"));
       break;
     }
     case "save": {
       saveConversation(history, arg || void 0);
       break;
     }
+    // ── Session persistence ──────────────────────────────────────────────────
+    case "sessions": {
+      const sessions = listSessions();
+      if (sessions.length === 0) {
+        console.log(source_default.dim("\u6682\u65E0\u5386\u53F2\u4F1A\u8BDD\u3002\u5BF9\u8BDD\u7ED3\u675F\u540E\u4F1A\u81EA\u52A8\u4FDD\u5B58\u3002"));
+        break;
+      }
+      console.log(source_default.bold(`
+\u5386\u53F2\u4F1A\u8BDD (${sessions.length} \u4E2A):
+`));
+      sessions.slice(0, 20).forEach((s2, i2) => {
+        const age = formatAge(s2.updatedAt);
+        const skills = s2.skills.length > 0 ? source_default.dim(` [${s2.skills.join(", ")}]`) : "";
+        const preview = s2.preview ? source_default.dim(` \u2014 "${s2.preview.slice(0, 40)}${s2.preview.length > 40 ? "\u2026" : ""}"`) : "";
+        const marker = i2 === 0 ? source_default.green("\u25CF") : source_default.dim("\u25CB");
+        console.log(`  ${marker} ${source_default.cyan(s2.id)}  ${source_default.dim(age)}${skills}`);
+        if (preview) console.log(`      ${preview}`);
+      });
+      console.log();
+      console.log(source_default.dim("\u4F7F\u7528 /resume [id] \u6062\u590D\u4F1A\u8BDD  /session-del <id> \u5220\u9664"));
+      break;
+    }
+    case "resume": {
+      let targetId = arg;
+      if (!targetId) {
+        const last = getLastSession();
+        if (!last) {
+          console.log(source_default.yellow("\u6682\u65E0\u5386\u53F2\u4F1A\u8BDD"));
+          break;
+        }
+        targetId = last.id;
+        console.log(source_default.dim(`\u6062\u590D\u6700\u8FD1\u4F1A\u8BDD: ${targetId}`));
+      }
+      const session = loadSession(targetId);
+      if (!session) {
+        const all = listSessions();
+        const match = all.find((s3) => s3.id.includes(targetId));
+        if (!match) {
+          console.log(source_default.red(`\u672A\u627E\u5230\u4F1A\u8BDD: ${targetId}`));
+          break;
+        }
+        const s2 = loadSession(match.id);
+        if (!s2) {
+          console.log(source_default.red("\u52A0\u8F7D\u5931\u8D25"));
+          break;
+        }
+        console.log(source_default.green(`\u2713 \u5DF2\u6062\u590D\u4F1A\u8BDD ${s2.id} (${s2.messageCount} \u6761\u6D88\u606F)`));
+        if (s2.skills.length > 0) console.log(source_default.dim(`  \u5DF2\u52A0\u8F7D Skills: ${s2.skills.join(", ")}`));
+        for (const sk of s2.skills) injectedSkills.set(sk, sk);
+        return { injectHistory: s2.messages };
+      }
+      console.log(source_default.green(`\u2713 \u5DF2\u6062\u590D\u4F1A\u8BDD ${session.id} (${session.messageCount} \u6761\u6D88\u606F)`));
+      if (session.skills.length > 0) console.log(source_default.dim(`  \u5DF2\u52A0\u8F7D Skills: ${session.skills.join(", ")}`));
+      for (const sk of session.skills) injectedSkills.set(sk, sk);
+      return { injectHistory: session.messages };
+    }
+    case "session-save": {
+      const sessionId = SESSION_CTX.id || void 0;
+      if (!sessionId) {
+        console.log(source_default.yellow("\u5F53\u524D\u4F1A\u8BDD\u5C1A\u672A\u521D\u59CB\u5316"));
+        break;
+      }
+      const name = arg || (/* @__PURE__ */ new Date()).toLocaleString("zh-CN");
+      saveSession(sessionId, name, history, Array.from(injectedSkills.keys()), SESSION_CTX.createdAt || (/* @__PURE__ */ new Date()).toISOString());
+      console.log(source_default.green(`\u2713 \u4F1A\u8BDD\u5DF2\u4FDD\u5B58: ${sessionId}  \u540D\u79F0: "${name}"`));
+      break;
+    }
+    case "session-del": {
+      if (!arg) {
+        console.log("\u7528\u6CD5: /session-del <id>");
+        break;
+      }
+      const ok = deleteSession(arg);
+      console.log(ok ? source_default.green(`\u2713 \u5DF2\u5220\u9664\u4F1A\u8BDD: ${arg}`) : source_default.yellow(`\u672A\u627E\u5230\u4F1A\u8BDD: ${arg}`));
+      break;
+    }
+    // ── Checkpoints ──────────────────────────────────────────────────────────
+    case "checkpoint": {
+      const sessionId = SESSION_CTX.id || "default";
+      const sub = arg.split(/\s+/)[0]?.toLowerCase();
+      const subArg = arg.split(/\s+/).slice(1).join(" ");
+      if (!sub || sub === "save" || sub === "") {
+        const label = subArg || `\u7B2C ${Math.floor(history.length / 2)} \u8F6E`;
+        const cpId = saveCheckpoint(sessionId, label, history, Array.from(injectedSkills.keys()));
+        console.log(source_default.green(`\u2713 \u65AD\u70B9\u5DF2\u4FDD\u5B58: ${cpId}  \u6807\u7B7E: "${label}"`));
+      } else if (sub === "list") {
+        const cps = listCheckpoints(sessionId);
+        if (cps.length === 0) {
+          console.log(source_default.dim("\u5F53\u524D\u4F1A\u8BDD\u6682\u65E0\u65AD\u70B9"));
+        } else {
+          console.log(source_default.bold(`
+\u5F53\u524D\u4F1A\u8BDD\u65AD\u70B9 (${cps.length} \u4E2A):
+`));
+          cps.forEach((cp) => {
+            const age = formatAge(cp.createdAt);
+            console.log(`  ${source_default.cyan(cp.id.split("-cp")[1] ?? cp.id)}  ${source_default.dim(age)}  "${cp.label}"  (${cp.messageCount} \u6761\u6D88\u606F)`);
+            console.log(source_default.dim(`    /checkpoint restore ${cp.id}`));
+          });
+        }
+      } else if (sub === "restore") {
+        if (!subArg) {
+          console.log("\u7528\u6CD5: /checkpoint restore <id>");
+          break;
+        }
+        const cps = listCheckpoints(sessionId);
+        const target = cps.find((cp) => cp.id === subArg || cp.id.endsWith(subArg));
+        if (!target) {
+          console.log(source_default.red(`\u672A\u627E\u5230\u65AD\u70B9: ${subArg}`));
+          break;
+        }
+        console.log(source_default.green(`\u2713 \u5DF2\u6062\u590D\u5230\u65AD\u70B9: "${target.label}" (${target.messageCount} \u6761\u6D88\u606F)`));
+        injectedSkills.clear();
+        for (const sk of target.skills) injectedSkills.set(sk, sk);
+        return { injectHistory: target.messages };
+      } else if (sub === "clear") {
+        const n2 = clearCheckpoints(sessionId);
+        console.log(source_default.green(`\u2713 \u5DF2\u6E05\u9664 ${n2} \u4E2A\u65AD\u70B9`));
+      } else {
+        console.log("\u7528\u6CD5: /checkpoint [list|restore <id>|clear]");
+      }
+      break;
+    }
+    // ── Workdir diff ─────────────────────────────────────────────────────────
+    case "diff": {
+      const snap = SESSION_CTX.wdirSnapshot ?? void 0;
+      if (!snap) {
+        console.log(source_default.dim("\u5DE5\u4F5C\u76EE\u5F55\u5FEB\u7167\u5C1A\u672A\u5EFA\u7ACB\uFF08\u4F1A\u8BDD\u5F00\u59CB\u65F6\u81EA\u52A8\u521B\u5EFA\uFF09"));
+        break;
+      }
+      const current = snapshotWorkdir(process.cwd());
+      const { added, modified } = diffWorkdir(snap, current);
+      if (added.length === 0 && modified.length === 0) {
+        console.log(source_default.dim("\u672C\u6B21\u4F1A\u8BDD\u672A\u4EA7\u751F\u65B0\u6587\u4EF6\u6216\u4FEE\u6539"));
+      } else {
+        if (added.length > 0) {
+          console.log(source_default.bold.green(`
+\u65B0\u589E\u6587\u4EF6 (${added.length} \u4E2A):`));
+          added.forEach((f2) => console.log(`  ${source_default.green("+")} ${f2}`));
+        }
+        if (modified.length > 0) {
+          console.log(source_default.bold.yellow(`
+\u4FEE\u6539\u6587\u4EF6 (${modified.length} \u4E2A):`));
+          modified.forEach((f2) => console.log(`  ${source_default.yellow("~")} ${f2}`));
+        }
+        console.log();
+      }
+      break;
+    }
+    // ── /run workflow wizard ─────────────────────────────────────────────────
+    case "run": {
+      const targetId = arg;
+      if (!targetId) {
+        console.log("\u7528\u6CD5: /run <skill-id>");
+        console.log(source_default.dim("\u793A\u4F8B: /run deseq2-analysis  /run survival-analysis-clinical"));
+        break;
+      }
+      const allSkillsRun = collectAllSkills();
+      const runMatch = allSkillsRun.find((e2) => e2.id === targetId || e2.id.startsWith(targetId) || e2.id.includes(targetId));
+      if (!runMatch) {
+        console.log(source_default.red(`\u672A\u627E\u5230 Skill: ${targetId}`));
+        break;
+      }
+      const skillPath = (0, import_path5.join)(runMatch.dir, runMatch.id, "SKILL.md");
+      if (!(0, import_fs5.existsSync)(skillPath)) {
+        console.log(source_default.red(`${runMatch.id} \u7F3A\u5C11 SKILL.md`));
+        break;
+      }
+      const skillContent = (0, import_fs5.readFileSync)(skillPath, "utf8");
+      const { name: skillName } = parseSkillMeta(skillContent);
+      const paramsMatch = skillContent.match(/##\s*(?:必要参数|Required Parameters|参数)[\s\S]*?(?=\n##|$)/i);
+      const paramsSection = paramsMatch?.[0] ?? "";
+      console.log(source_default.bold.cyan(`
+\u2500\u2500\u2500 /run ${runMatch.id} \u5411\u5BFC \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500`));
+      console.log(source_default.dim(`  Skill: ${skillName || runMatch.id}`));
+      console.log(source_default.dim("  \u8BF7\u56DE\u7B54\u4EE5\u4E0B\u95EE\u9898\uFF0CAI \u5C06\u81EA\u52A8\u751F\u6210\u5E76\u6267\u884C\u5206\u6790\u811A\u672C\n"));
+      const paramLines = paramsSection.split("\n").filter((l2) => /^[-*•]|^\d+\./.test(l2.trim())).map((l2) => l2.replace(/^[-*•\d.]+\s*/, "").trim()).filter(Boolean).slice(0, 8);
+      const questions = paramLines.length > 0 ? paramLines : [
+        "\u6570\u636E\u6587\u4EF6\u8DEF\u5F84\uFF08\u652F\u6301\u76F8\u5BF9\u8DEF\u5F84\uFF0C\u5982 ./data/counts.csv\uFF09",
+        "\u6837\u672C\u5206\u7EC4\u4FE1\u606F\uFF08\u5982 treatment,treatment,control,control\uFF09",
+        "\u5BF9\u7167\u7EC4\u540D\u79F0",
+        "\u5B9E\u9A8C\u7EC4\u540D\u79F0",
+        "\u8F93\u51FA\u76EE\u5F55\uFF08\u9ED8\u8BA4: ./results\uFF09"
+      ];
+      const answers = {};
+      for (const q2 of questions) {
+        const ans = await question(rl, source_default.blue(`  ${q2}: `));
+        if (ans.trim()) answers[q2] = ans.trim();
+      }
+      const paramSummary = Object.entries(answers).map(([k2, v2]) => `- ${k2}: ${v2}`).join("\n");
+      const runPrompt = `\u8BF7\u6839\u636E\u4EE5\u4E0B\u53C2\u6570\uFF0C\u4F7F\u7528 ${skillName || runMatch.id} \u5DE5\u4F5C\u6D41\u751F\u6210\u5B8C\u6574\u7684\u5206\u6790\u811A\u672C\u5E76\u7ACB\u5373\u6267\u884C\uFF1A
+
+\u7528\u6237\u63D0\u4F9B\u7684\u53C2\u6570\uFF1A
+${paramSummary}
+
+\u8BF7\uFF1A
+1. \u751F\u6210\u5B8C\u6574\u53EF\u8FD0\u884C\u7684\u5206\u6790\u811A\u672C\uFF08R \u6216 Python\uFF09
+2. \u4F7F\u7528 bash \u5DE5\u5177\u6267\u884C\u811A\u672C
+3. \u5206\u6790\u5B8C\u6210\u540E\u7ED9\u51FA\u7ED3\u679C\u6458\u8981`;
+      if (!injectedSkills.has(runMatch.id)) {
+        await injectSkill(runMatch.id, history, injectedSkills, rl, true);
+      }
+      history.push({ role: "user", content: runPrompt });
+      console.log(source_default.dim("\n  \u6B63\u5728\u751F\u6210\u5E76\u6267\u884C\u5206\u6790\u811A\u672C...\n"));
+      try {
+        const runCfg = loadConfig();
+        const reply = await chat(history, runCfg, buildSystemPrompt());
+        history.push({ role: "assistant", content: reply });
+      } catch (err) {
+        console.error(source_default.red(`\u6267\u884C\u5931\u8D25: ${err instanceof Error ? err.message : String(err)}`));
+        history.pop();
+      }
+      break;
+    }
+    // ── /check-env ───────────────────────────────────────────────────────────
+    case "check-env": {
+      const checkId = arg;
+      const skillsToCheck = checkId ? (() => {
+        const all = collectAllSkills();
+        const m2 = all.find((e2) => e2.id === checkId || e2.id.startsWith(checkId) || e2.id.includes(checkId));
+        return m2 ? [m2] : [];
+      })() : collectAllSkills().filter((e2) => injectedSkills.has(e2.id));
+      if (skillsToCheck.length === 0) {
+        console.log(source_default.yellow(checkId ? `\u672A\u627E\u5230 Skill: ${checkId}` : "\u5F53\u524D\u4F1A\u8BDD\u672A\u52A0\u8F7D\u4EFB\u4F55 Skill"));
+        break;
+      }
+      for (const entry of skillsToCheck) {
+        const sp = (0, import_path5.join)(entry.dir, entry.id, "SKILL.md");
+        if (!(0, import_fs5.existsSync)(sp)) continue;
+        const content = (0, import_fs5.readFileSync)(sp, "utf8");
+        const { name } = parseSkillMeta(content);
+        console.log(source_default.bold(`
+\u68C0\u6D4B ${name || entry.id} \u7684\u4F9D\u8D56\u73AF\u5883:`));
+        const rPkgs = [.../* @__PURE__ */ new Set([
+          ...(content.match(/library\(([\w.]+)\)/g) ?? []).map((m2) => m2.replace(/library\(|\)/g, "")),
+          ...(content.match(/require\(([\w.]+)\)/g) ?? []).map((m2) => m2.replace(/require\(|\)/g, "")),
+          ...(content.match(/BiocManager::install\("([^"]+)"\)/g) ?? []).map((m2) => m2.replace(/BiocManager::install\("|"\)/g, ""))
+        ])];
+        const pyPkgs = [.../* @__PURE__ */ new Set([
+          ...(content.match(/import (\w+)/g) ?? []).map((m2) => m2.replace("import ", "")),
+          ...(content.match(/from (\w+) import/g) ?? []).map((m2) => m2.replace("from ", "").replace(" import", ""))
+        ])];
+        if (rPkgs.length > 0) {
+          console.log(source_default.dim(`  R \u5305 (${rPkgs.length} \u4E2A): ${rPkgs.join(", ")}`));
+          const checkScript = rPkgs.map(
+            (p2) => `cat(sprintf("  %-30s %s\\n", "${p2}", if(requireNamespace("${p2}", quietly=TRUE)) "\u2713 \u5DF2\u5B89\u88C5" else "\u2717 \u672A\u5B89\u88C5"))`
+          ).join("\n");
+          const result = await executeTool("bash", { command: `Rscript -e '${checkScript}'` });
+          if (result.error) {
+            console.log(source_default.dim("  (R \u672A\u5B89\u88C5\u6216\u4E0D\u53EF\u7528)"));
+          } else {
+            console.log(result.output);
+            const missing = rPkgs.filter((p2) => result.output.includes(`${p2}`) && result.output.includes("\u2717"));
+            if (missing.length > 0) {
+              console.log(source_default.yellow(`  \u7F3A\u5C11 ${missing.length} \u4E2A R \u5305\uFF0C\u5B89\u88C5\u547D\u4EE4:`));
+              console.log(source_default.cyan(`  !Rscript -e 'install.packages(c(${missing.map((p2) => `"${p2}"`).join(", ")}))'`));
+              const biocPkgs = missing.filter((p2) => ["DESeq2", "edgeR", "limma", "clusterProfiler", "Seurat", "SingleCellExperiment", "BiocGenerics"].includes(p2));
+              if (biocPkgs.length > 0) {
+                console.log(source_default.cyan(`  !Rscript -e 'BiocManager::install(c(${biocPkgs.map((p2) => `"${p2}"`).join(", ")}))'`));
+              }
+            }
+          }
+        }
+        if (pyPkgs.length > 0) {
+          const commonPy = ["numpy", "pandas", "scipy", "sklearn", "matplotlib", "seaborn", "scanpy", "anndata", "torch"];
+          const relevantPy = pyPkgs.filter((p2) => commonPy.includes(p2));
+          if (relevantPy.length > 0) {
+            console.log(source_default.dim(`  Python \u5305 (${relevantPy.length} \u4E2A): ${relevantPy.join(", ")}`));
+            const checkPy = relevantPy.map(
+              (p2) => `python3 -c "import ${p2}; print('  %-30s \u2713 \u5DF2\u5B89\u88C5' % '${p2}')" 2>/dev/null || echo "  ${p2.padEnd(30)} \u2717 \u672A\u5B89\u88C5"`
+            ).join(" && ");
+            const result = await executeTool("bash", { command: checkPy });
+            if (!result.error) console.log(result.output);
+          }
+        }
+        if (rPkgs.length === 0 && pyPkgs.length === 0) {
+          console.log(source_default.dim("  \u672A\u68C0\u6D4B\u5230\u660E\u786E\u7684\u5305\u4F9D\u8D56\u58F0\u660E"));
+        }
+      }
+      break;
+    }
+    // ── /install from GitHub ─────────────────────────────────────────────────
+    case "install": {
+      if (!arg) {
+        console.log("\u7528\u6CD5: /install <github-url>");
+        console.log(source_default.dim("\u793A\u4F8B: /install https://github.com/user/my-skill"));
+        console.log(source_default.dim("      /install user/repo  (GitHub \u7B80\u5199)"));
+        break;
+      }
+      let repoUrl = arg;
+      if (!repoUrl.startsWith("http")) {
+        repoUrl = `https://github.com/${repoUrl}`;
+      }
+      const repoName = repoUrl.replace(/\.git$/, "").split("/").pop() ?? "unknown-skill";
+      const installTarget = (0, import_path5.join)(SKILLS_DIR, repoName);
+      if ((0, import_fs5.existsSync)(installTarget)) {
+        console.log(source_default.yellow(`Skill "${repoName}" \u5DF2\u5B58\u5728\uFF0C\u5982\u9700\u66F4\u65B0\u8BF7\u5148 /uninstall ${repoName}`));
+        break;
+      }
+      console.log(source_default.dim(`\u6B63\u5728\u4ECE GitHub \u5B89\u88C5 Skill: ${repoName}...`));
+      const cloneResult = await executeTool("bash", {
+        command: `git clone --depth 1 "${repoUrl}" "${installTarget}" 2>&1`
+      });
+      if (cloneResult.error || cloneResult.output.includes("fatal:")) {
+        console.log(source_default.red(`\u5B89\u88C5\u5931\u8D25: ${cloneResult.output || cloneResult.error}`));
+        break;
+      }
+      const skillMdPath = (0, import_path5.join)(installTarget, "SKILL.md");
+      if (!(0, import_fs5.existsSync)(skillMdPath)) {
+        console.log(source_default.red(`\u5B89\u88C5\u5931\u8D25: ${repoName} \u7F3A\u5C11 SKILL.md \u6587\u4EF6`));
+        await executeTool("bash", { command: `rm -rf "${installTarget}"` });
+        break;
+      }
+      const content = (0, import_fs5.readFileSync)(skillMdPath, "utf8");
+      const { name, shortDesc } = parseSkillMeta(content);
+      console.log(source_default.green(`\u2713 Skill \u5B89\u88C5\u6210\u529F!`));
+      console.log(`  ID:    ${source_default.cyan(repoName)}`);
+      console.log(`  \u540D\u79F0:  ${name || repoName}`);
+      if (shortDesc) console.log(`  \u529F\u80FD:  ${source_default.dim(shortDesc)}`);
+      console.log(source_default.dim(`  \u4F7F\u7528 /sk ${repoName} \u52A0\u8F7D`));
+      break;
+    }
+    case "uninstall": {
+      if (!arg) {
+        console.log("\u7528\u6CD5: /uninstall <skill-id>");
+        break;
+      }
+      const uninstallPath = (0, import_path5.join)(SKILLS_DIR, arg);
+      if (!(0, import_fs5.existsSync)(uninstallPath)) {
+        console.log(source_default.red(`\u672A\u627E\u5230\u5DF2\u5B89\u88C5\u7684 Skill: ${arg}`));
+        console.log(source_default.dim("\u6CE8\u610F: \u53EA\u80FD\u5378\u8F7D\u901A\u8FC7 /install \u5B89\u88C5\u7684\u7B2C\u4E09\u65B9 Skill"));
+        break;
+      }
+      const ans = await question(rl, source_default.yellow(`  \u786E\u8BA4\u5378\u8F7D Skill "${arg}"\uFF1F[y/N] \u203A `));
+      if (ans.trim().toLowerCase() !== "y") {
+        console.log(source_default.dim("  \u5DF2\u53D6\u6D88"));
+        break;
+      }
+      const rmResult = await executeTool("bash", { command: `rm -rf "${uninstallPath}"` });
+      if (rmResult.error) {
+        console.log(source_default.red(`\u5378\u8F7D\u5931\u8D25: ${rmResult.error}`));
+      } else {
+        injectedSkills.delete(arg);
+        console.log(source_default.green(`\u2713 Skill "${arg}" \u5DF2\u5378\u8F7D`));
+      }
+      break;
+    }
     case "compact": {
-      const tokens = estimateTokens(history);
+      const tokens = estimateTokens2(history);
       if (history.length < 4) {
         console.log(source_default.dim("\u5BF9\u8BDD\u592A\u77ED\uFF0C\u65E0\u9700\u538B\u7F29"));
         break;
@@ -15189,12 +16447,58 @@ ${summary}` },
           { role: "assistant", content: "\u2713 \u5DF2\u7406\u89E3\u4E4B\u524D\u7684\u5BF9\u8BDD\u6458\u8981\uFF0C\u8BF7\u7EE7\u7EED\u3002" },
           ...recent
         ];
-        const after = estimateTokens(newHistory);
+        const after = estimateTokens2(newHistory);
         console.log(source_default.green(`\u2713 \u538B\u7F29\u5B8C\u6210: ${history.length} \u6761\u6D88\u606F \u2192 ${newHistory.length} \u6761\uFF0C~${Math.round(after / 1e3)}k tokens`));
         return { injectHistory: newHistory };
       } catch (err) {
         console.error(source_default.red(`\u538B\u7F29\u5931\u8D25: ${err instanceof Error ? err.message : String(err)}`));
       }
+      break;
+    }
+    case "skills": {
+      if (injectedSkills.size === 0) {
+        console.log(source_default.dim("\u5F53\u524D\u4F1A\u8BDD\u672A\u52A0\u8F7D\u4EFB\u4F55 Skill"));
+        console.log(source_default.dim("\u4F7F\u7528 /sk <\u5173\u952E\u8BCD> \u52A0\u8F7D\uFF0C\u6216\u76F4\u63A5\u63CF\u8FF0\u4EFB\u52A1\u81EA\u52A8\u6FC0\u6D3B"));
+      } else {
+        console.log(source_default.bold(`
+\u5F53\u524D\u5DF2\u52A0\u8F7D\u7684 Skills (${injectedSkills.size} \u4E2A):
+`));
+        for (const [id, name] of injectedSkills) {
+          console.log(`  ${source_default.green("\u25CF")} ${source_default.cyan(id)}  ${source_default.dim("\u2014 " + name)}`);
+          console.log(source_default.dim(`       /unload ${id}  \u53EF\u5378\u8F7D\u6B64 Skill`));
+        }
+        console.log();
+        console.log(source_default.dim("\u63D0\u793A: /clear \u6E05\u7A7A\u5168\u90E8\u5BF9\u8BDD\u548C Skills | /unload <id> \u5378\u8F7D\u5355\u4E2A"));
+      }
+      break;
+    }
+    case "unload": {
+      if (!arg) {
+        console.log("\u7528\u6CD5: /unload <skill-id>");
+        console.log(source_default.dim("\u4F7F\u7528 /skills \u67E5\u770B\u5F53\u524D\u5DF2\u52A0\u8F7D\u7684 Skills"));
+        break;
+      }
+      const loadedIds = Array.from(injectedSkills.keys());
+      const targetId = loadedIds.find((id) => id === arg || id.includes(arg));
+      if (!targetId) {
+        console.log(source_default.yellow(`\u672A\u627E\u5230\u5DF2\u52A0\u8F7D\u7684 Skill: "${arg}"`));
+        console.log(source_default.dim("\u4F7F\u7528 /skills \u67E5\u770B\u5F53\u524D\u5DF2\u52A0\u8F7D\u7684 Skills"));
+        break;
+      }
+      const SKILL_MARKER = `[Skill \u5DF2\u52A0\u8F7D: ${targetId}]`;
+      let removed = 0;
+      for (let i2 = history.length - 1; i2 >= 0; i2--) {
+        const content = typeof history[i2].content === "string" ? history[i2].content : "";
+        if (history[i2].role === "user" && content.startsWith(SKILL_MARKER)) {
+          const toRemove = i2 + 1 < history.length && history[i2 + 1].role === "assistant" ? 2 : 1;
+          history.splice(i2, toRemove);
+          removed += toRemove;
+          break;
+        }
+      }
+      injectedSkills.delete(targetId);
+      console.log(source_default.green(`\u2713 Skill "${targetId}" \u5DF2\u5378\u8F7D`));
+      if (removed > 0) console.log(source_default.dim(`  \u5DF2\u4ECE\u5BF9\u8BDD\u5386\u53F2\u4E2D\u79FB\u9664 ${removed} \u6761\u6CE8\u5165\u6D88\u606F`));
       break;
     }
     case "think": {
@@ -15221,29 +16525,41 @@ ${summary}` },
       const allSkills = collectAllSkills();
       const idMatch = allSkills.find((e2) => e2.id === arg || e2.id.startsWith(arg) || e2.id.includes(arg));
       if (idMatch) {
-        injectSkill(arg, history);
+        await injectSkill(idMatch.id, history, injectedSkills, rl);
         break;
       }
-      const { routes, topScore } = routeSkill(arg);
-      if (routes.length === 0 || topScore < 4) {
+      const spinner = ["\u280B", "\u2819", "\u2839", "\u2838", "\u283C", "\u2834", "\u2826", "\u2827", "\u2807", "\u280F"];
+      let si = 0;
+      const spinTimer = setInterval(() => {
+        process.stdout.write(`\r  ${source_default.cyan(spinner[si++ % spinner.length])} \u6B63\u5728\u7528 AI \u641C\u7D22\u6700\u5339\u914D\u7684 Skills...`);
+      }, 80);
+      const llmRecs = await llmRecommendSkills(arg);
+      clearInterval(spinTimer);
+      process.stdout.write("\r" + " ".repeat(50) + "\r");
+      if (llmRecs.length === 0) {
+        console.log(source_default.yellow("  AI \u63A8\u8350\u6682\u65F6\u4E0D\u53EF\u7528\uFF0C\u663E\u793A\u5173\u952E\u8BCD\u5339\u914D\u7ED3\u679C:"));
         listSkills(arg);
         break;
       }
-      if (routes.length === 1 || topScore >= 10) {
-        console.log(source_default.dim(`\u6839\u636E\u63CF\u8FF0\u5339\u914D\u5230: ${routes[0].id}`));
-        injectSkill(routes[0].id, history);
-      } else {
-        console.log(source_default.bold(`
-\u6839\u636E\u63CF\u8FF0\u63A8\u8350\u4EE5\u4E0B Skills:
+      console.log(source_default.bold(`
+  AI \u4E3A\u60A8\u63A8\u8350\u4EE5\u4E0B Skills (\u8F93\u5165\u5E8F\u53F7\u76F4\u63A5\u52A0\u8F7D):
 `));
-        routes.forEach((r2, i2) => {
-          const marker = i2 === 0 ? source_default.green("\u25B6") : source_default.dim(" ");
-          console.log(`  ${marker} ${source_default.cyan(r2.id)}  \u2014 ${r2.name}`);
-          if (i2 > 0) console.log(source_default.dim(`       /sk ${r2.id} \u53EF\u6FC0\u6D3B\u6B64\u9879`));
-        });
-        console.log();
-        console.log(source_default.dim("\u5DF2\u81EA\u52A8\u6FC0\u6D3B\u7B2C\u4E00\u4E2A\uFF0C\u5982\u9700\u5207\u6362\u8BF7\u4F7F\u7528\u4E0A\u65B9\u547D\u4EE4"));
-        injectSkill(routes[0].id, history);
+      llmRecs.forEach((r2, i2) => {
+        const num = source_default.bold.cyan(`[${i2 + 1}]`);
+        console.log(`  ${num} ${source_default.cyan(r2.id)}`);
+        console.log(`      ${source_default.dim(r2.reason)}`);
+      });
+      console.log();
+      console.log(source_default.dim("  \u8F93\u5165\u5E8F\u53F7 1-" + llmRecs.length + " \u52A0\u8F7D\uFF0C\u76F4\u63A5\u56DE\u8F66\u53D6\u6D88\uFF0C\u6216\u8F93\u5165 /sk <id> \u52A0\u8F7D\u5176\u4ED6"));
+      console.log();
+      const choice = await question(rl, source_default.blue("  \u9009\u62E9 \u203A "));
+      const choiceNum = parseInt(choice.trim(), 10);
+      if (!isNaN(choiceNum) && choiceNum >= 1 && choiceNum <= llmRecs.length) {
+        await injectSkill(llmRecs[choiceNum - 1].id, history, injectedSkills, rl);
+      } else if (choice.trim() === "") {
+        console.log(source_default.dim("  \u5DF2\u53D6\u6D88"));
+      } else {
+        console.log(source_default.dim(`  \u63D0\u793A: \u4F7F\u7528 /sk ${choice.trim()} \u52A0\u8F7D\u6307\u5B9A Skill`));
       }
       break;
     }
@@ -15279,8 +16595,8 @@ ${summary}` },
         console.log("\u7528\u6CD5: /cd <\u8DEF\u5F84>");
         break;
       }
-      const target = (0, import_path4.resolve)(arg.replace(/^~/, (0, import_os3.homedir)()));
-      if (!(0, import_fs4.existsSync)(target)) {
+      const target = (0, import_path5.resolve)(arg.replace(/^~/, (0, import_os3.homedir)()));
+      if (!(0, import_fs5.existsSync)(target)) {
         console.log(source_default.red(`\u8DEF\u5F84\u4E0D\u5B58\u5728: ${target}`));
         break;
       }
@@ -15293,11 +16609,12 @@ ${summary}` },
       break;
     case "tools":
       console.log(source_default.bold("AI \u53EF\u8C03\u7528\u7684\u5DE5\u5177:"));
-      console.log(`  ${source_default.cyan("bash")}          \u6267\u884C Shell \u547D\u4EE4 (R/Python/bash \u811A\u672C\u3001\u751F\u4FE1\u5DE5\u5177)`);
-      console.log(`  ${source_default.cyan("read_file")}     \u8BFB\u53D6\u6587\u4EF6\u5185\u5BB9 (\u652F\u6301 ~/ \u8DEF\u5F84)`);
+      console.log(`  ${source_default.cyan("bash")}          \u6267\u884C Shell \u547D\u4EE4 (R/Python/bash \u811A\u672C\u3001\u751F\u4FE1\u5DE5\u5177) \u2014 \u5B9E\u65F6\u6D41\u5F0F\u8F93\u51FA`);
+      console.log(`  ${source_default.cyan("read_file")}     \u8BFB\u53D6\u6587\u4EF6\u5185\u5BB9 (\u652F\u6301 ~/ \u8DEF\u5F84\uFF0C\u9ED8\u8BA4 500 \u884C)`);
       console.log(`  ${source_default.cyan("write_file")}    \u521B\u5EFA\u6216\u8986\u5199\u6587\u4EF6`);
       console.log(`  ${source_default.cyan("list_dir")}      \u5217\u51FA\u76EE\u5F55\u5185\u5BB9`);
       console.log(`  ${source_default.cyan("search_files")}  glob \u641C\u7D22\u6587\u4EF6 (\u5982 *.R, *.csv)`);
+      console.log(`  ${source_default.cyan("fetch_geo")}     \u67E5\u8BE2 NCBI GEO \u6570\u636E\u5E93 (GSE/GDS/GPL/GSM \u7F16\u53F7)`);
       console.log();
       console.log(source_default.dim("\u63D0\u793A: \u76F4\u63A5\u63CF\u8FF0\u4EFB\u52A1\uFF0CAI \u4F1A\u81EA\u52A8\u51B3\u5B9A\u8C03\u7528\u54EA\u4E2A\u5DE5\u5177"));
       break;
@@ -15332,13 +16649,39 @@ async function main() {
   console.log(`  ${source_default.bold("\u6A21\u578B:")}    ${source_default.green(cfg.model)}`);
   console.log(`  ${source_default.bold("Skills:")}  ${totalSkills > 0 ? source_default.green(`${totalSkills} \u4E2A`) : source_default.yellow("\u672A\u5B89\u88C5")}  ${source_default.dim("(/sk \u641C\u7D22  /cat \u5206\u7C7B\u76EE\u5F55)")}`);
   console.log(`  ${source_default.bold("\u5DE5\u5177:")}    bash \xB7 read_file \xB7 write_file \xB7 list_dir \xB7 search_files`);
+  console.log(`  ${source_default.bold("\u65B0\u529F\u80FD:")}  /sessions /resume /checkpoint /run /check-env /install /diff`);
   console.log(source_default.bold.cyan("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  const lastSess = getLastSession();
+  if (lastSess) {
+    const age = (() => {
+      const diff = Date.now() - new Date(lastSess.updatedAt).getTime();
+      const h2 = Math.floor(diff / 36e5);
+      const d2 = Math.floor(diff / 864e5);
+      return d2 > 0 ? `${d2}\u5929\u524D` : h2 > 0 ? `${h2}\u5C0F\u65F6\u524D` : "\u521A\u521A";
+    })();
+    console.log(source_default.dim(`  \u4E0A\u6B21\u4F1A\u8BDD: ${lastSess.id}  ${age}  /resume \u6062\u590D`));
+  }
   console.log(source_default.dim("  \u8F93\u5165\u95EE\u9898\u5F00\u59CB\u5BF9\u8BDD   /help \u67E5\u770B\u547D\u4EE4   /cat \u6280\u80FD\u5206\u7C7B   @\u6587\u4EF6\u8DEF\u5F84 \u5185\u5D4C\u6587\u4EF6"));
   console.log();
   const systemPrompt = buildSystemPrompt();
   let history = [];
   let thinkMode = false;
-  const injectedSkills = /* @__PURE__ */ new Set();
+  const injectedSkills = /* @__PURE__ */ new Map();
+  const sessionId = newSessionId();
+  const sessionCreatedAt = (/* @__PURE__ */ new Date()).toISOString();
+  SESSION_CTX.id = sessionId;
+  SESSION_CTX.createdAt = sessionCreatedAt;
+  const wdirSnapshot = snapshotWorkdir(process.cwd());
+  SESSION_CTX.wdirSnapshot = wdirSnapshot;
+  function autoSaveSession() {
+    if (history.length === 0) return;
+    try {
+      saveSession(sessionId, sessionCreatedAt, history, Array.from(injectedSkills.keys()), sessionCreatedAt);
+    } catch {
+    }
+  }
+  let lastCheckpointMsgCount = 0;
+  const CHECKPOINT_INTERVAL = 6;
   while (true) {
     let input;
     const thinkIndicator = thinkMode ? source_default.yellow("[\u601D\u8003]") + " " : "";
@@ -15355,7 +16698,7 @@ async function main() {
       break;
     }
     if (trimmed.startsWith("/")) {
-      const result = await handleCommand(trimmed, rl, history, thinkMode);
+      const result = await handleCommand(trimmed, rl, history, thinkMode, injectedSkills);
       if (result.exit) break;
       if (result.clearHistory) {
         history = [];
@@ -15365,13 +16708,34 @@ async function main() {
       if (result.thinkMode !== void 0) thinkMode = result.thinkMode;
       continue;
     }
+    if (trimmed.startsWith("!")) {
+      const cmd = trimmed.slice(1).trim();
+      if (!cmd) {
+        console.log(source_default.yellow("\u7528\u6CD5: !<\u547D\u4EE4>  \u4F8B: !ls -la  !Rscript analysis.R  !python script.py"));
+        continue;
+      }
+      console.log(source_default.dim(`[\u76F4\u63A5\u6267\u884C] ${cmd}`));
+      const t0 = Date.now();
+      const result = await executeTool("bash", { command: cmd }, (chunk) => {
+        process.stdout.write(source_default.dim("  \u2502 ") + chunk);
+      });
+      const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
+      if (result.error) {
+        console.log(source_default.yellow(`
+  \u2717 ${result.error} ${source_default.dim("(" + elapsed + "s)")}`));
+      } else {
+        console.log(source_default.green(`
+  \u2713 \u5B8C\u6210 ${source_default.dim("(" + elapsed + "s)")}`));
+      }
+      console.log();
+      continue;
+    }
     const { routes: suggestedRoutes, topScore } = routeSkill(trimmed);
     const newRoutes = suggestedRoutes.filter((r2) => !injectedSkills.has(r2.id));
     if (newRoutes.length === 1 && topScore >= 8) {
       const r2 = newRoutes[0];
-      const ok = injectSkill(r2.id, history);
+      const ok = await injectSkill(r2.id, history, injectedSkills, rl, true);
       if (ok) {
-        injectedSkills.add(r2.id);
         console.log(source_default.dim("  (\u63D0\u793A: /clear \u53EF\u6E05\u9664\u4E0A\u4E0B\u6587\u540E\u5207\u6362 Skill)"));
       }
     } else if (newRoutes.length >= 2 && topScore >= 4) {
@@ -15390,6 +16754,17 @@ ${expanded}` : expanded;
       const reply = await chat(history, currentCfg, systemPrompt);
       history.push({ role: "assistant", content: reply });
       history = await maybeCompact(history, currentCfg);
+      autoSaveSession();
+      if (history.length - lastCheckpointMsgCount >= CHECKPOINT_INTERVAL) {
+        const label = `\u7B2C ${Math.floor(history.length / 2)} \u8F6E`;
+        saveCheckpoint(sessionId, label, history, Array.from(injectedSkills.keys()));
+        lastCheckpointMsgCount = history.length;
+      }
+      if (injectedSkills.size > 0) {
+        const ids = Array.from(injectedSkills.keys()).join(source_default.dim(" \xB7 "));
+        console.log(source_default.dim(`
+  [\u6FC0\u6D3B Skill: ${ids}]`));
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(source_default.red(`
