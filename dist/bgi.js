@@ -15144,14 +15144,34 @@ ${summary}` },
     case "sk": {
       if (!arg) {
         listSkills();
+        break;
+      }
+      const allSkills = collectAllSkills();
+      const idMatch = allSkills.find((e2) => e2.id === arg || e2.id.startsWith(arg) || e2.id.includes(arg));
+      if (idMatch) {
+        injectSkill(arg, history);
+        break;
+      }
+      const { routes, topScore } = routeSkill(arg);
+      if (routes.length === 0 || topScore < 4) {
+        listSkills(arg);
+        break;
+      }
+      if (routes.length === 1 || topScore >= 10) {
+        console.log(source_default.dim(`\u6839\u636E\u63CF\u8FF0\u5339\u914D\u5230: ${routes[0].id}`));
+        injectSkill(routes[0].id, history);
       } else {
-        const all = collectAllSkills();
-        const hasMatch = all.find((e2) => e2.id === arg || e2.id.startsWith(arg) || e2.id.includes(arg));
-        if (hasMatch) {
-          injectSkill(arg, history);
-        } else {
-          listSkills(arg);
-        }
+        console.log(source_default.bold(`
+\u6839\u636E\u63CF\u8FF0\u63A8\u8350\u4EE5\u4E0B Skills:
+`));
+        routes.forEach((r2, i2) => {
+          const marker = i2 === 0 ? source_default.green("\u25B6") : source_default.dim(" ");
+          console.log(`  ${marker} ${source_default.cyan(r2.id)}  \u2014 ${r2.name}`);
+          if (i2 > 0) console.log(source_default.dim(`       /sk ${r2.id} \u53EF\u6FC0\u6D3B\u6B64\u9879`));
+        });
+        console.log();
+        console.log(source_default.dim("\u5DF2\u81EA\u52A8\u6FC0\u6D3B\u7B2C\u4E00\u4E2A\uFF0C\u5982\u9700\u5207\u6362\u8BF7\u4F7F\u7528\u4E0A\u65B9\u547D\u4EE4"));
+        injectSkill(routes[0].id, history);
       }
       break;
     }

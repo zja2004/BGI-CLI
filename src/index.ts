@@ -534,14 +534,40 @@ async function handleCommand(
     case 'sk': {
       if (!arg) {
         listSkills();
+        break;
+      }
+
+      // 1. Try exact / partial ID match first
+      const allSkills = collectAllSkills();
+      const idMatch = allSkills.find((e) => e.id === arg || e.id.startsWith(arg) || e.id.includes(arg));
+      if (idMatch) {
+        injectSkill(arg, history);
+        break;
+      }
+
+      // 2. Natural language: run semantic routing on the description
+      const { routes, topScore } = routeSkill(arg);
+      if (routes.length === 0 || topScore < 4) {
+        // No semantic match — fall back to ID substring listing
+        listSkills(arg);
+        break;
+      }
+
+      if (routes.length === 1 || topScore >= 10) {
+        // Single or highly confident match — auto-inject
+        console.log(chalk.dim(`根据描述匹配到: ${routes[0].id}`));
+        injectSkill(routes[0].id, history);
       } else {
-        const all = collectAllSkills();
-        const hasMatch = all.find((e) => e.id === arg || e.id.startsWith(arg) || e.id.includes(arg));
-        if (hasMatch) {
-          injectSkill(arg, history);
-        } else {
-          listSkills(arg);
-        }
+        // Multiple candidates — show ranked list and inject the best one
+        console.log(chalk.bold(`\n根据描述推荐以下 Skills:\n`));
+        routes.forEach((r, i) => {
+          const marker = i === 0 ? chalk.green('▶') : chalk.dim(' ');
+          console.log(`  ${marker} ${chalk.cyan(r.id)}  — ${r.name}`);
+          if (i > 0) console.log(chalk.dim(`       /sk ${r.id} 可激活此项`));
+        });
+        console.log();
+        console.log(chalk.dim('已自动激活第一个，如需切换请使用上方命令'));
+        injectSkill(routes[0].id, history);
       }
       break;
     }
