@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync, mkdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
+import OpenAI from 'openai';
 import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message } from './chat.js';
@@ -246,6 +247,79 @@ function listSkills(keyword?: string): void {
   show.forEach((e) => console.log(`  ${chalk.cyan(e.id)}`));
   if (matched.length > 50) console.log(chalk.dim(`  ... 还有 ${matched.length - 50} 个，请用关键词筛选`));
   console.log();
+}
+
+// ── LLM-powered skill recommendation ─────────────────────────────────────────
+
+interface LlmSkillRec { id: string; name: string; reason: string; }
+
+/**
+ * Ask the configured LLM to recommend skills from the full catalog
+ * based on a free-text user description. Returns up to 5 results.
+ * Falls back to empty array on any error (network, parse, etc.).
+ */
+async function llmRecommendSkills(userQuery: string): Promise<LlmSkillRec[]> {
+  const cfg = loadConfig();
+  const prov = PROVIDERS[cfg.provider];
+  if (!prov) return [];
+
+  const apiKey = cfg.apiKeys[cfg.provider] ?? (prov.envKey ? process.env[prov.envKey] : undefined);
+  const requiresKey = prov.envKey !== '';
+  if (requiresKey && !apiKey) return [];
+
+  const baseURL = cfg.provider === 'custom' ? (cfg.customUrl ?? prov.baseURL) : prov.baseURL;
+  const model   = cfg.provider === 'custom' ? (cfg.customModel ?? cfg.model) : cfg.model;
+
+  // Build a compact catalog: id | name | short-description
+  const all = collectAllSkills();
+  const catalogLines: string[] = [];
+  for (const entry of all) {
+    const skillPath = join(entry.dir, entry.id, 'SKILL.md');
+    if (!existsSync(skillPath)) continue;
+    const raw = readFileSync(skillPath, 'utf8');
+    const { name, shortDesc } = parseSkillMeta(raw);
+    const displayName = name || entry.id;
+    const desc = shortDesc ? ` — ${shortDesc}` : '';
+    catalogLines.push(`${entry.id}|${displayName}${desc}`);
+  }
+
+  if (catalogLines.length === 0) return [];
+
+  const catalog = catalogLines.join('\n');
+  const systemMsg = `你是一个生物信息学 Skill 推荐助手。
+用户会描述他们想做的分析任务，你需要从下面的 Skill 目录中推荐最相关的 5 个（或更少）。
+
+Skill 目录（格式: id|名称 — 简介）：
+${catalog}
+
+请严格按照以下 JSON 格式回复，不要输出任何其他内容：
+[
+  {"id": "skill-id", "name": "Skill 名称", "reason": "一句话说明为什么推荐"},
+  ...
+]`;
+
+  try {
+    const client = new OpenAI({ apiKey: apiKey || 'none', baseURL });
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: systemMsg },
+        { role: 'user',   content: userQuery },
+      ],
+      temperature: 0.2,
+      max_tokens: 800,
+    });
+    const text = resp.choices[0]?.message?.content ?? '';
+    // Extract JSON array from response (model may wrap in markdown code block)
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+    const parsed = JSON.parse(jsonMatch[0]) as LlmSkillRec[];
+    // Validate: only keep entries whose id actually exists in catalog
+    const validIds = new Set(all.map((e) => e.id));
+    return parsed.filter((r) => r.id && validIds.has(r.id)).slice(0, 5);
+  } catch {
+    return [];
+  }
 }
 
 /** Parse name and short-description from a SKILL.md frontmatter block. */
@@ -686,37 +760,52 @@ async function handleCommand(
         break;
       }
 
-      // 1. Try exact / partial ID match first
+      // 1. Exact / partial ID match → inject directly (no LLM needed)
       const allSkills = collectAllSkills();
       const idMatch = allSkills.find((e) => e.id === arg || e.id.startsWith(arg) || e.id.includes(arg));
       if (idMatch) {
-        await injectSkill(arg, history, injectedSkills, rl);
+        await injectSkill(idMatch.id, history, injectedSkills, rl);
         break;
       }
 
-      // 2. Natural language: run semantic routing on the description
-      const { routes, topScore } = routeSkill(arg);
-      if (routes.length === 0 || topScore < 4) {
-        // No semantic match — fall back to ID substring listing
+      // 2. Free-text description → LLM-powered recommendation
+      const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      let si = 0;
+      const spinTimer = setInterval(() => {
+        process.stdout.write(`\r  ${chalk.cyan(spinner[si++ % spinner.length])} 正在用 AI 搜索最匹配的 Skills...`);
+      }, 80);
+
+      const llmRecs = await llmRecommendSkills(arg);
+      clearInterval(spinTimer);
+      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // clear spinner line
+
+      if (llmRecs.length === 0) {
+        // LLM failed or returned nothing → fall back to keyword listing
+        console.log(chalk.yellow('  AI 推荐暂时不可用，显示关键词匹配结果:'));
         listSkills(arg);
         break;
       }
 
-      if (routes.length === 1 || topScore >= 10) {
-        // Single or highly confident match — auto-inject
-        console.log(chalk.dim(`根据描述匹配到: ${routes[0].id}`));
-        await injectSkill(routes[0].id, history, injectedSkills, rl);
+      // Show ranked recommendations
+      console.log(chalk.bold(`\n  AI 为您推荐以下 Skills (输入序号直接加载):\n`));
+      llmRecs.forEach((r, i) => {
+        const num = chalk.bold.cyan(`[${i + 1}]`);
+        console.log(`  ${num} ${chalk.cyan(r.id)}`);
+        console.log(`      ${chalk.dim(r.reason)}`);
+      });
+      console.log();
+      console.log(chalk.dim('  输入序号 1-' + llmRecs.length + ' 加载，直接回车取消，或输入 /sk <id> 加载其他'));
+      console.log();
+
+      const choice = await question(rl, chalk.blue('  选择 › '));
+      const choiceNum = parseInt(choice.trim(), 10);
+      if (!isNaN(choiceNum) && choiceNum >= 1 && choiceNum <= llmRecs.length) {
+        await injectSkill(llmRecs[choiceNum - 1].id, history, injectedSkills, rl);
+      } else if (choice.trim() === '') {
+        console.log(chalk.dim('  已取消'));
       } else {
-        // Multiple candidates — show ranked list and inject the best one
-        console.log(chalk.bold(`\n根据描述推荐以下 Skills:\n`));
-        routes.forEach((r, i) => {
-          const marker = i === 0 ? chalk.green('▶') : chalk.dim(' ');
-          console.log(`  ${marker} ${chalk.cyan(r.id)}  — ${r.name}`);
-          if (i > 0) console.log(chalk.dim(`       /sk ${r.id} 可激活此项`));
-        });
-        console.log();
-        console.log(chalk.dim('已自动激活第一个，如需切换请使用上方命令'));
-        await injectSkill(routes[0].id, history, injectedSkills, rl);
+        // User typed something else — treat as another /sk query
+        console.log(chalk.dim(`  提示: 使用 /sk ${choice.trim()} 加载指定 Skill`));
       }
       break;
     }
