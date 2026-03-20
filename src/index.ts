@@ -11,9 +11,21 @@ import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOu
 import { executeTool } from './tools.js';
 import { buildSystemPrompt } from './prompt.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
+import {
+  saveSession, loadSession, listSessions, deleteSession, getLastSession, newSessionId,
+  saveCheckpoint, listCheckpoints, loadCheckpoint, deleteCheckpoint, clearCheckpoints,
+  type SessionMeta, type Checkpoint,
+} from './sessions.js';
 
 declare const __APP_VERSION__: string;
 const VERSION: string = __APP_VERSION__;
+
+// ── Session context (module-level, set in main()) ─────────────────────────────
+const SESSION_CTX = {
+  id: '',
+  createdAt: '',
+  wdirSnapshot: null as Map<string, { path: string; mtime: number; size: number }> | null,
+};
 
 // ── Bundled data installer ─────────────────────────────────────────────────────
 // When installed via npm, the data/ directory is bundled alongside dist/bgi.js.
@@ -77,8 +89,20 @@ function printHelp(): void {
   console.log(`  ${chalk.cyan('/clear')}              清空对话历史`);
   console.log(`  ${chalk.cyan('/history')}            查看对话统计（轮次 / Token 估算）`);
   console.log(`  ${chalk.cyan('/compact')}            立即压缩对话历史（超 60k token 自动触发）`);
-  console.log(`  ${chalk.cyan('/save')} [文件名]      保存对话为 Markdown 文件`);
+  console.log(`  ${chalk.cyan('/save')} [名称]        保存对话为 Markdown 文件`);
   console.log(`  ${chalk.cyan('/think')} [on|off]     切换思考模式 (Qwen3 /think 前缀)`);
+  console.log();
+  console.log(chalk.bold.cyan('─── 会话持久化 ───────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('/sessions')}           列出历史会话`);
+  console.log(`  ${chalk.cyan('/resume')} [id]        恢复上次（或指定）会话`);
+  console.log(`  ${chalk.cyan('/session-save')} [名称] 手动命名保存当前会话`);
+  console.log(`  ${chalk.cyan('/session-del')} <id>   删除指定会话`);
+  console.log();
+  console.log(chalk.bold.cyan('─── 断点续传 ─────────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('/checkpoint')}         保存当前对话断点`);
+  console.log(`  ${chalk.cyan('/checkpoint list')}    列出当前会话所有断点`);
+  console.log(`  ${chalk.cyan('/checkpoint restore')} <id>  恢复到指定断点`);
+  console.log(`  ${chalk.cyan('/checkpoint clear')}   清除当前会话所有断点`);
   console.log();
   console.log(chalk.bold.cyan('─── Skills ───────────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/cat')}                按领域浏览 Skills 分类目录`);
@@ -94,11 +118,20 @@ function printHelp(): void {
   console.log(`  ${chalk.cyan('!<命令>')}             绕过 AI 直接执行 Shell 命令（实时输出）`);
   console.log(chalk.dim('  示例: !ls -la  !Rscript analysis.R  !python script.py  !samtools view -h a.bam'));
   console.log();
+  console.log(chalk.bold.cyan('─── 工作流向导 ───────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('/run')} <skill-id>     交互式参数向导，自动生成并执行分析脚本`);
+  console.log(`  ${chalk.cyan('/check-env')} [id]     检测 Skill 所需 R/Python 包是否已安装`);
+  console.log(`  ${chalk.cyan('/install')} <url>      从 GitHub 安装第三方 Skill`);
+  console.log(`  ${chalk.cyan('/uninstall')} <id>     卸载已安装的第三方 Skill`);
+  console.log();
   console.log(chalk.bold.cyan('─── 文件 & 目录 ──────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/cd')} <路径>          更改工作目录`);
   console.log(`  ${chalk.cyan('/cwd')}                显示当前工作目录`);
+  console.log(`  ${chalk.cyan('/diff')}               显示本次会话新增/修改的文件`);
   console.log(`  ${chalk.cyan('/tools')}              列出 AI 可调用的工具`);
   console.log(`  ${chalk.cyan('@路径')}               消息中内嵌文件内容 (例: @data.csv 里有什么?)`);
+  console.log(`  ${chalk.cyan('@目录/')}              内嵌目录下所有文件摘要 (例: @results/)`);
+  console.log(`  ${chalk.cyan('@*.csv')}              通配符内嵌多个文件 (例: @*.csv @*.tsv)`);
   console.log();
   console.log(chalk.bold.cyan('─── 其他 ─────────────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/help')}               显示本帮助`);
@@ -410,25 +443,132 @@ async function injectSkill(
   return true;
 }
 
-// ── @file expansion ───────────────────────────────────────────────────────────
+// ── @file / @dir / @glob expansion ───────────────────────────────────────────
+
+import { readdirSync as _readdirSync2, statSync as _statSync2 } from 'fs';
+
+const FILE_SIZE_LIMIT = 100 * 1024; // 100 KB per file
+const DIR_FILE_LIMIT  = 20;         // max files from a directory glob
+
+/** Recursively list files in a directory (non-recursive, one level). */
+function listDirFiles(dirPath: string): string[] {
+  try {
+    return _readdirSync2(dirPath)
+      .map((f) => join(dirPath, f))
+      .filter((p) => {
+        try { return _statSync2(p).isFile(); } catch { return false; }
+      });
+  } catch {
+    return [];
+  }
+}
+
+/** Expand a single file path to its content block. */
+function expandSingleFile(resolved: string): string {
+  try {
+    const stat = _statSync2(resolved);
+    if (!stat.isFile()) return `[${resolved}: 不是文件]`;
+    if (stat.size > FILE_SIZE_LIMIT) {
+      return `\n\`\`\`\n[文件: ${resolved}]\n(文件过大 ${Math.round(stat.size / 1024)}KB，已跳过)\n\`\`\`\n`;
+    }
+    const content = readFileSync(resolved, 'utf8');
+    const lines = content.split('\n');
+    const preview = lines.length > 150
+      ? lines.slice(0, 150).join('\n') + `\n... (共 ${lines.length} 行，已截断)`
+      : content;
+    return `\n\`\`\`\n[文件: ${resolved}]\n${preview}\n\`\`\`\n`;
+  } catch {
+    return `[无法读取: ${resolved}]`;
+  }
+}
 
 function expandFileRefs(input: string): string {
-  // Match @path or @"path with spaces"
-  return input.replace(/@"([^"]+)"|@'([^']+)'|@([\w./\\~:-]+)/g, (_, q1, q2, q3) => {
-    const rawPath = q1 ?? q2 ?? q3;
-    try {
-      const resolved = resolve(rawPath.replace(/^~/, homedir()));
-      if (!existsSync(resolved)) return _;
-      const content = readFileSync(resolved, 'utf8');
-      const lines = content.split('\n');
-      const preview = lines.length > 100
-        ? lines.slice(0, 100).join('\n') + `\n... (共 ${lines.length} 行，已截断显示前 100 行)`
-        : content;
-      return `\n\`\`\`\n[文件: ${resolved}]\n${preview}\n\`\`\`\n`;
-    } catch {
-      return _;
+  // Match @"path", @'path', or @token
+  return input.replace(/@"([^"]+)"|@'([^']+)'|@([\/\w.*?~:-]+)/g, (match, q1, q2, q3) => {
+    const rawPath = (q1 ?? q2 ?? q3) as string;
+    const expanded = rawPath.replace(/^~/, homedir());
+
+    // ── Directory: @path/ ──────────────────────────────────────────────────
+    if (rawPath.endsWith('/') || rawPath.endsWith('\\')) {
+      const dirResolved = resolve(expanded);
+      if (!existsSync(dirResolved)) return match;
+      const files = listDirFiles(dirResolved).slice(0, DIR_FILE_LIMIT);
+      if (files.length === 0) return `[目录 ${dirResolved} 为空]`;
+      const parts = [`\n[目录: ${dirResolved}  共 ${files.length} 个文件]`];
+      for (const f of files) parts.push(expandSingleFile(f));
+      return parts.join('\n');
     }
+
+    // ── Glob: @*.csv, @data/*.tsv ──────────────────────────────────────────
+    if (rawPath.includes('*') || rawPath.includes('?')) {
+      const { globSync } = (() => {
+        try { return require('glob'); } catch { return { globSync: null }; }
+      })();
+      let matched: string[] = [];
+      if (globSync) {
+        matched = (globSync(expanded, { absolute: true }) as string[]).slice(0, DIR_FILE_LIMIT);
+      } else {
+        // Fallback: simple *.ext in cwd
+        const ext = rawPath.replace(/^.*\./, '.');
+        matched = listDirFiles(process.cwd())
+          .filter((f) => f.endsWith(ext))
+          .slice(0, DIR_FILE_LIMIT);
+      }
+      if (matched.length === 0) return `[未找到匹配: ${rawPath}]`;
+      const parts = [`\n[通配符匹配: ${rawPath}  共 ${matched.length} 个文件]`];
+      for (const f of matched) parts.push(expandSingleFile(f));
+      return parts.join('\n');
+    }
+
+    // ── Single file ────────────────────────────────────────────────────────
+    const resolved = resolve(expanded);
+    if (!existsSync(resolved)) return match;
+    return expandSingleFile(resolved);
   });
+}
+
+// ── Workdir snapshot & diff ──────────────────────────────────────────────────
+
+interface FileSnapshot { path: string; mtime: number; size: number; }
+
+function snapshotWorkdir(dir: string): Map<string, FileSnapshot> {
+  const snap = new Map<string, FileSnapshot>();
+  function walk(d: string, depth = 0): void {
+    if (depth > 3) return; // max 3 levels deep
+    try {
+      for (const entry of readdirSync(d)) {
+        if (entry.startsWith('.') || entry === 'node_modules') continue;
+        const full = join(d, entry);
+        try {
+          const st = statSync(full);
+          if (st.isDirectory()) {
+            walk(full, depth + 1);
+          } else {
+            snap.set(full, { path: full, mtime: st.mtimeMs, size: st.size });
+          }
+        } catch { /* skip */ }
+      }
+    } catch { /* skip */ }
+  }
+  walk(dir);
+  return snap;
+}
+
+function diffWorkdir(
+  before: Map<string, FileSnapshot>,
+  after: Map<string, FileSnapshot>,
+): { added: string[]; modified: string[] } {
+  const added: string[] = [];
+  const modified: string[] = [];
+  for (const [path, snap] of after) {
+    const prev = before.get(path);
+    if (!prev) {
+      added.push(path);
+    } else if (snap.mtime !== prev.mtime || snap.size !== prev.size) {
+      modified.push(path);
+    }
+  }
+  return { added, modified };
 }
 
 // ── Save conversation ─────────────────────────────────────────────────────────
@@ -528,6 +668,20 @@ interface CommandResult {
   clearHistory?: boolean;
   thinkMode?: boolean;
   injectHistory?: Message[];
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatAge(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins  = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days  = Math.floor(diff / 86_400_000);
+  if (mins < 1)   return '刚刚';
+  if (mins < 60)  return `${mins} 分钟前`;
+  if (hours < 24) return `${hours} 小时前`;
+  if (days < 30)  return `${days} 天前`;
+  return new Date(isoDate).toLocaleDateString('zh-CN');
 }
 
 async function handleCommand(
@@ -651,6 +805,388 @@ async function handleCommand(
 
     case 'save': {
       saveConversation(history, arg || undefined);
+      break;
+    }
+
+    // ── Session persistence ──────────────────────────────────────────────────
+    case 'sessions': {
+      const sessions = listSessions();
+      if (sessions.length === 0) {
+        console.log(chalk.dim('暂无历史会话。对话结束后会自动保存。'));
+        break;
+      }
+      console.log(chalk.bold(`\n历史会话 (${sessions.length} 个):\n`));
+      sessions.slice(0, 20).forEach((s, i) => {
+        const age = formatAge(s.updatedAt);
+        const skills = s.skills.length > 0 ? chalk.dim(` [${s.skills.join(', ')}]`) : '';
+        const preview = s.preview ? chalk.dim(` — "${s.preview.slice(0, 40)}${s.preview.length > 40 ? '…' : ''}"`) : '';
+        const marker = i === 0 ? chalk.green('●') : chalk.dim('○');
+        console.log(`  ${marker} ${chalk.cyan(s.id)}  ${chalk.dim(age)}${skills}`);
+        if (preview) console.log(`      ${preview}`);
+      });
+      console.log();
+      console.log(chalk.dim('使用 /resume [id] 恢复会话  /session-del <id> 删除'));
+      break;
+    }
+
+    case 'resume': {
+      let targetId = arg;
+      if (!targetId) {
+        const last = getLastSession();
+        if (!last) {
+          console.log(chalk.yellow('暂无历史会话'));
+          break;
+        }
+        targetId = last.id;
+        console.log(chalk.dim(`恢复最近会话: ${targetId}`));
+      }
+      const session = loadSession(targetId);
+      if (!session) {
+        // Try partial match
+        const all = listSessions();
+        const match = all.find((s) => s.id.includes(targetId!));
+        if (!match) {
+          console.log(chalk.red(`未找到会话: ${targetId}`));
+          break;
+        }
+        const s2 = loadSession(match.id);
+        if (!s2) { console.log(chalk.red('加载失败')); break; }
+        console.log(chalk.green(`✓ 已恢复会话 ${s2.id} (${s2.messageCount} 条消息)`));
+        if (s2.skills.length > 0) console.log(chalk.dim(`  已加载 Skills: ${s2.skills.join(', ')}`));
+        // Restore skills map
+        for (const sk of s2.skills) injectedSkills.set(sk, sk);
+        return { injectHistory: s2.messages };
+      }
+      console.log(chalk.green(`✓ 已恢复会话 ${session.id} (${session.messageCount} 条消息)`));
+      if (session.skills.length > 0) console.log(chalk.dim(`  已加载 Skills: ${session.skills.join(', ')}`));
+      for (const sk of session.skills) injectedSkills.set(sk, sk);
+      return { injectHistory: session.messages };
+    }
+
+    case 'session-save': {
+      const sessionId = SESSION_CTX.id || undefined;
+      if (!sessionId) { console.log(chalk.yellow('当前会话尚未初始化')); break; }
+      const name = arg || new Date().toLocaleString('zh-CN');
+      saveSession(sessionId, name, history, Array.from(injectedSkills.keys()), SESSION_CTX.createdAt || new Date().toISOString());
+      console.log(chalk.green(`✓ 会话已保存: ${sessionId}  名称: "${name}"`));
+      break;
+    }
+
+    case 'session-del': {
+      if (!arg) { console.log('用法: /session-del <id>'); break; }
+      const ok = deleteSession(arg);
+      console.log(ok ? chalk.green(`✓ 已删除会话: ${arg}`) : chalk.yellow(`未找到会话: ${arg}`));
+      break;
+    }
+
+    // ── Checkpoints ──────────────────────────────────────────────────────────
+    case 'checkpoint': {
+      const sessionId = SESSION_CTX.id || undefined ?? 'default';
+      const sub = arg.split(/\s+/)[0]?.toLowerCase();
+      const subArg = arg.split(/\s+/).slice(1).join(' ');
+
+      if (!sub || sub === 'save' || sub === '') {
+        // Save checkpoint
+        const label = subArg || `第 ${Math.floor(history.length / 2)} 轮`;
+        const cpId = saveCheckpoint(sessionId, label, history, Array.from(injectedSkills.keys()));
+        console.log(chalk.green(`✓ 断点已保存: ${cpId}  标签: "${label}"`));
+      } else if (sub === 'list') {
+        const cps = listCheckpoints(sessionId);
+        if (cps.length === 0) {
+          console.log(chalk.dim('当前会话暂无断点'));
+        } else {
+          console.log(chalk.bold(`\n当前会话断点 (${cps.length} 个):\n`));
+          cps.forEach((cp) => {
+            const age = formatAge(cp.createdAt);
+            console.log(`  ${chalk.cyan(cp.id.split('-cp')[1] ?? cp.id)}  ${chalk.dim(age)}  "${cp.label}"  (${cp.messageCount} 条消息)`);
+            console.log(chalk.dim(`    /checkpoint restore ${cp.id}`));
+          });
+        }
+      } else if (sub === 'restore') {
+        if (!subArg) { console.log('用法: /checkpoint restore <id>'); break; }
+        // Support short ID (just the timestamp part)
+        const cps = listCheckpoints(sessionId);
+        const target = cps.find((cp) => cp.id === subArg || cp.id.endsWith(subArg));
+        if (!target) { console.log(chalk.red(`未找到断点: ${subArg}`)); break; }
+        console.log(chalk.green(`✓ 已恢复到断点: "${target.label}" (${target.messageCount} 条消息)`));
+        injectedSkills.clear();
+        for (const sk of target.skills) injectedSkills.set(sk, sk);
+        return { injectHistory: target.messages };
+      } else if (sub === 'clear') {
+        const n = clearCheckpoints(sessionId);
+        console.log(chalk.green(`✓ 已清除 ${n} 个断点`));
+      } else {
+        console.log('用法: /checkpoint [list|restore <id>|clear]');
+      }
+      break;
+    }
+
+    // ── Workdir diff ─────────────────────────────────────────────────────────
+    case 'diff': {
+      const snap = SESSION_CTX.wdirSnapshot ?? undefined;
+      if (!snap) {
+        console.log(chalk.dim('工作目录快照尚未建立（会话开始时自动创建）'));
+        break;
+      }
+      const current = snapshotWorkdir(process.cwd());
+      const { added, modified } = diffWorkdir(snap, current);
+      if (added.length === 0 && modified.length === 0) {
+        console.log(chalk.dim('本次会话未产生新文件或修改'));
+      } else {
+        if (added.length > 0) {
+          console.log(chalk.bold.green(`\n新增文件 (${added.length} 个):`));
+          added.forEach((f) => console.log(`  ${chalk.green('+')} ${f}`));
+        }
+        if (modified.length > 0) {
+          console.log(chalk.bold.yellow(`\n修改文件 (${modified.length} 个):`));
+          modified.forEach((f) => console.log(`  ${chalk.yellow('~')} ${f}`));
+        }
+        console.log();
+      }
+      break;
+    }
+
+    // ── /run workflow wizard ─────────────────────────────────────────────────
+    case 'run': {
+      const targetId = arg;
+      if (!targetId) {
+        console.log('用法: /run <skill-id>');
+        console.log(chalk.dim('示例: /run deseq2-analysis  /run survival-analysis-clinical'));
+        break;
+      }
+      const allSkillsRun = collectAllSkills();
+      const runMatch = allSkillsRun.find((e) => e.id === targetId || e.id.startsWith(targetId) || e.id.includes(targetId));
+      if (!runMatch) {
+        console.log(chalk.red(`未找到 Skill: ${targetId}`));
+        break;
+      }
+      const skillPath = join(runMatch.dir, runMatch.id, 'SKILL.md');
+      if (!existsSync(skillPath)) {
+        console.log(chalk.red(`${runMatch.id} 缺少 SKILL.md`));
+        break;
+      }
+      const skillContent = readFileSync(skillPath, 'utf8');
+      const { name: skillName } = parseSkillMeta(skillContent);
+
+      // Extract required-params section from SKILL.md
+      const paramsMatch = skillContent.match(/##\s*(?:必要参数|Required Parameters|参数)[\s\S]*?(?=\n##|$)/i);
+      const paramsSection = paramsMatch?.[0] ?? '';
+
+      // Ask LLM to extract parameter list
+      console.log(chalk.bold.cyan(`\n─── /run ${runMatch.id} 向导 ─────────────────────────────`));
+      console.log(chalk.dim(`  Skill: ${skillName || runMatch.id}`));
+      console.log(chalk.dim('  请回答以下问题，AI 将自动生成并执行分析脚本\n'));
+
+      // Simple parameter extraction: look for bullet points or numbered items in params section
+      const paramLines = paramsSection
+        .split('\n')
+        .filter((l) => /^[-*•]|^\d+\./.test(l.trim()))
+        .map((l) => l.replace(/^[-*•\d.]+\s*/, '').trim())
+        .filter(Boolean)
+        .slice(0, 8);
+
+      // If no params found in SKILL.md, use generic questions
+      const questions = paramLines.length > 0 ? paramLines : [
+        '数据文件路径（支持相对路径，如 ./data/counts.csv）',
+        '样本分组信息（如 treatment,treatment,control,control）',
+        '对照组名称',
+        '实验组名称',
+        '输出目录（默认: ./results）',
+      ];
+
+      const answers: Record<string, string> = {};
+      for (const q of questions) {
+        const ans = await question(rl, chalk.blue(`  ${q}: `));
+        if (ans.trim()) answers[q] = ans.trim();
+      }
+
+      // Build prompt for LLM to generate analysis script
+      const paramSummary = Object.entries(answers)
+        .map(([k, v]) => `- ${k}: ${v}`)
+        .join('\n');
+
+      const runPrompt = `请根据以下参数，使用 ${skillName || runMatch.id} 工作流生成完整的分析脚本并立即执行：
+
+用户提供的参数：
+${paramSummary}
+
+请：
+1. 生成完整可运行的分析脚本（R 或 Python）
+2. 使用 bash 工具执行脚本
+3. 分析完成后给出结果摘要`;
+
+      // Ensure skill is loaded
+      if (!injectedSkills.has(runMatch.id)) {
+        await injectSkill(runMatch.id, history, injectedSkills, rl, true);
+      }
+
+      history.push({ role: 'user', content: runPrompt });
+      console.log(chalk.dim('\n  正在生成并执行分析脚本...\n'));
+      try {
+        const runCfg = loadConfig();
+        const reply = await chat(history, runCfg, buildSystemPrompt());
+        history.push({ role: 'assistant', content: reply });
+      } catch (err) {
+        console.error(chalk.red(`执行失败: ${err instanceof Error ? err.message : String(err)}`));
+        history.pop();
+      }
+      break;
+    }
+
+    // ── /check-env ───────────────────────────────────────────────────────────
+    case 'check-env': {
+      const checkId = arg;
+      const skillsToCheck = checkId
+        ? (() => {
+            const all = collectAllSkills();
+            const m = all.find((e) => e.id === checkId || e.id.startsWith(checkId) || e.id.includes(checkId));
+            return m ? [m] : [];
+          })()
+        : collectAllSkills().filter((e) => injectedSkills.has(e.id));
+
+      if (skillsToCheck.length === 0) {
+        console.log(chalk.yellow(checkId ? `未找到 Skill: ${checkId}` : '当前会话未加载任何 Skill'));
+        break;
+      }
+
+      for (const entry of skillsToCheck) {
+        const sp = join(entry.dir, entry.id, 'SKILL.md');
+        if (!existsSync(sp)) continue;
+        const content = readFileSync(sp, 'utf8');
+        const { name } = parseSkillMeta(content);
+        console.log(chalk.bold(`\n检测 ${name || entry.id} 的依赖环境:`));
+
+        // Extract R packages
+        const rPkgs = [...new Set([
+          ...(content.match(/library\(([\w.]+)\)/g) ?? []).map((m) => m.replace(/library\(|\)/g, '')),
+          ...(content.match(/require\(([\w.]+)\)/g) ?? []).map((m) => m.replace(/require\(|\)/g, '')),
+          ...(content.match(/BiocManager::install\("([^"]+)"\)/g) ?? []).map((m) => m.replace(/BiocManager::install\("|"\)/g, '')),
+        ])];
+
+        // Extract Python packages
+        const pyPkgs = [...new Set([
+          ...(content.match(/import (\w+)/g) ?? []).map((m) => m.replace('import ', '')),
+          ...(content.match(/from (\w+) import/g) ?? []).map((m) => m.replace('from ', '').replace(' import', '')),
+        ])];
+
+        if (rPkgs.length > 0) {
+          console.log(chalk.dim(`  R 包 (${rPkgs.length} 个): ${rPkgs.join(', ')}`));
+          // Check each R package
+          const checkScript = rPkgs.map((p) =>
+            `cat(sprintf("  %-30s %s\\n", "${p}", if(requireNamespace("${p}", quietly=TRUE)) "✓ 已安装" else "✗ 未安装"))`
+          ).join('\n');
+          const result = await executeTool('bash', { command: `Rscript -e '${checkScript}'` });
+          if (result.error) {
+            console.log(chalk.dim('  (R 未安装或不可用)'));
+          } else {
+            console.log(result.output);
+            // Show install command for missing packages
+            const missing = rPkgs.filter((p) => result.output.includes(`${p}`) && result.output.includes('✗'));
+            if (missing.length > 0) {
+              console.log(chalk.yellow(`  缺少 ${missing.length} 个 R 包，安装命令:`));
+              console.log(chalk.cyan(`  !Rscript -e 'install.packages(c(${missing.map((p) => `"${p}"`).join(', ')}))'`));
+              const biocPkgs = missing.filter((p) => ['DESeq2','edgeR','limma','clusterProfiler','Seurat','SingleCellExperiment','BiocGenerics'].includes(p));
+              if (biocPkgs.length > 0) {
+                console.log(chalk.cyan(`  !Rscript -e 'BiocManager::install(c(${biocPkgs.map((p) => `"${p}"`).join(', ')}))'`));
+              }
+            }
+          }
+        }
+
+        if (pyPkgs.length > 0) {
+          const commonPy = ['numpy','pandas','scipy','sklearn','matplotlib','seaborn','scanpy','anndata','torch'];
+          const relevantPy = pyPkgs.filter((p) => commonPy.includes(p));
+          if (relevantPy.length > 0) {
+            console.log(chalk.dim(`  Python 包 (${relevantPy.length} 个): ${relevantPy.join(', ')}`));
+            const checkPy = relevantPy.map((p) =>
+              `python3 -c "import ${p}; print('  %-30s ✓ 已安装' % '${p}')" 2>/dev/null || echo "  ${p.padEnd(30)} ✗ 未安装"`
+            ).join(' && ');
+            const result = await executeTool('bash', { command: checkPy });
+            if (!result.error) console.log(result.output);
+          }
+        }
+
+        if (rPkgs.length === 0 && pyPkgs.length === 0) {
+          console.log(chalk.dim('  未检测到明确的包依赖声明'));
+        }
+      }
+      break;
+    }
+
+    // ── /install from GitHub ─────────────────────────────────────────────────
+    case 'install': {
+      if (!arg) {
+        console.log('用法: /install <github-url>');
+        console.log(chalk.dim('示例: /install https://github.com/user/my-skill'));
+        console.log(chalk.dim('      /install user/repo  (GitHub 简写)'));
+        break;
+      }
+      // Normalize URL
+      let repoUrl = arg;
+      if (!repoUrl.startsWith('http')) {
+        repoUrl = `https://github.com/${repoUrl}`;
+      }
+      // Extract repo name as skill ID
+      const repoName = repoUrl.replace(/\.git$/, '').split('/').pop() ?? 'unknown-skill';
+      const installTarget = join(SKILLS_DIR, repoName);
+
+      if (existsSync(installTarget)) {
+        console.log(chalk.yellow(`Skill "${repoName}" 已存在，如需更新请先 /uninstall ${repoName}`));
+        break;
+      }
+
+      console.log(chalk.dim(`正在从 GitHub 安装 Skill: ${repoName}...`));
+      const cloneResult = await executeTool('bash', {
+        command: `git clone --depth 1 "${repoUrl}" "${installTarget}" 2>&1`,
+      });
+
+      if (cloneResult.error || cloneResult.output.includes('fatal:')) {
+        console.log(chalk.red(`安装失败: ${cloneResult.output || cloneResult.error}`));
+        break;
+      }
+
+      // Validate SKILL.md exists
+      const skillMdPath = join(installTarget, 'SKILL.md');
+      if (!existsSync(skillMdPath)) {
+        console.log(chalk.red(`安装失败: ${repoName} 缺少 SKILL.md 文件`));
+        // Clean up
+        await executeTool('bash', { command: `rm -rf "${installTarget}"` });
+        break;
+      }
+
+      const content = readFileSync(skillMdPath, 'utf8');
+      const { name, shortDesc } = parseSkillMeta(content);
+      console.log(chalk.green(`✓ Skill 安装成功!`));
+      console.log(`  ID:    ${chalk.cyan(repoName)}`);
+      console.log(`  名称:  ${name || repoName}`);
+      if (shortDesc) console.log(`  功能:  ${chalk.dim(shortDesc)}`);
+      console.log(chalk.dim(`  使用 /sk ${repoName} 加载`));
+      break;
+    }
+
+    case 'uninstall': {
+      if (!arg) {
+        console.log('用法: /uninstall <skill-id>');
+        break;
+      }
+      const uninstallPath = join(SKILLS_DIR, arg);
+      if (!existsSync(uninstallPath)) {
+        console.log(chalk.red(`未找到已安装的 Skill: ${arg}`));
+        console.log(chalk.dim('注意: 只能卸载通过 /install 安装的第三方 Skill'));
+        break;
+      }
+      const ans = await question(rl, chalk.yellow(`  确认卸载 Skill "${arg}"？[y/N] › `));
+      if (ans.trim().toLowerCase() !== 'y') {
+        console.log(chalk.dim('  已取消'));
+        break;
+      }
+      const rmResult = await executeTool('bash', { command: `rm -rf "${uninstallPath}"` });
+      if (rmResult.error) {
+        console.log(chalk.red(`卸载失败: ${rmResult.error}`));
+      } else {
+        injectedSkills.delete(arg);
+        console.log(chalk.green(`✓ Skill "${arg}" 已卸载`));
+      }
       break;
     }
 
@@ -914,7 +1450,19 @@ async function main(): Promise<void> {
   console.log(`  ${chalk.bold('模型:')}    ${chalk.green(cfg.model)}`);
   console.log(`  ${chalk.bold('Skills:')}  ${totalSkills > 0 ? chalk.green(`${totalSkills} 个`) : chalk.yellow('未安装')}  ${chalk.dim('(/sk 搜索  /cat 分类目录)')}`);
   console.log(`  ${chalk.bold('工具:')}    bash · read_file · write_file · list_dir · search_files`);
+  console.log(`  ${chalk.bold('新功能:')}  /sessions /resume /checkpoint /run /check-env /install /diff`);
   console.log(chalk.bold.cyan('─────────────────────────────────────────────────────────'));
+  // Show last session hint
+  const lastSess = getLastSession();
+  if (lastSess) {
+    const age = (() => {
+      const diff = Date.now() - new Date(lastSess.updatedAt).getTime();
+      const h = Math.floor(diff / 3_600_000);
+      const d = Math.floor(diff / 86_400_000);
+      return d > 0 ? `${d}天前` : h > 0 ? `${h}小时前` : '刚刚';
+    })();
+    console.log(chalk.dim(`  上次会话: ${lastSess.id}  ${age}  /resume 恢复`));
+  }
   console.log(chalk.dim('  输入问题开始对话   /help 查看命令   /cat 技能分类   @文件路径 内嵌文件'));
   console.log();
 
@@ -922,6 +1470,29 @@ async function main(): Promise<void> {
   let history: Message[] = [];
   let thinkMode = false;
   const injectedSkills = new Map<string, string>(); // id → display name
+
+  // ── Session init ────────────────────────────────────────────────────────────
+  const sessionId = newSessionId();
+  const sessionCreatedAt = new Date().toISOString();
+  // Attach session metadata to cfg object (passed through handleCommand)
+  SESSION_CTX.id = sessionId;
+  SESSION_CTX.createdAt = sessionCreatedAt;
+
+  // ── Workdir snapshot ────────────────────────────────────────────────────────
+  const wdirSnapshot = snapshotWorkdir(process.cwd());
+  SESSION_CTX.wdirSnapshot = wdirSnapshot;
+
+  // Auto-save session after each AI reply
+  function autoSaveSession(): void {
+    if (history.length === 0) return;
+    try {
+      saveSession(sessionId, sessionCreatedAt, history, Array.from(injectedSkills.keys()), sessionCreatedAt);
+    } catch { /* non-fatal */ }
+  }
+
+  // Auto-checkpoint after successful bash tool execution (tracked via message count)
+  let lastCheckpointMsgCount = 0;
+  const CHECKPOINT_INTERVAL = 6; // save checkpoint every ~3 turns (6 messages)
 
   while (true) {
     let input: string;
@@ -1002,6 +1573,16 @@ async function main(): Promise<void> {
       const reply = await chat(history, currentCfg, systemPrompt);
       history.push({ role: 'assistant', content: reply });
       history = await maybeCompact(history, currentCfg);
+
+      // ── Auto-save session ─────────────────────────────────────────────────
+      autoSaveSession();
+
+      // ── Auto-checkpoint every N messages ──────────────────────────────────
+      if (history.length - lastCheckpointMsgCount >= CHECKPOINT_INTERVAL) {
+        const label = `第 ${Math.floor(history.length / 2)} 轮`;
+        saveCheckpoint(sessionId, label, history, Array.from(injectedSkills.keys()));
+        lastCheckpointMsgCount = history.length;
+      }
 
       // ── Show active Skills footer ──────────────────────────────────────────
       if (injectedSkills.size > 0) {
