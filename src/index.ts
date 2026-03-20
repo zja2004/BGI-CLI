@@ -10,7 +10,8 @@ import { chat, compactMessages, type Message } from './chat.js';
 import { buildSystemPrompt } from './prompt.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 
-const VERSION = '2.2.0';
+declare const __APP_VERSION__: string;
+const VERSION: string = __APP_VERSION__;
 
 // ── Bundled data installer ─────────────────────────────────────────────────────
 // When installed via npm, the data/ directory is bundled alongside dist/bgi.js.

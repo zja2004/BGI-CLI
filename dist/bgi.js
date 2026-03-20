@@ -14726,7 +14726,7 @@ function routeSkill(message) {
 }
 
 // src/index.ts
-var VERSION2 = "2.2.0";
+var VERSION2 = "2.2.6";
 function installBundledData() {
   const bundledData = (0, import_path4.join)(__dirname, "..", "data");
   if (!(0, import_fs4.existsSync)(bundledData)) return;

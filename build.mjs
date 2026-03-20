@@ -1,5 +1,7 @@
 import { build } from 'esbuild';
-import { writeFileSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
+
+const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
 
 await build({
   entryPoints: ['src/index.ts'],
@@ -12,6 +14,7 @@ await build({
   minify: false,
   sourcemap: false,
   external: [],
+  define: { __APP_VERSION__: JSON.stringify(version) },
 });
 
 console.log('✓ Built dist/bgi.js');
