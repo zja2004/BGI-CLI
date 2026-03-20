@@ -6,7 +6,7 @@ import { join, resolve } from 'path';
 import { homedir } from 'os';
 import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
-import { chat, compactMessages, type Message } from './chat.js';
+import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message } from './chat.js';
 import { buildSystemPrompt } from './prompt.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 
@@ -316,24 +316,46 @@ function saveConversation(history: Message[], filename?: string): void {
 
 // ── Auto-compact ──────────────────────────────────────────────────────────────
 
-const COMPACT_TOKEN_THRESHOLD = 60_000; // ~210k chars; trigger compaction
-const COMPACT_KEEP_RECENT = 8;          // keep last N messages intact
+// Context window thresholds
+const COMPACT_TOKEN_THRESHOLD = 40_000; // ~140k chars; trigger compaction earlier
+const COMPACT_KEEP_RECENT     = 8;      // keep last N messages intact after compaction
+const WARN_TOKEN_THRESHOLD    = 30_000; // warn user when approaching limit
 
-function estimateTokens(messages: Message[]): number {
-  const chars = messages.reduce((n, m) => n + String(m.content ?? '').length, 0);
-  return Math.round(chars / 3.5);
-}
+// Use the shared estimateTokens from chat.ts (consistent heuristic)
+const estimateTokens = chatEstimateTokens;
 
 async function maybeCompact(history: Message[], cfg: ReturnType<typeof loadConfig>): Promise<Message[]> {
-  const tokens = estimateTokens(history);
-  if (tokens < COMPACT_TOKEN_THRESHOLD) return history;
+  // Step 1: always deduplicate skill injections and trim tool outputs first
+  // (cheap, no LLM call needed — often saves 10-30k tokens for free)
+  let cleaned = deduplicateSkillInjections(trimToolOutputs(history));
+  const tokensBefore = estimateTokens(history);
+  const tokensAfter  = estimateTokens(cleaned);
 
-  // Keep the most recent messages untouched; summarize everything older
-  const recent = history.slice(-COMPACT_KEEP_RECENT);
-  const old = history.slice(0, -COMPACT_KEEP_RECENT);
-  if (old.length === 0) return history;
+  if (tokensAfter < tokensBefore) {
+    const saved = tokensBefore - tokensAfter;
+    process.stdout.write(chalk.dim(
+      `\n[上下文优化: 去重/截断节省 ~${Math.round(saved / 1000)}k tokens]\n`
+    ));
+  }
 
-  process.stdout.write(chalk.dim(`\n[上下文已达 ~${Math.round(tokens / 1000)}k tokens，正在自动压缩...]\n`));
+  // Step 2: warn if approaching threshold
+  if (tokensAfter >= WARN_TOKEN_THRESHOLD && tokensAfter < COMPACT_TOKEN_THRESHOLD) {
+    process.stdout.write(chalk.dim(
+      `[提示: 上下文已达 ~${Math.round(tokensAfter / 1000)}k tokens，接近压缩阈值 ${Math.round(COMPACT_TOKEN_THRESHOLD / 1000)}k]\n`
+    ));
+    return cleaned;
+  }
+
+  if (tokensAfter < COMPACT_TOKEN_THRESHOLD) return cleaned;
+
+  // Step 3: LLM-based summarization of older messages
+  const recent = cleaned.slice(-COMPACT_KEEP_RECENT);
+  const old    = cleaned.slice(0, -COMPACT_KEEP_RECENT);
+  if (old.length === 0) return cleaned;
+
+  process.stdout.write(chalk.dim(
+    `\n[上下文已达 ~${Math.round(tokensAfter / 1000)}k tokens，正在自动压缩历史...]\n`
+  ));
   try {
     const summary = await compactMessages(old, cfg);
     const compacted: Message[] = [
@@ -347,12 +369,16 @@ async function maybeCompact(history: Message[], cfg: ReturnType<typeof loadConfi
       },
       ...recent,
     ];
-    const saved = estimateTokens(history) - estimateTokens(compacted);
-    process.stdout.write(chalk.dim(`[压缩完成，释放约 ~${Math.round(saved / 1000)}k tokens]\n\n`));
+    const finalTokens = estimateTokens(compacted);
+    const totalSaved  = tokensBefore - finalTokens;
+    process.stdout.write(chalk.dim(
+      `[压缩完成: ~${Math.round(tokensBefore / 1000)}k → ~${Math.round(finalTokens / 1000)}k tokens，节省 ~${Math.round(totalSaved / 1000)}k]\n\n`
+    ));
     return compacted;
   } catch {
     // Compaction failed — fall back to simple truncation
-    return history.slice(-COMPACT_KEEP_RECENT * 2);
+    process.stdout.write(chalk.yellow('[压缩失败，回退到截断模式]\n'));
+    return cleaned.slice(-COMPACT_KEEP_RECENT * 2);
   }
 }
 
@@ -468,13 +494,18 @@ async function handleCommand(
       return { clearHistory: true };
 
     case 'history': {
-      const turns = Math.floor(history.length / 2);
-      const chars = history.reduce((n, m) => n + String(m.content ?? '').length, 0);
-      const estTokens = Math.round(chars / 3.5);
+      const turns     = Math.floor(history.length / 2);
+      const estTokens = estimateTokens(history);
+      const pct       = Math.round((estTokens / COMPACT_TOKEN_THRESHOLD) * 100);
+      const bar       = '█'.repeat(Math.min(20, Math.round(pct / 5))) +
+                        '░'.repeat(Math.max(0, 20 - Math.round(pct / 5)));
       console.log(chalk.bold('对话统计:'));
       console.log(`  轮次:        ${turns}`);
       console.log(`  消息总数:    ${history.length}`);
       console.log(`  估算 Token:  ~${estTokens.toLocaleString()}`);
+      console.log(`  上下文用量:  [${pct >= 80 ? chalk.red(bar) : pct >= 50 ? chalk.yellow(bar) : chalk.green(bar)}] ${pct}%`);
+      console.log(`  压缩阈值:    ~${Math.round(COMPACT_TOKEN_THRESHOLD / 1000)}k tokens`);
+      if (pct >= 80) console.log(chalk.yellow('  ⚠ 接近上限，建议运行 /compact'));
       break;
     }
 
@@ -625,11 +656,12 @@ async function handleCommand(
 
     case 'tools':
       console.log(chalk.bold('AI 可调用的工具:'));
-      console.log(`  ${chalk.cyan('bash')}          执行 Shell 命令 (R/Python/bash 脚本、生信工具)`);
-      console.log(`  ${chalk.cyan('read_file')}     读取文件内容 (支持 ~/ 路径)`);
+      console.log(`  ${chalk.cyan('bash')}          执行 Shell 命令 (R/Python/bash 脚本、生信工具) — 实时流式输出`);
+      console.log(`  ${chalk.cyan('read_file')}     读取文件内容 (支持 ~/ 路径，默认 500 行)`);
       console.log(`  ${chalk.cyan('write_file')}    创建或覆写文件`);
       console.log(`  ${chalk.cyan('list_dir')}      列出目录内容`);
       console.log(`  ${chalk.cyan('search_files')}  glob 搜索文件 (如 *.R, *.csv)`);
+      console.log(`  ${chalk.cyan('fetch_geo')}     查询 NCBI GEO 数据库 (GSE/GDS/GPL/GSM 编号)`);
       console.log();
       console.log(chalk.dim('提示: 直接描述任务，AI 会自动决定调用哪个工具'));
       break;

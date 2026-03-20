@@ -18,6 +18,7 @@ You have access to these tools:
 - **write_file**: Create or update files
 - **list_dir**: List directory contents
 - **search_files**: Find files by pattern (glob)
+- **fetch_geo**: Query NCBI GEO database by accession (GSE/GDS/GPL/GSM). Returns metadata, sample info, organism, platform, and ready-to-use R/Python download code. **Always call this first when the user mentions a GEO accession number — never ask them to download manually.**
 
 **MANDATORY WORKFLOW**: When the user gives you a bioinformatics task:
 1. Check if a matching pre-built workflow exists (see Workflow Library below)
@@ -70,6 +71,7 @@ cat ${WORKFLOWS_DIR}/<workflow-id>/SKILL.md
 
 | ID | Use When |
 |----|----------|
+| \`survival-analysis-clinical\` | 生存分析：KM 曲线、log-rank 检验、Cox 回归、竞争风险（OS/PFS/DFS） |
 | \`clinicaltrials-landscape\` | ClinicalTrials.gov 数据分析 |
 | \`literature-preclinical\` | 临床前文献系统提取与综合 |
 | \`experimental-design-statistics\` | 统计检验选择、样本量计算、随机化方案 |
@@ -246,5 +248,11 @@ message(sprintf("总基因数: %d | 显著 DEG: %d (上调: %d, 下调: %d)",
 → 功能富集分析，使用 functional-enrichment-from-degs 工作流
 
 **用户说 "分析单细胞数据" / "10X数据分析" →**
-先问：Python 还是 R？→ Scanpy 或 Seurat`;
+先问：Python 还是 R？→ Scanpy 或 Seurat
+
+**用户说 "画生存曲线" / "分析患者预后" / "OS/PFS 分析" →**
+→ 生存分析，使用 survival-analysis-clinical 工作流
+
+**用户说 "帮我分析 GSE12345" / "下载 GEO 数据" →**
+→ 立即调用 fetch_geo("GSE12345") 获取元数据和下载代码，无需让用户手动下载`;
 }

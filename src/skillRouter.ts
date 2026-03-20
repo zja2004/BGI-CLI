@@ -261,6 +261,29 @@ export const SKILL_ROUTES: SkillRoute[] = [
     ],
   },
 
+  // ── Survival Analysis ─────────────────────────────────────────────────────────
+  {
+    id: 'survival-analysis-clinical', name: '临床生存分析 (KM + Cox)',
+    category: '临床', tag: 'workflow',
+    keywords: [
+      // exact method names
+      'kaplan-meier', 'kaplan meier', 'km曲线', 'cox回归', 'cox regression',
+      '生存分析', 'survival analysis', '生存曲线', 'log-rank',
+      // outcome types
+      '总生存期', 'overall survival', 'os分析',
+      '无进展生存', 'progression-free survival', 'pfs分析',
+      '无病生存', 'disease-free survival', 'dfs分析',
+      '复发生存', 'relapse-free survival', 'rfs分析',
+      // natural-language synonyms
+      '患者预后', '预后分析', '生存预后', '临床预后',
+      '删失数据', '右删失', 'censored data',
+      '风险比', 'hazard ratio', 'hr值',
+      '竞争风险', 'competing risk', 'fine-gray',
+      '中位生存时间', '5年生存率', '3年生存率',
+      '高表达预后差', '基因表达与预后', '突变与预后',
+    ],
+  },
+
   // ── OpenClaw Key Skills ────────────────────────────────────────────────────────
   {
     id: 'pubmed-search', name: 'PubMed 文献检索',

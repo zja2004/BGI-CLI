@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import chalk from 'chalk';
-import { TOOL_DEFINITIONS, executeTool } from './tools.js';
+import { TOOL_DEFINITIONS, executeTool, type StreamCallback } from './tools.js';
 import type { BgiConfig } from './config.js';
 import { PROVIDERS } from './providers.js';
 
@@ -50,6 +50,9 @@ async function streamLoop(
   let finalText = '';
 
   for (let round = 0; round < 20; round++) {
+    // Before each LLM call: deduplicate skill injections + trim oversized tool outputs
+    messages = deduplicateSkillInjections(trimToolOutputs(messages));
+
     const { text, toolCalls, finishReason } = await streamOnce(client, messages, model);
 
     if (text) finalText = text;
@@ -71,30 +74,78 @@ async function streamLoop(
       const SPIN_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
       for (const tc of toolCalls) {
         const args = parseArgs(tc.args);
+        const isBash = tc.name === 'bash';
 
-        // Spinner + elapsed-time display
+        // Header line
         const label = chalk.dim(`[工具: ${tc.name}(${summarizeArgs(args)})]`);
         const t0 = Date.now();
+        process.stdout.write(`\n${label}\n`);
+
+        let streamedLines = 0;
+        let lastLineWasEmpty = false;
+        const MAX_STREAM_LINES = 200; // cap live output to avoid flooding terminal
+
+        // For bash: stream output in real-time; for others: show spinner
+        let spin: ReturnType<typeof setInterval> | null = null;
         let frame = 0;
-        process.stdout.write(`\n${label} `);
-        const spin = setInterval(() => {
-          const secs = ((Date.now() - t0) / 1000).toFixed(1);
-          process.stdout.write(
-            `\r${label} ${chalk.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${chalk.dim(secs + 's')}`,
-          );
-        }, 80);
 
-        const result = await executeTool(tc.name, args);
+        const onStream: StreamCallback | undefined = isBash
+          ? (chunk: string) => {
+              if (streamedLines >= MAX_STREAM_LINES) return;
+              const lines = chunk.split('\n');
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                // Skip excessive blank lines
+                if (line.trim() === '') {
+                  if (lastLineWasEmpty) continue;
+                  lastLineWasEmpty = true;
+                } else {
+                  lastLineWasEmpty = false;
+                }
+                if (i < lines.length - 1 || line.length > 0) {
+                  process.stdout.write(chalk.dim('  │ ') + line + (i < lines.length - 1 ? '\n' : ''));
+                  streamedLines++;
+                  if (streamedLines >= MAX_STREAM_LINES) {
+                    process.stdout.write(chalk.dim('\n  │ ... (输出过长，已截断)\n'));
+                    break;
+                  }
+                }
+              }
+            }
+          : undefined;
 
-        clearInterval(spin);
+        if (!isBash) {
+          // Non-bash tools: show spinner
+          spin = setInterval(() => {
+            const secs = ((Date.now() - t0) / 1000).toFixed(1);
+            process.stdout.write(
+              `\r  ${chalk.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${chalk.dim(secs + 's')}`,
+            );
+          }, 80);
+        }
+
+        const result = await executeTool(tc.name, args, onStream);
+
+        if (spin) {
+          clearInterval(spin);
+          process.stdout.write('\r\x1b[2K');
+        }
+
         const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
         const doneIcon = result.error ? chalk.yellow('✗') : chalk.green('✓');
-        process.stdout.write(`\r\x1b[2K${label} ${doneIcon} ${chalk.dim(elapsed + 's')}\n`);
+
+        // For bash with streaming: just print summary footer
+        if (isBash && streamedLines > 0) {
+          process.stdout.write('\n');
+        }
+        process.stdout.write(`  ${doneIcon} ${chalk.dim('完成 ' + elapsed + 's')}\n`);
 
         if (result.error) {
           process.stdout.write(chalk.yellow(`  ⚠ ${result.error}\n`));
         }
-        if (result.output) {
+
+        // For non-bash tools (or bash with no stream output): show brief preview
+        if (!isBash && result.output) {
           const preview = result.output.split('\n').slice(0, 3).join('\n');
           const more = result.output.split('\n').length > 3;
           process.stdout.write(chalk.dim(`  ${preview}${more ? '\n  ...' : ''}\n`));
@@ -186,6 +237,70 @@ async function streamOnce(
     toolCalls: Object.values(toolCallMap),
     finishReason,
   };
+}
+
+// ── Context window utilities ──────────────────────────────────────────────────
+
+/**
+ * Estimate token count for a message array.
+ * Uses a 3.5 chars/token heuristic (reasonable for mixed Chinese/English).
+ */
+export function estimateTokens(messages: Message[]): number {
+  const chars = messages.reduce((n, m) => {
+    const content = m.content;
+    if (typeof content === 'string') return n + content.length;
+    if (Array.isArray(content)) {
+      return n + content.reduce((s, c) => s + (typeof c === 'object' && 'text' in c ? (c as {text: string}).text.length : 0), 0);
+    }
+    return n;
+  }, 0);
+  return Math.round(chars / 3.5);
+}
+
+/**
+ * Trim oversized tool outputs in-place to prevent a single bash result
+ * from consuming the entire context window.
+ * Tool messages with output > MAX_TOOL_CHARS are truncated with a notice.
+ */
+const MAX_TOOL_OUTPUT_CHARS = 8_000;
+
+export function trimToolOutputs(messages: Message[]): Message[] {
+  return messages.map((m) => {
+    if (m.role !== 'tool') return m;
+    const content = typeof m.content === 'string' ? m.content : '';
+    if (content.length <= MAX_TOOL_OUTPUT_CHARS) return m;
+    const head = content.slice(0, MAX_TOOL_OUTPUT_CHARS / 2);
+    const tail = content.slice(-MAX_TOOL_OUTPUT_CHARS / 2);
+    const trimmed = `${head}\n\n... [输出过长，已截断 ${content.length - MAX_TOOL_OUTPUT_CHARS} 字符] ...\n\n${tail}`;
+    return { ...m, content: trimmed };
+  });
+}
+
+/**
+ * Remove duplicate SKILL.md injections — if the same skill was injected
+ * multiple times (e.g. user ran /sk deseq2 twice), keep only the last copy.
+ * This is the single biggest source of wasted tokens in long sessions.
+ */
+export function deduplicateSkillInjections(messages: Message[]): Message[] {
+  const SKILL_MARKER = '[Skill 已加载:';
+  const seenSkills = new Set<string>();
+  const result: Message[] = [];
+
+  // Process in reverse to keep the LAST injection of each skill
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    const content = typeof m.content === 'string' ? m.content : '';
+    if (m.role === 'user' && content.startsWith(SKILL_MARKER)) {
+      const idMatch = content.match(/\[Skill 已加载: ([^\]]+)\]/);
+      const skillId = idMatch?.[1];
+      if (skillId) {
+        if (seenSkills.has(skillId)) continue; // skip duplicate
+        seenSkills.add(skillId);
+      }
+    }
+    result.unshift(m);
+  }
+  return result;
 }
 
 // ── Compact (summarize old messages) ─────────────────────────────────────────
