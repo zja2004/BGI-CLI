@@ -153,6 +153,62 @@ samtools --version 2>&1 | head -1
 
 ---
 
+## Data Integrity Rules（分析前必须执行）
+
+🔬 **在任何统计分析开始前，必须完成以下检查：**
+
+### 1. 样本 ID 一致性
+\`\`\`r
+# R: 检查 count 矩阵列名与 metadata 行名是否完全一致
+stopifnot(all(colnames(counts) == rownames(metadata)))
+# 如果不一致，先对齐再分析：
+metadata <- metadata[colnames(counts), , drop = FALSE]
+\`\`\`
+\`\`\`python
+# Python: 检查 AnnData obs_names 与 metadata index 是否一致
+assert list(adata.obs_names) == list(metadata.index), "样本 ID 不匹配！"
+\`\`\`
+
+### 2. 重复行/列名检测
+\`\`\`r
+# 检查重复基因名（行名）
+if (any(duplicated(rownames(counts)))) {
+  warning("发现重复基因名，将聚合重复行（取均值）")
+  counts <- aggregate(counts, by = list(rownames(counts)), FUN = mean)
+}
+\`\`\`
+
+### 3. 缺失值报告
+\`\`\`r
+na_pct <- sum(is.na(counts)) / prod(dim(counts)) * 100
+message(sprintf("缺失值比例: %.2f%%", na_pct))
+if (na_pct > 5) warning("缺失值超过 5%，请检查数据质量")
+\`\`\`
+
+### 4. 差异表达分析：必须使用 padj，禁止使用原始 pvalue
+\`\`\`r
+# ✅ 正确：使用 FDR 校正后的 p 值
+sig_genes <- res[!is.na(res$padj) & res$padj <= 0.05 & abs(res$log2FoldChange) >= 1, ]
+
+# ❌ 错误：不要用原始 pvalue 筛选 DEG
+# sig_genes <- res[res$pvalue < 0.05, ]  # 这是错的！
+\`\`\`
+
+**标准阈值**（除非用户明确指定其他值）：
+- 显著性：**padj ≤ 0.05**（FDR 校正，Benjamini-Hochberg）
+- 效应量：**|log2FoldChange| ≥ 1**（即 2 倍差异）
+
+### 5. 结果验证
+每个分析完成后，输出关键统计摘要：
+\`\`\`r
+message(sprintf("总基因数: %d | 显著 DEG: %d (上调: %d, 下调: %d)",
+  nrow(res), nrow(sig_genes),
+  sum(sig_genes$log2FoldChange > 0),
+  sum(sig_genes$log2FoldChange < 0)))
+\`\`\`
+
+---
+
 ## Script Execution Rules
 
 🚨 **关键规则：**
@@ -178,5 +234,17 @@ samtools --version 2>&1 | head -1
 使用 functional-enrichment-from-degs 工作流
 
 **用户说 "设计 CRISPR guide RNA" →**
-使用 molecular_biology.py 的 design_crispr_knockout_guides()`;
+使用 molecular_biology.py 的 design_crispr_knockout_guides()
+
+**用户说 "哪些基因在肿瘤里表达量高" / "找上调基因" →**
+→ 差异表达分析（DESeq2），使用 bulk-rnaseq-counts-to-de-deseq2 工作流
+
+**用户说 "先做差异表达，再做富集分析" →**
+→ 识别为多任务：依次执行 bulk-rnaseq-counts-to-de-deseq2 + functional-enrichment-from-degs
+
+**用户说 "这些基因参与什么通路" / "基因功能是什么" →**
+→ 功能富集分析，使用 functional-enrichment-from-degs 工作流
+
+**用户说 "分析单细胞数据" / "10X数据分析" →**
+先问：Python 还是 R？→ Scanpy 或 Seurat`;
 }

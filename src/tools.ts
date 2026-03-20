@@ -35,7 +35,7 @@ export const TOOL_DEFINITIONS: OpenAI.Chat.ChatCompletionTool[] = [
           timeout_ms: {
             type: 'number',
             description:
-              'Timeout in milliseconds (default 30000, max 300000 for long jobs)',
+              'Timeout in milliseconds (default 300000 / 5 min, max 1800000 / 30 min for long jobs like STAR alignment)',
           },
         },
         required: ['command'],
@@ -54,7 +54,7 @@ export const TOOL_DEFINITIONS: OpenAI.Chat.ChatCompletionTool[] = [
           path: { type: 'string', description: 'Absolute or relative file path' },
           max_lines: {
             type: 'number',
-            description: 'Maximum number of lines to return (default: 200)',
+            description: 'Maximum number of lines to return (default: 500)',
           },
           offset: {
             type: 'number',
@@ -133,12 +133,12 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
         return await toolBash(
           args['command'] as string,
           args['workdir'] as string | undefined,
-          (args['timeout_ms'] as number | undefined) ?? 30_000,
+          (args['timeout_ms'] as number | undefined) ?? 300_000,
         );
       case 'read_file':
         return toolReadFile(
           args['path'] as string,
-          (args['max_lines'] as number | undefined) ?? 200,
+          (args['max_lines'] as number | undefined) ?? 500,
           (args['offset'] as number | undefined) ?? 0,
         );
       case 'write_file':
@@ -173,7 +173,35 @@ function decodeBuffer(buf: Buffer | string | null | undefined): string {
   }
 }
 
-async function toolBash(command: string, workdir?: string, timeoutMs = 30_000): Promise<ToolResult> {
+// ── Dangerous command patterns that require user confirmation ─────────────────
+const DANGEROUS_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
+  { pattern: /rm\s+-rf\s+\/(?!\S)/, reason: '删除根目录 (rm -rf /)' },
+  { pattern: /rm\s+-rf\s+~(?!\S)/, reason: '删除 home 目录 (rm -rf ~)' },
+  { pattern: /rm\s+-rf\s+\$HOME(?!\S)/, reason: '删除 $HOME 目录' },
+  { pattern: /dd\s+if=\/dev\/(?:zero|random|urandom)\s+of=\/dev\//, reason: '覆写磁盘设备 (dd)' },
+  { pattern: /mkfs\b/, reason: '格式化文件系统 (mkfs)' },
+  { pattern: />\s*\/dev\/sd[a-z]/, reason: '直接写入磁盘设备' },
+  { pattern: /chmod\s+-R\s+777\s+\/(?!\S)/, reason: '递归修改根目录权限' },
+  { pattern: /:\(\)\s*\{.*\}.*:/, reason: 'Fork bomb 检测' },
+];
+
+function checkDangerousCommand(command: string): string | null {
+  for (const { pattern, reason } of DANGEROUS_PATTERNS) {
+    if (pattern.test(command)) return reason;
+  }
+  return null;
+}
+
+async function toolBash(command: string, workdir?: string, timeoutMs = 300_000): Promise<ToolResult> {
+  // Safety check: block known destructive commands
+  const danger = checkDangerousCommand(command);
+  if (danger) {
+    return {
+      output: '',
+      error: `⚠️  安全拦截：检测到危险命令（${danger}）。\n命令已被阻止，请确认你的意图后手动执行。\n被拦截的命令: ${command}`,
+    };
+  }
+
   return new Promise((resolve) => {
     const isWin = process.platform === 'win32';
     const child = spawn(isWin ? 'cmd' : '/bin/sh', isWin ? ['/c', command] : ['-c', command], {
