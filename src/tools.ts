@@ -158,19 +158,35 @@ export function executeTool(name: string, args: Record<string, unknown>): ToolRe
   }
 }
 
+/** Decode a raw buffer: try UTF-8 first, fall back to GBK (Windows Chinese CP936). */
+function decodeBuffer(buf: Buffer | string | null | undefined): string {
+  if (!buf) return '';
+  if (typeof buf === 'string') return buf;
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+  } catch {
+    try {
+      return new TextDecoder('gbk').decode(buf);
+    } catch {
+      return buf.toString('latin1');
+    }
+  }
+}
+
 function toolBash(command: string, workdir?: string, timeoutMs = 30_000): ToolResult {
   try {
-    const out = execSync(command, {
+    const buf = execSync(command, {
       cwd: workdir ?? process.cwd(),
       timeout: timeoutMs,
-      encoding: 'utf8',
+      encoding: 'buffer',
       stdio: ['pipe', 'pipe', 'pipe'],
-      maxBuffer: 10 * 1024 * 1024, // 10 MB
+      maxBuffer: 10 * 1024 * 1024,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
     });
-    return { output: out.trim() };
+    return { output: decodeBuffer(buf).trim() };
   } catch (err: unknown) {
-    const e = err as { stdout?: string; stderr?: string; message?: string };
-    const out = ((e.stdout ?? '') + '\n' + (e.stderr ?? '')).trim();
+    const e = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
+    const out = (decodeBuffer(e.stdout) + '\n' + decodeBuffer(e.stderr)).trim();
     return { output: out, error: e.message ?? String(err) };
   }
 }

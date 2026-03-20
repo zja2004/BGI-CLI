@@ -13762,20 +13762,33 @@ function executeTool(name, args) {
     return { output: "", error: String(err) };
   }
 }
+function decodeBuffer(buf) {
+  if (!buf) return "";
+  if (typeof buf === "string") return buf;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buf);
+  } catch {
+    try {
+      return new TextDecoder("gbk").decode(buf);
+    } catch {
+      return buf.toString("latin1");
+    }
+  }
+}
 function toolBash(command, workdir, timeoutMs = 3e4) {
   try {
-    const out = (0, import_child_process.execSync)(command, {
+    const buf = (0, import_child_process.execSync)(command, {
       cwd: workdir ?? process.cwd(),
       timeout: timeoutMs,
-      encoding: "utf8",
+      encoding: "buffer",
       stdio: ["pipe", "pipe", "pipe"],
-      maxBuffer: 10 * 1024 * 1024
-      // 10 MB
+      maxBuffer: 10 * 1024 * 1024,
+      env: { ...process.env, PYTHONIOENCODING: "utf-8" }
     });
-    return { output: out.trim() };
+    return { output: decodeBuffer(buf).trim() };
   } catch (err) {
     const e2 = err;
-    const out = ((e2.stdout ?? "") + "\n" + (e2.stderr ?? "")).trim();
+    const out = (decodeBuffer(e2.stdout) + "\n" + decodeBuffer(e2.stderr)).trim();
     return { output: out, error: e2.message ?? String(err) };
   }
 }
