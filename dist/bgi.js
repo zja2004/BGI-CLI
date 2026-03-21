@@ -6935,6 +6935,8 @@ var source_default = chalk;
 var import_fs5 = require("fs");
 var import_path5 = require("path");
 var import_os3 = require("os");
+var import_https2 = require("https");
+var import_child_process2 = require("child_process");
 
 // node_modules/openai/internal/qs/formats.mjs
 var default_format = "RFC3986";
@@ -15408,7 +15410,68 @@ function clearCheckpoints(sessionId) {
 
 // src/index.ts
 var import_fs6 = require("fs");
-var VERSION2 = "2.2.9";
+var VERSION2 = "2.2.10";
+function isNewer(latest, current) {
+  const [lM, lm, lp] = latest.split(".").map(Number);
+  const [cM, cm, cp] = current.split(".").map(Number);
+  if (lM !== cM) return lM > cM;
+  if (lm !== cm) return lm > cm;
+  return lp > cp;
+}
+async function checkAndAutoUpdate() {
+  let latest;
+  try {
+    latest = await new Promise((resolve3, reject) => {
+      const req = (0, import_https2.get)(
+        "https://registry.npmjs.org/@bgicli/bgicli/latest",
+        { headers: { "User-Agent": `bgicli/${VERSION2}` } },
+        (res) => {
+          const chunks = [];
+          res.on("data", (c2) => chunks.push(c2));
+          res.on("end", () => {
+            try {
+              resolve3(JSON.parse(Buffer.concat(chunks).toString()).version);
+            } catch {
+              reject(new Error("parse"));
+            }
+          });
+        }
+      );
+      req.setTimeout(5e3, () => {
+        req.destroy();
+        reject(new Error("timeout"));
+      });
+      req.on("error", reject);
+    });
+  } catch {
+    return;
+  }
+  if (!isNewer(latest, VERSION2)) return;
+  process.stdout.write(
+    source_default.cyan(`
+  \u{1F504} \u53D1\u73B0\u65B0\u7248\u672C v${latest}\uFF08\u5F53\u524D v${VERSION2}\uFF09\uFF0C\u6B63\u5728\u81EA\u52A8\u66F4\u65B0...
+`)
+  );
+  const ok = await new Promise((resolve3) => {
+    const isWin = process.platform === "win32";
+    const child = (0, import_child_process2.spawn)(
+      isWin ? "npm.cmd" : "npm",
+      ["install", "-g", `@bgicli/bgicli@${latest}`, "--registry", "https://registry.npmjs.org"],
+      { stdio: "inherit", shell: false }
+    );
+    child.on("close", (code) => resolve3(code === 0));
+    child.on("error", () => resolve3(false));
+  });
+  if (ok) {
+    process.stdout.write(source_default.green(`  \u2713 \u5DF2\u66F4\u65B0\u81F3 v${latest}\uFF0C\u91CD\u542F bgi \u540E\u751F\u6548
+
+`));
+  } else {
+    process.stdout.write(source_default.yellow(`  \u26A0 \u81EA\u52A8\u66F4\u65B0\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u8FD0\u884C: npm install -g @bgicli/bgicli
+
+`));
+  }
+}
 var SESSION_CTX = {
   id: "",
   createdAt: "",
@@ -16629,6 +16692,7 @@ ${summary}` },
 async function main() {
   installBundledData();
   printBanner();
+  await checkAndAutoUpdate();
   const rl = (0, import_readline.createInterface)({
     input: process.stdin,
     output: process.stdout,

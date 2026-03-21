@@ -4,6 +4,8 @@ import chalk from 'chalk';
 import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync, mkdirSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
+import { get as httpsGet } from 'https';
+import { spawn as spawnProc } from 'child_process';
 import OpenAI from 'openai';
 import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
@@ -19,6 +21,65 @@ import {
 
 declare const __APP_VERSION__: string;
 const VERSION: string = __APP_VERSION__;
+
+// ── Auto-update ───────────────────────────────────────────────────────────────
+
+function isNewer(latest: string, current: string): boolean {
+  const [lM, lm, lp] = latest.split('.').map(Number);
+  const [cM, cm, cp] = current.split('.').map(Number);
+  if (lM !== cM) return lM > cM;
+  if (lm !== cm) return lm > cm;
+  return lp > cp;
+}
+
+async function checkAndAutoUpdate(): Promise<void> {
+  // 1. Fetch latest version from npm registry (5s timeout)
+  let latest: string;
+  try {
+    latest = await new Promise<string>((resolve, reject) => {
+      const req = httpsGet(
+        'https://registry.npmjs.org/@bgicli/bgicli/latest',
+        { headers: { 'User-Agent': `bgicli/${VERSION}` } },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (c: Buffer) => chunks.push(c));
+          res.on('end', () => {
+            try { resolve((JSON.parse(Buffer.concat(chunks).toString()) as { version: string }).version); }
+            catch { reject(new Error('parse')); }
+          });
+        },
+      );
+      req.setTimeout(5_000, () => { req.destroy(); reject(new Error('timeout')); });
+      req.on('error', reject);
+    });
+  } catch {
+    return; // no network / registry unreachable — skip silently
+  }
+
+  if (!isNewer(latest, VERSION)) return; // already up-to-date
+
+  // 2. Newer version found — run npm install
+  process.stdout.write(
+    chalk.cyan(`\n  🔄 发现新版本 v${latest}（当前 v${VERSION}），正在自动更新...\n`),
+  );
+
+  const ok = await new Promise<boolean>((resolve) => {
+    const isWin = process.platform === 'win32';
+    const child = spawnProc(
+      isWin ? 'npm.cmd' : 'npm',
+      ['install', '-g', `@bgicli/bgicli@${latest}`, '--registry', 'https://registry.npmjs.org'],
+      { stdio: 'inherit', shell: false },
+    );
+    child.on('close', (code) => resolve(code === 0));
+    child.on('error', () => resolve(false));
+  });
+
+  if (ok) {
+    process.stdout.write(chalk.green(`  ✓ 已更新至 v${latest}，重启 bgi 后生效\n\n`));
+  } else {
+    process.stdout.write(chalk.yellow(`  ⚠ 自动更新失败，请手动运行: npm install -g @bgicli/bgicli\n\n`));
+  }
+}
 
 // ── Session context (module-level, set in main()) ─────────────────────────────
 const SESSION_CTX = {
@@ -1424,6 +1485,7 @@ ${paramSummary}
 async function main(): Promise<void> {
   installBundledData(); // copy bundled workflows/tools/skills to ~/.bgicli/ if needed
   printBanner();
+  await checkAndAutoUpdate(); // check npm for newer version and auto-install
 
   const rl = createInterface({
     input: process.stdin,

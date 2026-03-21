@@ -1,6 +1,6 @@
 {
   "name": "@bgicli/bgicli",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "description": "BGI CLI — Bioinformatics AI terminal for Chinese researchers (百炼/DeepSeek/Kimi/Qwen)",
   "bin": {
     "bgi": "dist/bgi.js"
