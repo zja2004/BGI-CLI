@@ -15408,7 +15408,7 @@ function clearCheckpoints(sessionId) {
 
 // src/index.ts
 var import_fs6 = require("fs");
-var VERSION2 = "2.2.8";
+var VERSION2 = "2.2.9";
 var SESSION_CTX = {
   id: "",
   createdAt: "",
@@ -16761,7 +16761,7 @@ ${expanded}` : expanded;
         lastCheckpointMsgCount = history.length;
       }
       if (injectedSkills.size > 0) {
-        const ids = Array.from(injectedSkills.keys()).join(source_default.dim(" \xB7 "));
+        const ids = Array.from(injectedSkills.keys()).join(" \xB7 ");
         console.log(source_default.dim(`
   [\u6FC0\u6D3B Skill: ${ids}]`));
       }
