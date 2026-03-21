@@ -1586,7 +1586,7 @@ async function main(): Promise<void> {
 
       // ── Show active Skills footer ──────────────────────────────────────────
       if (injectedSkills.size > 0) {
-        const ids = Array.from(injectedSkills.keys()).join(chalk.dim(' · '));
+        const ids = Array.from(injectedSkills.keys()).join(' · ');
         console.log(chalk.dim(`\n  [激活 Skill: ${ids}]`));
       }
     } catch (err: unknown) {
