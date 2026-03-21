@@ -105,7 +105,7 @@ Python tools are at: **${TOOLS_DIR}**
 
 ---
 
-## OpenClaw Medical Skills (868个专科技能)
+## OpenClaw Medical Skills (979个专科技能)
 
 技能库位于: **${SKILLS_DIR}**
 
