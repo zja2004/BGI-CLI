@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync,
 import { join, resolve } from 'path';
 import { homedir } from 'os';
 import { get as httpsGet } from 'https';
-import { spawn as spawnProc } from 'child_process';
+import { exec } from 'child_process';
 import OpenAI from 'openai';
 import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
@@ -64,13 +64,10 @@ async function checkAndAutoUpdate(): Promise<void> {
   );
 
   const ok = await new Promise<boolean>((resolve) => {
-    const child = spawnProc(
-      'npm',
-      ['install', '-g', `@bgicli/bgicli@${latest}`, '--registry', 'https://registry.npmjs.org'],
-      { stdio: 'inherit', shell: true },
+    exec(
+      `npm install -g @bgicli/bgicli@${latest} --registry https://registry.npmjs.org`,
+      (error) => resolve(!error),
     );
-    child.on('close', (code) => resolve(code === 0));
-    child.on('error', () => resolve(false));
   });
 
   if (ok) {
@@ -1484,7 +1481,7 @@ ${paramSummary}
 async function main(): Promise<void> {
   installBundledData(); // copy bundled workflows/tools/skills to ~/.bgicli/ if needed
   printBanner();
-  await checkAndAutoUpdate(); // check npm for newer version and auto-install
+  await checkAndAutoUpdate().catch(() => {}); // check npm for newer version and auto-install
 
   const rl = createInterface({
     input: process.stdin,
