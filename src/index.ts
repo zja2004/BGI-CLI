@@ -64,11 +64,10 @@ async function checkAndAutoUpdate(): Promise<void> {
   );
 
   const ok = await new Promise<boolean>((resolve) => {
-    const isWin = process.platform === 'win32';
     const child = spawnProc(
-      isWin ? 'npm.cmd' : 'npm',
+      'npm',
       ['install', '-g', `@bgicli/bgicli@${latest}`, '--registry', 'https://registry.npmjs.org'],
-      { stdio: 'inherit', shell: false },
+      { stdio: 'inherit', shell: true },
     );
     child.on('close', (code) => resolve(code === 0));
     child.on('error', () => resolve(false));
