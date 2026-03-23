@@ -16,6 +16,7 @@ export const BGI_DIR = join(homedir(), '.bgicli');
 export const WORKFLOWS_DIR = join(BGI_DIR, 'workflows');
 export const TOOLS_DIR = join(BGI_DIR, 'tools');
 export const SKILLS_DIR = join(BGI_DIR, 'skills');
+export const DATABASES_FILE = join(BGI_DIR, 'databases.json');
 const CONFIG_FILE = join(BGI_DIR, 'config.json');
 
 export function ensureDirs(): void {

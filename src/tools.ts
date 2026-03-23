@@ -13,6 +13,7 @@ import type OpenAI from 'openai';
 
 import { get as httpsGet } from 'https';
 import { get as httpGet } from 'http';
+import { scanCommand } from './security.js';
 
 // ── Tool Definitions (OpenAI function-call format) ────────────────────────────
 
@@ -211,38 +212,27 @@ function decodeBuffer(buf: Buffer | string | null | undefined): string {
   }
 }
 
-// ── Dangerous command patterns that require user confirmation ─────────────────
-const DANGEROUS_PATTERNS: Array<{ pattern: RegExp; reason: string }> = [
-  { pattern: /rm\s+-rf\s+\/(?!\S)/, reason: '删除根目录 (rm -rf /)' },
-  { pattern: /rm\s+-rf\s+~(?!\S)/, reason: '删除 home 目录 (rm -rf ~)' },
-  { pattern: /rm\s+-rf\s+\$HOME(?!\S)/, reason: '删除 $HOME 目录' },
-  { pattern: /dd\s+if=\/dev\/(?:zero|random|urandom)\s+of=\/dev\//, reason: '覆写磁盘设备 (dd)' },
-  { pattern: /mkfs\b/, reason: '格式化文件系统 (mkfs)' },
-  { pattern: />\s*\/dev\/sd[a-z]/, reason: '直接写入磁盘设备' },
-  { pattern: /chmod\s+-R\s+777\s+\/(?!\S)/, reason: '递归修改根目录权限' },
-  { pattern: /:\(\)\s*\{.*\}.*:/, reason: 'Fork bomb 检测' },
-];
-
-function checkDangerousCommand(command: string): string | null {
-  for (const { pattern, reason } of DANGEROUS_PATTERNS) {
-    if (pattern.test(command)) return reason;
-  }
-  return null;
-}
-
 async function toolBash(
   command: string,
   workdir?: string,
   timeoutMs = 300_000,
   onStream?: StreamCallback,
 ): Promise<ToolResult> {
-  // Safety check: block known destructive commands
-  const danger = checkDangerousCommand(command);
-  if (danger) {
+  // ── Security scan ────────────────────────────────────────────────────────
+  const scan = scanCommand(command);
+  const criticals = scan.matches.filter(m => m.pattern.level === 'CRITICAL');
+  if (criticals.length > 0) {
+    const reasons = criticals.map(m => m.pattern.reason).join('、');
     return {
       output: '',
-      error: `⚠️  安全拦截：检测到危险命令（${danger}）。\n命令已被阻止，请确认你的意图后手动执行。\n被拦截的命令: ${command}`,
+      error: `安全拦截 [CRITICAL]: ${reasons}\n命令已被阻止: ${command}`,
     };
+  }
+  // HIGH: emit warning but allow (user is informed via chat output)
+  const highs = scan.matches.filter(m => m.pattern.level === 'HIGH');
+  if (highs.length > 0) {
+    const reasons = highs.map(m => m.pattern.reason).join('、');
+    if (onStream) onStream(`⚠ 安全警告 [HIGH]: ${reasons}\n`);
   }
 
   return new Promise((resolve) => {
