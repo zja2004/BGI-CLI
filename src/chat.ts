@@ -79,23 +79,41 @@ async function streamLoop(
         // Header line
         const label = chalk.dim(`[工具: ${tc.name}(${summarizeArgs(args)})]`);
         const t0 = Date.now();
-        process.stdout.write(`\n${label}\n`);
+        process.stdout.write(`\n${label} `);
 
         let streamedLines = 0;
         let lastLineWasEmpty = false;
-        const MAX_STREAM_LINES = 200; // cap live output to avoid flooding terminal
+        let spinnerCleared = false;
+        const MAX_STREAM_LINES = 200;
 
-        // For bash: stream output in real-time; for others: show spinner
-        let spin: ReturnType<typeof setInterval> | null = null;
+        // Spinner runs for ALL tools; bash clears it on first output chunk
         let frame = 0;
+        const spin = setInterval(() => {
+          if (spinnerCleared) return;
+          const secs = ((Date.now() - t0) / 1000).toFixed(1);
+          process.stdout.write(
+            `\r${label} ${chalk.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${chalk.dim(secs + 's')}`,
+          );
+        }, 80);
+
+        const clearSpinner = () => {
+          if (spinnerCleared) return;
+          spinnerCleared = true;
+          clearInterval(spin);
+          process.stdout.write('\r\x1b[2K'); // erase spinner line
+        };
 
         const onStream: StreamCallback | undefined = isBash
           ? (chunk: string) => {
               if (streamedLines >= MAX_STREAM_LINES) return;
+              // First output: clear spinner and print header afresh
+              if (streamedLines === 0) {
+                clearSpinner();
+                process.stdout.write(`${label}\n`);
+              }
               const lines = chunk.split('\n');
               for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                // Skip excessive blank lines
                 if (line.trim() === '') {
                   if (lastLineWasEmpty) continue;
                   lastLineWasEmpty = true;
@@ -114,27 +132,13 @@ async function streamLoop(
             }
           : undefined;
 
-        if (!isBash) {
-          // Non-bash tools: show spinner
-          spin = setInterval(() => {
-            const secs = ((Date.now() - t0) / 1000).toFixed(1);
-            process.stdout.write(
-              `\r  ${chalk.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${chalk.dim(secs + 's')}`,
-            );
-          }, 80);
-        }
-
         const result = await executeTool(tc.name, args, onStream);
 
-        if (spin) {
-          clearInterval(spin);
-          process.stdout.write('\r\x1b[2K');
-        }
+        clearSpinner(); // stop spinner if not already stopped
 
         const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
         const doneIcon = result.error ? chalk.yellow('✗') : chalk.green('✓');
 
-        // For bash with streaming: just print summary footer
         if (isBash && streamedLines > 0) {
           process.stdout.write('\n');
         }
@@ -144,7 +148,7 @@ async function streamLoop(
           process.stdout.write(chalk.yellow(`  ⚠ ${result.error}\n`));
         }
 
-        // For non-bash tools (or bash with no stream output): show brief preview
+        // For non-bash tools: show brief output preview
         if (!isBash && result.output) {
           const preview = result.output.split('\n').slice(0, 3).join('\n');
           const more = result.output.split('\n').length > 3;

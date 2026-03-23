@@ -1895,6 +1895,20 @@ async function main(): Promise<void> {
   console.log();
 
   let dbRegistry = loadDbRegistry();
+  // Auto-scan on first run (no databases registered yet)
+  if (Object.keys(dbRegistry.databases).length === 0) {
+    process.stdout.write(chalk.dim('  正在自动扫描参考数据库...\n'));
+    const report = scanForDatabases([]);
+    if (report.found.length > 0) {
+      for (const entry of report.found) dbRegistry.databases[entry.id] = entry;
+      dbRegistry.lastScan = new Date().toISOString();
+      saveDbRegistry(dbRegistry);
+      process.stdout.write(chalk.green(`  ✓ 发现 ${report.found.length} 个数据库，已自动注册 (/db list 查看)\n`));
+    } else {
+      process.stdout.write(chalk.dim('  未发现已知数据库（可用 /db add <路径> 手动添加）\n'));
+    }
+    console.log();
+  }
   let systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
   let history: Message[] = [];
   let thinkMode = false;
