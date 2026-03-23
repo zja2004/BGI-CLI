@@ -22,6 +22,89 @@ import {
 declare const __APP_VERSION__: string;
 const VERSION: string = __APP_VERSION__;
 
+// ── SkillHub API ───────────────────────────────────────────────────────────────
+
+const SKILLHUB_HUBS = {
+  bgi:     { label: 'BGI内网',    apiBase: 'https://clawhub.ai', backend: 'clawhub' },
+  clawhub: { label: 'clawhub.ai', apiBase: 'https://clawhub.ai', backend: 'clawhub' },
+  tencent: { label: 'Tencent',    apiBase: 'https://lightmake.site', backend: 'tencent' },
+} as const;
+
+type HubKey = keyof typeof SKILLHUB_HUBS;
+
+interface SkillResult {
+  slug: string;
+  name: string;
+  summary: string;
+  version?: string;
+  owner?: string;
+}
+
+function httpGetJson(url: string): Promise<unknown> {
+  const mod = url.startsWith('https') ? httpsGet : (require('http').get as typeof httpsGet);
+  return new Promise((resolve, reject) => {
+    const req = mod(url, { headers: { 'User-Agent': `bgicli/${VERSION}`, Accept: 'application/json' } }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('end', () => {
+        try { resolve(JSON.parse(Buffer.concat(chunks).toString())); }
+        catch (e) { reject(new Error(`JSON parse error from ${url}`)); }
+      });
+    });
+    req.setTimeout(10_000, () => { req.destroy(); reject(new Error('timeout')); });
+    req.on('error', reject);
+  });
+}
+
+async function searchSkillHub(query: string, hub: HubKey, limit = 10): Promise<SkillResult[]> {
+  const cfg = SKILLHUB_HUBS[hub];
+  if (cfg.backend === 'tencent') {
+    const data = await httpGetJson(
+      `${cfg.apiBase}/api/skills?page=1&pageSize=${limit}&keyword=${encodeURIComponent(query)}`
+    ) as { code: number; data?: { skills?: Array<{ slug: string; name: string; description?: string; version?: string; ownerName?: string; homepage?: string }> } };
+    if (data.code !== 0 || !data.data?.skills) return [];
+    return data.data.skills.map(s => ({
+      slug: s.slug,
+      name: s.name,
+      summary: s.description ?? '',
+      version: s.version,
+      owner: s.ownerName ?? (s.homepage ? s.homepage.replace(/.*clawhub\.ai\/([^/]+)\/.*/, '$1') : undefined),
+    }));
+  } else {
+    const data = await httpGetJson(
+      `${cfg.apiBase}/api/v1/search?q=${encodeURIComponent(query)}&limit=${limit}&nonSuspiciousOnly=true`
+    ) as { results?: Array<{ slug: string; displayName?: string; summary?: string; version?: string }> };
+    if (!data.results) return [];
+    return data.results.map(s => ({
+      slug: s.slug,
+      name: s.displayName ?? s.slug,
+      summary: s.summary ?? '',
+      version: s.version ?? undefined,
+    }));
+  }
+}
+
+async function downloadSkillMd(slug: string): Promise<string> {
+  const data = await new Promise<string>((resolve, reject) => {
+    const req = httpsGet(
+      `https://clawhub.ai/api/v1/skills/${encodeURIComponent(slug)}/file?path=SKILL.md`,
+      { headers: { 'User-Agent': `bgicli/${VERSION}` } },
+      (res) => {
+        if (res.statusCode === 404) { req.destroy(); reject(new Error('not_found')); return; }
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => resolve(Buffer.concat(chunks).toString()));
+      }
+    );
+    req.setTimeout(15_000, () => { req.destroy(); reject(new Error('timeout')); });
+    req.on('error', reject);
+  });
+  return data;
+}
+
+// Store last search results for quick install by number
+let _lastSearchResults: SkillResult[] = [];
+
 // ── Auto-update ───────────────────────────────────────────────────────────────
 
 function isNewer(latest: string, current: string): boolean {
@@ -178,7 +261,8 @@ function printHelp(): void {
   console.log(chalk.bold.cyan('─── 工作流向导 ───────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/run')} <skill-id>     交互式参数向导，自动生成并执行分析脚本`);
   console.log(`  ${chalk.cyan('/check-env')} [id]     检测 Skill 所需 R/Python 包是否已安装`);
-  console.log(`  ${chalk.cyan('/install')} <url>      从 GitHub 安装第三方 Skill`);
+  console.log(`  ${chalk.cyan('/search')} <关键词>    在 SkillHub 搜索并下载技能 ${chalk.dim('[--hub=bgi|clawhub|tencent]')}`);
+  console.log(`  ${chalk.cyan('/install')} <url|slug> 从 GitHub 或 SkillHub 安装 Skill`);
   console.log(`  ${chalk.cyan('/uninstall')} <id>     卸载已安装的第三方 Skill`);
   console.log();
   console.log(chalk.bold.cyan('─── 文件 & 目录 ──────────────────────────────────────────'));
@@ -1170,16 +1254,113 @@ ${paramSummary}
       break;
     }
 
-    // ── /install from GitHub ─────────────────────────────────────────────────
-    case 'install': {
+    // ── /search SkillHub ─────────────────────────────────────────────────────
+    case 'search': {
       if (!arg) {
-        console.log('用法: /install <github-url>');
-        console.log(chalk.dim('示例: /install https://github.com/user/my-skill'));
-        console.log(chalk.dim('      /install user/repo  (GitHub 简写)'));
+        console.log('用法: /search <关键词> [--hub=bgi|clawhub|tencent]');
+        console.log(chalk.dim('示例: /search rnaseq'));
+        console.log(chalk.dim('      /search 蛋白质结构预测 --hub=tencent'));
+        console.log(chalk.dim('      /search genomics --hub=clawhub'));
+        console.log(chalk.dim('\n默认搜索 BGI 内网 SkillHub (http://172.16.218.40:8080)'));
         break;
       }
-      // Normalize URL
-      let repoUrl = arg;
+      // Parse --hub flag
+      let hubKey: HubKey = 'bgi';
+      const hubMatch = arg.match(/--hub=(\w+)/);
+      const query = arg.replace(/--hub=\w+/g, '').trim();
+      if (hubMatch) {
+        const hk = hubMatch[1] as HubKey;
+        if (hk in SKILLHUB_HUBS) hubKey = hk;
+        else { console.log(chalk.red(`未知 hub: ${hubMatch[1]}，可选: bgi, clawhub, tencent`)); break; }
+      }
+      if (!query) { console.log(chalk.yellow('请提供搜索关键词')); break; }
+
+      const hubLabel = SKILLHUB_HUBS[hubKey].label;
+      process.stdout.write(chalk.dim(`正在搜索 ${hubLabel} SkillHub: "${query}"...\n`));
+      try {
+        const results = await searchSkillHub(query, hubKey, 10);
+        if (results.length === 0) {
+          console.log(chalk.yellow(`  未找到相关 Skill，请尝试其他关键词`));
+          break;
+        }
+        _lastSearchResults = results;
+        console.log(chalk.bold(`\n  搜索结果 (${hubLabel}) — 共 ${results.length} 个:\n`));
+        results.forEach((s, i) => {
+          const ver = s.version ? chalk.dim(` v${s.version}`) : '';
+          const owner = s.owner ? chalk.dim(` @${s.owner}`) : '';
+          console.log(`  ${chalk.cyan(`[${i + 1}]`)} ${chalk.bold(s.name)}${owner}${ver}`);
+          console.log(`      ${chalk.dim(s.summary.substring(0, 90))}${s.summary.length > 90 ? '…' : ''}`);
+          console.log(`      ${chalk.dim(`slug: ${s.slug}`)}`);
+          console.log();
+        });
+        console.log(chalk.dim(`安装: /install <slug>  或  /install <序号>  (如: /install 1)`));
+      } catch (e) {
+        console.log(chalk.red(`搜索失败: ${e instanceof Error ? e.message : String(e)}`));
+      }
+      break;
+    }
+
+    // ── /install from GitHub or SkillHub ──────────────────────────────────────
+    case 'install': {
+      if (!arg) {
+        console.log('用法: /install <github-url | slug | 搜索序号>');
+        console.log(chalk.dim('示例: /install https://github.com/user/my-skill'));
+        console.log(chalk.dim('      /install user/repo       (GitHub 简写)'));
+        console.log(chalk.dim('      /install personal-genomics (SkillHub slug)'));
+        console.log(chalk.dim('      /install 2               (搜索结果序号)'));
+        break;
+      }
+      // Check if arg is a search result number → resolve to slug
+      let installArg = arg;
+      const searchNum = /^\d+$/.test(installArg) ? parseInt(installArg, 10) : 0;
+      if (searchNum > 0 && _lastSearchResults.length > 0) {
+        if (searchNum > _lastSearchResults.length) {
+          console.log(chalk.red(`序号 ${searchNum} 超出范围（共 ${_lastSearchResults.length} 个结果）`));
+          break;
+        }
+        const picked = _lastSearchResults[searchNum - 1];
+        console.log(chalk.dim(`从搜索结果安装: ${picked.name} (${picked.slug})`));
+        installArg = picked.slug;
+      }
+
+      // Detect SkillHub slug (no slash, no http, not github.com-like two-part path)
+      // A plain slug like "personal-genomics" → download from clawhub.ai API
+      // A github-like "user/repo" or "https://..." → git clone
+      const isGitHub = installArg.includes('github.com') || installArg.includes('gitlab') ||
+                       installArg.includes('bitbucket') || /^[^/]+\/[^/]+$/.test(installArg);
+
+      if (!isGitHub && !installArg.startsWith('http')) {
+        // ── SkillHub slug install ────────────────────────────────────────────
+        const slug = installArg.trim();
+        const installTarget = join(SKILLS_DIR, slug);
+        if (existsSync(installTarget)) {
+          console.log(chalk.yellow(`Skill "${slug}" 已存在，如需更新请先 /uninstall ${slug}`));
+          break;
+        }
+        process.stdout.write(chalk.dim(`正在从 SkillHub 下载 Skill: ${slug}...\n`));
+        try {
+          const skillMdContent = await downloadSkillMd(slug);
+          mkdirSync(installTarget, { recursive: true });
+          writeFileSync(join(installTarget, 'SKILL.md'), skillMdContent, 'utf8');
+          const { name, shortDesc } = parseSkillMeta(skillMdContent);
+          console.log(chalk.green(`✓ SkillHub Skill 安装成功!`));
+          console.log(`  ID:    ${chalk.cyan(slug)}`);
+          console.log(`  名称:  ${name || slug}`);
+          if (shortDesc) console.log(`  功能:  ${chalk.dim(shortDesc)}`);
+          console.log(chalk.dim(`  使用 /sk ${slug} 加载`));
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg === 'not_found') {
+            console.log(chalk.red(`SkillHub 未找到 "${slug}"，请先用 /search 搜索确认 slug`));
+          } else {
+            console.log(chalk.red(`下载失败: ${msg}`));
+          }
+        }
+        break;
+      }
+
+      // ── GitHub / git clone install ───────────────────────────────────────
+      let repoUrl = installArg;
       if (!repoUrl.startsWith('http')) {
         repoUrl = `https://github.com/${repoUrl}`;
       }
@@ -1206,7 +1387,6 @@ ${paramSummary}
       const skillMdPath = join(installTarget, 'SKILL.md');
       if (!existsSync(skillMdPath)) {
         console.log(chalk.red(`安装失败: ${repoName} 缺少 SKILL.md 文件`));
-        // Clean up
         await executeTool('bash', { command: `rm -rf "${installTarget}"` });
         break;
       }
