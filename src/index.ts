@@ -2103,8 +2103,11 @@ async function main(): Promise<void> {
     }
     if (exiting) break; // exitWithReport() resolved the question with '' via kQuestionCancel
 
-    const trimmed = input.trim();
-    if (!trimmed) continue;
+    const rawTrimmed = input.trim();
+    if (!rawTrimmed) continue;
+
+    // Normalize leading backslash to forward slash so \db, \sk etc. work like /db, /sk
+    const trimmed = rawTrimmed.startsWith('\\') ? '/' + rawTrimmed.slice(1) : rawTrimmed;
 
     if (['exit', 'quit', 'q', '/exit', '/quit'].includes(trimmed.toLowerCase())) {
       await exitWithReport();

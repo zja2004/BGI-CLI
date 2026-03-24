@@ -16001,7 +16001,7 @@ function clearCheckpoints(sessionId) {
 
 // src/index.ts
 var import_fs7 = require("fs");
-var VERSION2 = "2.4.2";
+var VERSION2 = "2.4.3";
 var SKILLHUB_HUBS = {
   bgi: { label: "BGI\u5185\u7F51", apiBase: "https://clawhub.ai", backend: "clawhub" },
   clawhub: { label: "clawhub.ai", apiBase: "https://clawhub.ai", backend: "clawhub" },
@@ -17835,8 +17835,9 @@ async function main() {
       break;
     }
     if (exiting) break;
-    const trimmed = input.trim();
-    if (!trimmed) continue;
+    const rawTrimmed = input.trim();
+    if (!rawTrimmed) continue;
+    const trimmed = rawTrimmed.startsWith("\\") ? "/" + rawTrimmed.slice(1) : rawTrimmed;
     if (["exit", "quit", "q", "/exit", "/quit"].includes(trimmed.toLowerCase())) {
       await exitWithReport();
       return;
