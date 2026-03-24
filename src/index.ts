@@ -7,7 +7,7 @@ import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR, BGI_DIR } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
@@ -191,6 +191,14 @@ function installBundledData(): void {
 
   ensureDirs();
 
+  // Compare installed data version with current package version.
+  // If they differ (new package version), re-sync bundled data so users always
+  // get the latest built-in skills after `npm update`.
+  const installedDataVersion = existsSync(DATA_VERSION_FILE)
+    ? readFileSync(DATA_VERSION_FILE, 'utf8').trim()
+    : '';
+  const needsUpdate = installedDataVersion !== VERSION;
+
   const targets: Array<{ src: string; dest: string; name: string }> = [
     { src: join(bundledData, 'workflows'), dest: WORKFLOWS_DIR, name: 'Skills (生信工作流)' },
     { src: join(bundledData, 'skills'),    dest: SKILLS_DIR,    name: 'Skills (医学专科)' },
@@ -200,19 +208,27 @@ function installBundledData(): void {
   let installed = false;
   for (const { src, dest, name } of targets) {
     if (!existsSync(src)) continue;
-    // Only copy if destination is empty (don't overwrite user customizations)
     const isEmpty = !existsSync(dest) || readdirSync(dest).length === 0;
-    if (isEmpty) {
+    if (isEmpty || needsUpdate) {
       mkdirSync(dest, { recursive: true });
-      cpSync(src, dest, { recursive: true });
+      // force:true overwrites existing bundled files; user-installed skills live in
+      // USER_SKILLS_DIR and are never touched here.
+      cpSync(src, dest, { recursive: true, force: true });
       if (!installed) {
-        process.stdout.write(chalk.dim('正在初始化内置数据...\n'));
+        process.stdout.write(chalk.dim(needsUpdate && !isEmpty ? `更新内置数据到 v${VERSION}...\n` : '正在初始化内置数据...\n'));
         installed = true;
       }
-      process.stdout.write(chalk.green(`  ✓ ${name} 已安装\n`));
+      process.stdout.write(chalk.green(`  ✓ ${name} 已${needsUpdate && !isEmpty ? '更新' : '安装'}\n`));
     }
   }
-  if (installed) console.log();
+  if (installed) {
+    // Record the version we just installed so we don't re-sync on next run
+    writeFileSync(DATA_VERSION_FILE, VERSION, 'utf8');
+    console.log();
+  } else if (needsUpdate) {
+    // Data dirs existed and were synced; still write version marker
+    writeFileSync(DATA_VERSION_FILE, VERSION, 'utf8');
+  }
 }
 
 // ── Banner ────────────────────────────────────────────────────────────────────
@@ -404,7 +420,7 @@ async function firstRunIfNeeded(rl: readline.Interface): Promise<void> {
 
 interface SkillEntry { id: string; dir: string; tag: string; }
 
-/** Collect all skills from both SKILLS_DIR and WORKFLOWS_DIR */
+/** Collect all skills from SKILLS_DIR, WORKFLOWS_DIR, and USER_SKILLS_DIR */
 function collectAllSkills(): SkillEntry[] {
   const entries: SkillEntry[] = [];
   const addFrom = (dir: string, tag: string) => {
@@ -416,7 +432,8 @@ function collectAllSkills(): SkillEntry[] {
     });
   };
   addFrom(SKILLS_DIR, 'skill');
-  addFrom(WORKFLOWS_DIR, 'skill'); // workflows are skills too
+  addFrom(WORKFLOWS_DIR, 'skill');   // workflows are skills too
+  addFrom(USER_SKILLS_DIR, 'user');  // user-installed via /install
   return entries;
 }
 
@@ -1355,7 +1372,7 @@ ${paramSummary}
       if (!isGitHub && !installArg.startsWith('http')) {
         // ── SkillHub slug install ────────────────────────────────────────────
         const slug = installArg.trim();
-        const installTarget = join(SKILLS_DIR, slug);
+        const installTarget = join(USER_SKILLS_DIR, slug);
         if (existsSync(installTarget)) {
           console.log(chalk.yellow(`Skill "${slug}" 已存在，如需更新请先 /uninstall ${slug}`));
           break;
@@ -1397,7 +1414,7 @@ ${paramSummary}
       }
       // Extract repo name as skill ID
       const repoName = repoUrl.replace(/\.git$/, '').split('/').pop() ?? 'unknown-skill';
-      const installTarget = join(SKILLS_DIR, repoName);
+      const installTarget = join(USER_SKILLS_DIR, repoName);
 
       if (existsSync(installTarget)) {
         console.log(chalk.yellow(`Skill "${repoName}" 已存在，如需更新请先 /uninstall ${repoName}`));
@@ -1437,7 +1454,10 @@ ${paramSummary}
         console.log('用法: /uninstall <skill-id>');
         break;
       }
-      const uninstallPath = join(SKILLS_DIR, arg);
+      // Look in user-skills dir first, then fall back to skills dir (legacy)
+      const uninstallPath = existsSync(join(USER_SKILLS_DIR, arg))
+        ? join(USER_SKILLS_DIR, arg)
+        : join(SKILLS_DIR, arg);
       if (!existsSync(uninstallPath)) {
         console.log(chalk.red(`未找到已安装的 Skill: ${arg}`));
         console.log(chalk.dim('注意: 只能卸载通过 /install 安装的第三方 Skill'));
@@ -1879,12 +1899,17 @@ async function main(): Promise<void> {
   // Startup status panel
   const cfg = loadConfig();
   const prov = PROVIDERS[cfg.provider];
-  const totalSkills = collectAllSkills().length;
+  const allSkillsList = collectAllSkills();
+  const totalSkills = allSkillsList.length;
+  const userSkillCount = allSkillsList.filter(e => e.tag === 'user').length;
+  const skillsLabel = totalSkills > 0
+    ? chalk.green(`${totalSkills} 个`) + (userSkillCount > 0 ? chalk.dim(` (含 ${userSkillCount} 个用户安装)`) : '')
+    : chalk.yellow('未安装');
 
   console.log(chalk.bold.cyan('─────────────────────────────────────────────────────────'));
   console.log(`  ${chalk.bold('服务商:')}  ${prov?.name ?? cfg.provider}`);
   console.log(`  ${chalk.bold('模型:')}    ${chalk.green(cfg.model)}`);
-  console.log(`  ${chalk.bold('Skills:')}  ${totalSkills > 0 ? chalk.green(`${totalSkills} 个`) : chalk.yellow('未安装')}  ${chalk.dim('(/sk 搜索  /cat 分类目录)')}`);
+  console.log(`  ${chalk.bold('Skills:')}  ${skillsLabel}  ${chalk.dim('(/sk 搜索  /cat 分类目录)')}`);
   console.log(`  ${chalk.bold('工具:')}    bash · read_file · write_file · list_dir · search_files`);
   console.log(`  ${chalk.bold('新功能:')}  /sessions /resume /checkpoint /run /check-env /install /diff`);
   console.log(chalk.bold.cyan('─────────────────────────────────────────────────────────'));
