@@ -7,9 +7,9 @@ import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, TOOLS_DIR, BGI_DIR } from './config.js';
 import { PROVIDERS } from './providers.js';
-import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message } from './chat.js';
+import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
 import { buildSystemPrompt } from './prompt.js';
 import {
@@ -173,6 +173,12 @@ const SESSION_CTX = {
   createdAt: '',
   wdirSnapshot: null as Map<string, { path: string; mtime: number; size: number }> | null,
 };
+
+// ── Mutable globals shared between main() and handleCommand() ─────────────────
+// handleCommand() is module-level so it can't close over main()'s locals.
+// These are initialized in main() before the command loop starts.
+let dbRegistry: DatabaseRegistry = { version: 1, lastScan: null, databases: {} };
+let systemPrompt = '';
 
 // ── Bundled data installer ─────────────────────────────────────────────────────
 // When installed via npm, the data/ directory is bundled alongside dist/bgi.js.
@@ -1860,11 +1866,13 @@ async function main(): Promise<void> {
     historySize: 100,
   });
 
+  let sigintHandling = false; // true while we're in single-Ctrl+C interrupt flow
+
   rl.on('close', () => {
-    console.log(chalk.dim('\n再见！'));
-    process.exit(0);
+    // Only exit for real stdin close (EOF/Ctrl+D), not when SIGINT is being handled
+    // or when exitWithReport() intentionally closed rl to drain pending question
+    if (!sigintHandling && !exiting) process.exit(0);
   });
-  process.on('SIGINT', () => rl.close());
 
   await firstRunIfNeeded(rl);
 
@@ -1894,7 +1902,7 @@ async function main(): Promise<void> {
   console.log(chalk.dim('  输入问题开始对话   /help 查看命令   /cat 技能分类   @文件路径 内嵌文件'));
   console.log();
 
-  let dbRegistry = loadDbRegistry();
+  dbRegistry = loadDbRegistry();
   // Auto-scan on first run (no databases registered yet)
   if (Object.keys(dbRegistry.databases).length === 0) {
     process.stdout.write(chalk.dim('  正在自动扫描参考数据库...\n'));
@@ -1909,7 +1917,7 @@ async function main(): Promise<void> {
     }
     console.log();
   }
-  let systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+  systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
   let history: Message[] = [];
   let thinkMode = false;
   const injectedSkills = new Map<string, string>(); // id → display name
@@ -1937,22 +1945,145 @@ async function main(): Promise<void> {
   let lastCheckpointMsgCount = 0;
   const CHECKPOINT_INTERVAL = 6; // save checkpoint every ~3 turns (6 messages)
 
+  // ── v2.3.0: Session stats + double Ctrl+C ─────────────────────────────────
+  const sessionStartTime = Date.now();
+  const sessionStats: ChatStats = { inputTokens: 0, outputTokens: 0, successCmds: 0, failCmds: 0 };
+  let lastSigintTime = 0;
+  let currentAbortController: AbortController | null = null;
+  let exiting = false;
+
+  function formatDuration(ms: number): string {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m ${sec}s`;
+    if (m > 0) return `${m}m ${sec}s`;
+    return `${sec}s`;
+  }
+
+  function saveSessionMemory(): void {
+    const memDir = join(BGI_DIR, 'memory');
+    if (!existsSync(memDir)) mkdirSync(memDir, { recursive: true });
+    const dateStr = new Date(sessionStartTime).toISOString().slice(0, 10);
+    const filename = join(memDir, `${dateStr}-${sessionId}.md`);
+    const lines: string[] = [
+      `# 会话记忆 ${new Date(sessionStartTime).toLocaleString('zh-CN')}`,
+      ``,
+      `- 模型: ${loadConfig().model}`,
+      `- Token: 输入 ${sessionStats.inputTokens} / 输出 ${sessionStats.outputTokens}`,
+      `- 命令: ${sessionStats.successCmds} 成功 / ${sessionStats.failCmds} 失败`,
+      ``,
+    ];
+    let turnCount = 0;
+    for (let i = 0; i < history.length; i++) {
+      const msg = history[i];
+      if (msg.role === 'user' && typeof msg.content === 'string') {
+        turnCount++;
+        const content = msg.content.slice(0, 500) + (msg.content.length > 500 ? '...' : '');
+        lines.push(`## 对话 ${turnCount}`);
+        lines.push(`**用户**: ${content}`);
+      } else if (msg.role === 'assistant' && typeof msg.content === 'string') {
+        const content = msg.content.slice(0, 500) + (msg.content.length > 500 ? '...' : '');
+        lines.push(`**BGI**: ${content}`);
+        lines.push(``);
+      }
+    }
+    writeFileSync(filename, lines.join('\n'), 'utf8');
+    console.log(chalk.green(`  ✓ 记忆已保存: ${filename}`));
+  }
+
+  async function exitWithReport(): Promise<void> {
+    if (exiting) return;
+    exiting = true;
+
+    // ── Immediately disable all SIGINT handlers to prevent re-entry ────────
+    rl.removeAllListeners('SIGINT');
+    process.removeAllListeners('SIGINT');
+
+    // ── Print stats ────────────────────────────────────────────────────────
+    const runtime = formatDuration(Date.now() - sessionStartTime);
+    console.log('\n' + chalk.bold.cyan('══════════════════ 会话报告 ══════════════════'));
+    console.log(`  运行时间:   ${chalk.white(runtime)}`);
+    console.log(`  消耗 Token: ${chalk.yellow('输入')} ${chalk.bold(String(sessionStats.inputTokens))}  |  ${chalk.green('输出')} ${chalk.bold(String(sessionStats.outputTokens))}`);
+    console.log(`  执行命令:   ${chalk.green('✓ ' + sessionStats.successCmds + ' 成功')}  ${sessionStats.failCmds > 0 ? chalk.yellow('✗ ' + sessionStats.failCmds + ' 失败') : chalk.dim('✗ 0 失败')}`);
+    console.log(chalk.bold.cyan('══════════════════════════════════════════════'));
+
+    // ── Ask memory question via a FRESH readline (avoids conflicts with ────
+    // ── any pending question on the main rl interface)                  ────
+    // Close main rl — this fires 'close' event which triggers the reject()
+    // handler in any pending question() call, causing the while loop to break.
+    // The auto-exit close handler checks !exiting so it won't process.exit here.
+    rl.close();
+
+    let ans = 'n';
+    try {
+      const exitRl = createInterface({ input: process.stdin, output: process.stdout });
+      // Allow Ctrl+C during the exit question to force-quit immediately
+      exitRl.on('SIGINT', () => { exitRl.close(); process.exit(0); });
+      process.once('SIGINT', () => { exitRl.close(); process.exit(0); });
+      ans = await Promise.race([
+        new Promise<string>((res) => {
+          exitRl.question(chalk.cyan('\n  是否保存本次会话记忆？[y/N] '), (a) => {
+            exitRl.close();
+            res(a.trim().toLowerCase());
+          });
+        }),
+        new Promise<string>((res) => setTimeout(() => { exitRl.close(); res('n'); }, 15_000)),
+      ]);
+    } catch { /* ignore */ }
+
+    if (ans === 'y') saveSessionMemory();
+    console.log(chalk.dim('\n再见！'));
+    process.exit(0);
+  }
+
+  // Register on BOTH rl and process to cover Windows readline interception.
+  // Debounce 200ms to prevent double-firing when both events fire simultaneously.
+  let lastSigintCall = 0;
+  function handleSigint() {
+    const now = Date.now();
+    if (now - lastSigintCall < 200) return; // debounce
+    lastSigintCall = now;
+
+    if (now - lastSigintTime < 2000) {
+      // Double Ctrl+C → show report and exit
+      sigintHandling = false;
+      exitWithReport().catch(() => process.exit(0));
+    } else {
+      lastSigintTime = now;
+      sigintHandling = true;
+      // Single Ctrl+C → interrupt current AI task only
+      if (currentAbortController) {
+        currentAbortController.abort();
+      }
+      process.stdout.write(chalk.yellow('\n\n  [任务已中断] 再按一次 Ctrl+C 退出\n\n'));
+      // Reset flag after a short delay so close events triggered by rl don't exit
+      setTimeout(() => { sigintHandling = false; }, 500);
+    }
+  }
+
+  // rl.on('SIGINT') fires when readline intercepts \x03 from TTY (Windows/Linux)
+  // process.on('SIGINT') fires from the OS signal — both are needed for reliability
+  rl.on('SIGINT', handleSigint);
+  process.on('SIGINT', handleSigint);
+
   while (true) {
     let input: string;
     const thinkIndicator = thinkMode ? chalk.yellow('[思考]') + ' ' : '';
     try {
       input = await question(rl, thinkIndicator + chalk.blue('你 › '));
     } catch {
-      break;
+      break; // rl closed (EOF / exitWithReport called rl.close())
     }
+    if (exiting) break; // exitWithReport() resolved the question with '' via kQuestionCancel
 
     const trimmed = input.trim();
     if (!trimmed) continue;
 
     if (['exit', 'quit', 'q', '/exit', '/quit'].includes(trimmed.toLowerCase())) {
-      console.log(chalk.dim('再见！'));
-      rl.close();
-      break;
+      await exitWithReport();
+      return;
     }
 
     if (trimmed.startsWith('/')) {
@@ -2013,7 +2144,17 @@ async function main(): Promise<void> {
 
     try {
       const currentCfg = loadConfig();
-      const reply = await chat(history, currentCfg, systemPrompt);
+      currentAbortController = new AbortController();
+      const reply = await chat(history, currentCfg, systemPrompt, sessionStats, currentAbortController.signal);
+      currentAbortController = null;
+
+      if (!reply && history[history.length - 1]?.role === 'user') {
+        // Interrupted mid-stream — remove the unanswered user message
+        history.pop();
+        console.log();
+        continue;
+      }
+
       history.push({ role: 'assistant', content: reply });
       history = await maybeCompact(history, currentCfg);
 
@@ -2033,13 +2174,23 @@ async function main(): Promise<void> {
         console.log(chalk.dim(`\n  [激活 Skill: ${ids}]`));
       }
     } catch (err: unknown) {
+      currentAbortController = null;
       const msg = err instanceof Error ? err.message : String(err);
+      if (err instanceof Error && (err.name === 'AbortError' || msg.toLowerCase().includes('abort'))) {
+        // Task interrupted by Ctrl+C — already printed [任务已中断] in chat.ts
+        history.pop();
+        console.log();
+        continue;
+      }
       console.error(chalk.red(`\n错误: ${msg}\n`));
       history.pop();
     }
 
     console.log();
   }
+
+  // While loop exited normally (e.g., EOF / explicit exit handled inline)
+  await exitWithReport();
 }
 
 // ── Util ──────────────────────────────────────────────────────────────────────

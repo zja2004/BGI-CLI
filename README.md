@@ -5,7 +5,7 @@
 - ✅ **开箱即用** — `npm install -g @bgicli/bgicli` 即可
 - ✅ **内置 889 个技能** — 21 个生信工作流 + 868 个 OpenClaw 医学技能，自动安装
 - ✅ **智能技能路由** — 描述任务自动激活对应技能，无需手动搜索
-- ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen3.5、DeepSeek、Kimi、MiniMax 等 20+ 模型
+- ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen、DeepSeek、Kimi、MiniMax 等 20+ 模型
 - ✅ **真实工具调用** — 执行 bash、读写文件、运行 R/Python 脚本
 - ✅ **内网支持** — 可接入公司私有化部署的大模型
 
@@ -91,7 +91,7 @@ bgi                    # 启动
 ### 服务商 / 模型
 | 命令 | 说明 |
 |------|------|
-| `/provider <name>` | 切换服务商 (`bailian` / `intranet` / `custom`) |
+| `/provider <name>` | 切换服务商（`bailian` / `intranet` / `custom`） |
 | `/model <name>` | 切换模型 |
 | `/models` | 列出当前服务商所有可用模型 |
 | `/providers` | 列出所有服务商 |
@@ -116,6 +116,34 @@ bgi                    # 启动
 | `/save [文件名]` | 保存对话为 Markdown 文件 |
 | `/think [on\|off]` | 切换思考模式（Qwen3 `/think` 前缀） |
 
+### 断点与恢复
+| 命令 | 说明 |
+|------|------|
+| `/checkpoint` | 保存当前对话断点（含激活的技能） |
+| `/checkpoint save [标签]` | 保存断点并指定标签 |
+| `/checkpoint list` | 列出本次会话所有断点 |
+| `/checkpoint restore <id>` | 恢复到指定断点 |
+
+> 适合长时间分析任务中途保存进度，防止意外中断丢失上下文。
+
+### 数据库管理
+| 命令 | 说明 |
+|------|------|
+| `/db list` | 列出已注册的参考数据库 |
+| `/db add <路径> [基因组] [类型] [说明]` | 手动注册数据库路径 |
+| `/db scan [目录]` | 自动扫描文件系统查找已知数据库 |
+| `/db rm <id>` | 删除数据库记录 |
+| `/db download [名称]` | 显示标准数据库下载命令 |
+
+> 注册后 AI 可自动引用正确路径，无需每次手动指定。支持 hg38/hg19/mm10 基因组、STAR/HISAT2 索引、GTF 注释等。
+
+### 安全扫描
+| 命令 | 说明 |
+|------|------|
+| `/scan <命令>` | 扫描命令安全风险，输出 CRITICAL / HIGH / MEDIUM / LOW 等级 |
+
+> AI 执行每条 bash 命令前均自动扫描；CRITICAL 级别命令将被拦截。
+
 ### 文件与目录
 | 命令 | 说明 |
 |------|------|
@@ -124,11 +152,27 @@ bgi                    # 启动
 | `/tools` | 列出 AI 可调用的工具 |
 | `@路径` | 消息中内嵌文件内容（如 `@data.csv 里有什么?`） |
 
+### 会话报告与记忆
+退出时（双击 Ctrl+C 或输入 `exit`）自动显示会话报告：
+- 运行时长
+- 消耗 Token（输入 / 输出）
+- 执行命令成功 / 失败次数
+- 可选保存会话记忆到 `~/.bgicli/memory/`
+
 ### 其他
 | 命令 | 说明 |
 |------|------|
 | `/help` | 显示帮助 |
-| `exit` / `quit` / `q` | 退出 |
+| `exit` / `quit` / `q` | 退出（显示会话报告） |
+
+---
+
+## 快捷键
+
+| 快捷键 | 说明 |
+|--------|------|
+| `Ctrl+C`（单次） | 中断当前 AI 任务（保留对话历史） |
+| `Ctrl+C`（连按两次） | 退出程序（显示会话报告） |
 
 ---
 
@@ -195,14 +239,16 @@ npm link
 
 ```
 bgi
-├── src/index.ts       — CLI 主入口、命令处理、智能路由
-├── src/chat.ts        — 流式对话引擎（工具调用循环）
-├── src/tools.ts       — 工具实现（bash / read_file / write_file 等）
-├── src/skillRouter.ts — 关键词路由表（35个核心技能自动匹配）
-├── src/prompt.ts      — 生物信息学系统提示
-├── src/providers.ts   — 中国 AI 服务商配置
-├── src/config.ts      — 配置管理（~/.bgicli/config.json）
-└── data/              — 内置数据（工作流 + Skills + Python 工具）
+├── src/index.ts        — CLI 主入口、命令处理、智能路由、会话管理
+├── src/chat.ts         — 流式对话引擎（工具调用循环、进度渲染）
+├── src/tools.ts        — 工具实现（bash / read_file / write_file 等）
+├── src/security.ts     — 命令安全扫描（CRITICAL / HIGH / MEDIUM / LOW）
+├── src/databases.ts    — 参考数据库注册与管理
+├── src/skillRouter.ts  — 关键词路由表（35个核心技能自动匹配）
+├── src/prompt.ts       — 生物信息学系统提示
+├── src/providers.ts    — 中国 AI 服务商配置
+├── src/config.ts       — 配置管理（~/.bgicli/config.json）
+└── data/               — 内置数据（工作流 + Skills + Python 工具）
 ```
 
 ---

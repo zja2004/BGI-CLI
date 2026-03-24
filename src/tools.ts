@@ -39,7 +39,7 @@ export const TOOL_DEFINITIONS: OpenAI.Chat.ChatCompletionTool[] = [
           timeout_ms: {
             type: 'number',
             description:
-              'Timeout in milliseconds (default 300000 / 5 min, max 1800000 / 30 min for long jobs like STAR alignment)',
+              'Timeout in milliseconds (default 300000 / 5 min). For downloads (wget/curl/aria2c) or long computations (STAR, HISAT2, etc.) ALWAYS use at least 3600000 (60 min). Never set a short timeout for downloads — slow networks are normal, be patient.',
           },
         },
         required: ['command'],
@@ -159,16 +159,21 @@ export async function executeTool(
   name: string,
   args: Record<string, unknown>,
   onStream?: StreamCallback,
+  signal?: AbortSignal,
 ): Promise<ToolResult> {
   try {
     switch (name) {
-      case 'bash':
-        return await toolBash(
-          args['command'] as string,
-          args['workdir'] as string | undefined,
-          (args['timeout_ms'] as number | undefined) ?? 300_000,
-          onStream,
-        );
+      case 'bash': {
+        const cmd = args['command'] as string;
+        const requestedTimeout = (args['timeout_ms'] as number | undefined) ?? 300_000;
+        const isDownload = /\b(wget|curl|aria2c|axel|rsync)\b/.test(cmd);
+        if (isDownload) {
+          // Use inactivity-based timeout: kill only if silent for 10 min (stalled connection).
+          // Total download time is unlimited — large datasets can take hours.
+          return await toolBash(cmd, args['workdir'] as string | undefined, 0, onStream, 600_000, signal);
+        }
+        return await toolBash(cmd, args['workdir'] as string | undefined, requestedTimeout, onStream, undefined, signal);
+      }
       case 'read_file':
         return toolReadFile(
           args['path'] as string,
@@ -212,11 +217,31 @@ function decodeBuffer(buf: Buffer | string | null | undefined): string {
   }
 }
 
+/**
+ * Inject progress/verbosity flags for common tools that suppress output when
+ * stdout/stderr is piped (not a TTY). Only adds flags if not already present.
+ */
+function injectProgressFlags(cmd: string): string {
+  // wget: add --show-progress so download progress appears even when piped
+  if (/\bwget\b/.test(cmd) && !/-q\b|--quiet|--show-progress|--progress/.test(cmd)) {
+    cmd = cmd.replace(/\bwget\b/, 'wget --show-progress');
+  }
+  // curl: add --progress-bar for a simple progress indicator when piped
+  if (/\bcurl\b/.test(cmd) && !/-s\b|--silent|-S\b|-#|--progress-bar|--no-progress-meter/.test(cmd)) {
+    cmd = cmd.replace(/\bcurl\b/, 'curl --progress-bar');
+  }
+  return cmd;
+}
+
 async function toolBash(
   command: string,
   workdir?: string,
   timeoutMs = 300_000,
   onStream?: StreamCallback,
+  /** If set, resets the timer on every output chunk (for downloads).
+   *  The process is only killed after this many ms of complete silence. */
+  inactivityMs?: number,
+  signal?: AbortSignal,
 ): Promise<ToolResult> {
   // ── Security scan ────────────────────────────────────────────────────────
   const scan = scanCommand(command);
@@ -235,11 +260,19 @@ async function toolBash(
     if (onStream) onStream(`⚠ 安全警告 [HIGH]: ${reasons}\n`);
   }
 
+  // Force progress output for common download/progress tools that suppress it when piped
+  const processedCommand = injectProgressFlags(command);
+
   return new Promise((resolve) => {
     const isWin = process.platform === 'win32';
-    const child = spawn(isWin ? 'cmd' : '/bin/sh', isWin ? ['/c', command] : ['-c', command], {
+    const child = spawn(isWin ? 'cmd' : '/bin/sh', isWin ? ['/c', processedCommand] : ['-c', processedCommand], {
       cwd: workdir ?? process.cwd(),
-      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+      env: {
+        ...process.env,
+        PYTHONIOENCODING: 'utf-8',
+        PYTHONUNBUFFERED: '1',      // prevent Python stdout buffering
+        FORCE_COLOR: '1',           // hint color support to tools that check
+      },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
@@ -264,13 +297,45 @@ async function toolBash(
     });
 
     let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; child.kill(); }, timeoutMs);
+    let timedOutSecs = 0;
+    let aborted = false;
+
+    // AbortSignal: kill child immediately when the user presses Ctrl+C
+    if (signal) {
+      if (signal.aborted) {
+        child.kill();
+        return resolve({ output: '', error: '任务已中断' });
+      }
+      signal.addEventListener('abort', () => {
+        aborted = true;
+        child.kill();
+      }, { once: true });
+    }
+
+    // Inactivity mode (downloads): reset timer on every output chunk.
+    // Fixed-timeout mode (normal commands): never reset.
+    const effectiveMs = inactivityMs ?? timeoutMs;
+    let timer = setTimeout(() => { timedOut = true; timedOutSecs = effectiveMs / 1000; child.kill(); }, effectiveMs);
+
+    const resetTimer = inactivityMs
+      ? () => { clearTimeout(timer); timer = setTimeout(() => { timedOut = true; timedOutSecs = inactivityMs / 1000; child.kill(); }, inactivityMs); }
+      : null;
+
+    if (resetTimer) {
+      child.stdout?.on('data', resetTimer);
+      child.stderr?.on('data', resetTimer);
+    }
 
     child.on('close', (code) => {
       clearTimeout(timer);
       const out = (decodeBuffer(Buffer.concat(outChunks)) + '\n' + decodeBuffer(Buffer.concat(errChunks))).trim();
-      if (timedOut) {
-        resolve({ output: out, error: `Command timed out after ${timeoutMs / 1000}s` });
+      if (aborted) {
+        resolve({ output: out, error: '任务已中断' });
+      } else if (timedOut) {
+        const msg = inactivityMs
+          ? `下载停滞 — 超过 ${timedOutSecs}s 无任何输出（连接可能已断开）`
+          : `Command timed out after ${timedOutSecs}s`;
+        resolve({ output: out, error: msg });
       } else if (code !== 0) {
         resolve({ output: out, error: `Command failed (exit ${code})` });
       } else {

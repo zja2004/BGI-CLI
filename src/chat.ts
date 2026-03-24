@@ -6,12 +6,21 @@ import { PROVIDERS } from './providers.js';
 
 export type Message = OpenAI.Chat.ChatCompletionMessageParam;
 
+export interface ChatStats {
+  inputTokens: number;
+  outputTokens: number;
+  successCmds: number;
+  failCmds: number;
+}
+
 // ── Streaming response + tool-use loop ───────────────────────────────────────
 
 export async function chat(
   messages: Message[],
   config: BgiConfig,
   systemPrompt: string,
+  stats?: ChatStats,
+  signal?: AbortSignal,
 ): Promise<string> {
   const prov = PROVIDERS[config.provider];
   if (!prov) throw new Error(`Unknown provider: ${config.provider}`);
@@ -38,22 +47,39 @@ export async function chat(
     ...messages,
   ];
 
-  return await streamLoop(client, fullMessages, config.model);
+  return await streamLoop(client, fullMessages, config.model, stats, signal);
 }
 
 async function streamLoop(
   client: OpenAI,
   messages: Message[],
   model: string,
+  stats?: ChatStats,
+  signal?: AbortSignal,
 ): Promise<string> {
   // Accumulate the final assistant text across potential tool-call rounds
   let finalText = '';
 
   for (let round = 0; round < 20; round++) {
+    if (signal?.aborted) break;
     // Before each LLM call: deduplicate skill injections + trim oversized tool outputs
     messages = deduplicateSkillInjections(trimToolOutputs(messages));
 
-    const { text, toolCalls, finishReason } = await streamOnce(client, messages, model);
+    let streamResult: Awaited<ReturnType<typeof streamOnce>>;
+    try {
+      streamResult = await streamOnce(client, messages, model, signal);
+    } catch (err) {
+      if (signal?.aborted || (err instanceof Error && (err.name === 'AbortError' || err.message.includes('abort')))) {
+        process.stdout.write(chalk.yellow('\n  [任务已中断]\n'));
+        break;
+      }
+      throw err;
+    }
+    const { text, toolCalls, finishReason, inputTokens, outputTokens } = streamResult;
+    if (stats) {
+      stats.inputTokens += inputTokens;
+      stats.outputTokens += outputTokens;
+    }
 
     if (text) finalText = text;
 
@@ -84,6 +110,8 @@ async function streamLoop(
         let streamedLines = 0;
         let lastLineWasEmpty = false;
         let spinnerCleared = false;
+        let partialLine = ''; // accumulated output not yet terminated by \r or \n
+        let outputStarted = false; // true after first chunk — guards single heartbeat creation
         const MAX_STREAM_LINES = 200;
 
         // Spinner runs for ALL tools; bash clears it on first output chunk
@@ -103,36 +131,92 @@ async function streamLoop(
           process.stdout.write('\r\x1b[2K'); // erase spinner line
         };
 
+        // Heartbeat: when bash has started outputting but goes silent for ≥5s,
+        // print an elapsed-time line so the user knows the command is still running.
+        let lastChunkTime = t0;
+        let heartbeat: ReturnType<typeof setInterval> | null = null;
+
+        // If aborted mid-tool, clear heartbeat immediately so it stops printing
+        const clearHeartbeat = () => { if (heartbeat) { clearInterval(heartbeat); heartbeat = null; } };
+        signal?.addEventListener('abort', clearHeartbeat, { once: true });
+
         const onStream: StreamCallback | undefined = isBash
           ? (chunk: string) => {
-              if (streamedLines >= MAX_STREAM_LINES) return;
-              // First output: clear spinner and print header afresh
-              if (streamedLines === 0) {
+              lastChunkTime = Date.now();
+              // First chunk ever: clear spinner, print header, start heartbeat ONCE
+              if (!outputStarted) {
+                outputStarted = true;
                 clearSpinner();
                 process.stdout.write(`${label}\n`);
-              }
-              const lines = chunk.split('\n');
-              for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                if (line.trim() === '') {
-                  if (lastLineWasEmpty) continue;
-                  lastLineWasEmpty = true;
-                } else {
-                  lastLineWasEmpty = false;
-                }
-                if (i < lines.length - 1 || line.length > 0) {
-                  process.stdout.write(chalk.dim('  │ ') + line + (i < lines.length - 1 ? '\n' : ''));
-                  streamedLines++;
-                  if (streamedLines >= MAX_STREAM_LINES) {
-                    process.stdout.write(chalk.dim('\n  │ ... (输出过长，已截断)\n'));
-                    break;
+                heartbeat = setInterval(() => {
+                  if (Date.now() - lastChunkTime >= 5000) {
+                    const totalSecs = ((Date.now() - t0) / 1000).toFixed(0);
+                    process.stdout.write(chalk.dim(`\n  │ ⏱ 运行中... ${totalSecs}s`));
                   }
+                }, 5000);
+              }
+
+              // Process each character group between \r and \n terminators.
+              // \r lines are rendered in-place (progress bars) and do NOT count toward
+              // the line limit. Only \n-terminated lines count.
+              let i = 0;
+              while (i < chunk.length) {
+                const crPos = chunk.indexOf('\r', i);
+                const nlPos = chunk.indexOf('\n', i);
+
+                if (crPos === -1 && nlPos === -1) {
+                  // No terminator in remainder — accumulate and show in-place
+                  partialLine += chunk.slice(i);
+                  process.stdout.write('\r' + chalk.dim('  │ ') + partialLine + '\x1b[K');
+                  break;
+                }
+
+                const nextPos = crPos === -1 ? nlPos : nlPos === -1 ? crPos : Math.min(crPos, nlPos);
+                const isCR = chunk[nextPos] === '\r';
+                partialLine += chunk.slice(i, nextPos);
+
+                if (isCR) {
+                  // Carriage return: overwrite current line in-place, do not count
+                  process.stdout.write('\r' + chalk.dim('  │ ') + partialLine + '\x1b[K');
+                  partialLine = '';
+                  i = nextPos + 1;
+                  if (i < chunk.length && chunk[i] === '\n') i++; // consume \r\n as one
+                } else {
+                  // Newline: commit as a real output line, count toward limit
+                  if (partialLine.trim() !== '' || !lastLineWasEmpty) {
+                    if (streamedLines < MAX_STREAM_LINES) {
+                      process.stdout.write('\r' + chalk.dim('  │ ') + partialLine + '\x1b[K\n');
+                      lastLineWasEmpty = partialLine.trim() === '';
+                      streamedLines++;
+                      if (streamedLines >= MAX_STREAM_LINES) {
+                        process.stdout.write(chalk.dim('  │ ... (输出过长，已截断)\n'));
+                      }
+                    }
+                  }
+                  partialLine = '';
+                  i = nextPos + 1;
                 }
               }
             }
           : undefined;
 
-        const result = await executeTool(tc.name, args, onStream);
+        const result = await executeTool(tc.name, args, onStream, signal);
+
+        signal?.removeEventListener('abort', clearHeartbeat);
+        clearHeartbeat();
+
+        // Flush any partial line that wasn't terminated (e.g. final progress bar state)
+        if (partialLine) {
+          if (streamedLines < MAX_STREAM_LINES) {
+            process.stdout.write('\r' + chalk.dim('  │ ') + partialLine + '\x1b[K\n');
+          }
+          partialLine = '';
+        }
+
+        if (stats) {
+          if (result.error) stats.failCmds++;
+          else stats.successCmds++;
+        }
 
         clearSpinner(); // stop spinner if not already stopped
 
@@ -187,21 +271,31 @@ async function streamOnce(
   client: OpenAI,
   messages: Message[],
   model: string,
-): Promise<{ text: string; toolCalls: ToolCall[]; finishReason: string | null }> {
+  signal?: AbortSignal,
+): Promise<{ text: string; toolCalls: ToolCall[]; finishReason: string | null; inputTokens: number; outputTokens: number }> {
   const stream = await client.chat.completions.create({
     model,
     messages,
     tools: TOOL_DEFINITIONS,
     stream: true,
-  });
+    stream_options: { include_usage: true },
+  }, { signal });
 
   let text = '';
   const toolCallMap: Record<number, ToolCall> = {};
   let finishReason: string | null = null;
+  let inputTokens = 0;
+  let outputTokens = 0;
 
   process.stdout.write(chalk.green('BGI › '));
 
   for await (const chunk of stream) {
+    // Usage arrives in the final chunk (choices may be empty)
+    if (chunk.usage) {
+      inputTokens = chunk.usage.prompt_tokens ?? 0;
+      outputTokens = chunk.usage.completion_tokens ?? 0;
+    }
+
     const choice = chunk.choices[0];
     if (!choice) continue;
 
@@ -240,6 +334,8 @@ async function streamOnce(
     text,
     toolCalls: Object.values(toolCallMap),
     finishReason,
+    inputTokens,
+    outputTokens,
   };
 }
 
