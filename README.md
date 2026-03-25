@@ -3,7 +3,7 @@
 **BGI CLI** 是面向中国生物学研究者的 AI 终端工具，开箱即用，无需额外配置。
 
 - ✅ **开箱即用** — clone 仓库后一键安装即可
-- ✅ **内置 889 个技能** — 21 个生信工作流 + 868 个 OpenClaw 医学技能，自动安装
+- ✅ **内置 1001 个技能** — 22 个生信工作流 + 979 个 OpenClaw 医学技能，自动安装
 - ✅ **智能技能路由** — 描述任务自动激活对应技能，无需手动搜索
 - ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen、DeepSeek、Kimi、MiniMax 等 20+ 模型
 - ✅ **真实工具调用** — 执行 bash、读写文件、运行 R/Python 脚本
@@ -82,11 +82,16 @@ bgi                    # 启动
 | 模型 | 命令 |
 |------|------|
 | Qwen3.5-plus（默认） | `/model qwen3.5-plus` |
+| Qwen3.5-397B（旗舰） | `/model qwen3.5-397b-a17b` |
 | Qwen3-235B | `/model qwen3-235b-a22b` |
-| DeepSeek-R1 | `/model deepseek-r1` |
+| Qwen3-Coder-Plus | `/model qwen3-coder-plus` |
+| DeepSeek-R1（推理） | `/model deepseek-r1` |
 | DeepSeek-V3 | `/model deepseek-v3` |
+| DeepSeek-V3.2 | `/model deepseek-v3.2` |
 | Kimi-K2.5 | `/model kimi-k2.5` |
+| Kimi-K2-Thinking（推理） | `/model kimi-k2-thinking` |
 | MiniMax-M2.5 | `/model MiniMax-M2.5` |
+| GLM-5 | `/model glm-5` |
 | QwQ-Plus（推理） | `/model qwq-plus` |
 
 获取 API Key：[bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
@@ -228,13 +233,14 @@ bgi                    # 启动
 #### 临床与流行病学
 | ID | 说明 |
 |----|------|
+| `survival-analysis-clinical` | 临床生存分析（KM 曲线 / Cox 回归 / 竞争风险） |
 | `clinicaltrials-landscape` | 临床试验格局分析 |
 | `literature-preclinical` | 临床前文献系统提取 |
 | `experimental-design-statistics` | 实验设计与统计检验 |
 | `lasso-biomarker-panel` | LASSO 生物标志物筛选 |
 | `pcr-primer-design` | PCR/qPCR 引物设计 |
 
-### OpenClaw Medical Skills（868个）
+### OpenClaw Medical Skills（979个）
 
 覆盖结构生物学、单细胞、药物发现、抗体设计、文献检索等领域，使用 `/cat` 浏览分类目录。
 
