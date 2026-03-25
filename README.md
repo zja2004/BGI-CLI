@@ -27,8 +27,8 @@ sudo npm link
 > ```bash
 > mkdir -p ~/.npm-global
 > npm config set prefix '~/.npm-global'
-> echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc  # bash 用户改为 ~/.bashrc
-> source ~/.zshrc
+> echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc  # zsh 用户改为 ~/.zshrc
+> source ~/.bashrc
 > npm link   # 再次执行
 > ```
 
