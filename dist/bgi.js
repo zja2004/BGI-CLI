@@ -16003,7 +16003,7 @@ function clearCheckpoints(sessionId) {
 
 // src/index.ts
 var import_fs7 = require("fs");
-var VERSION2 = "2.4.3";
+var VERSION2 = "2.4.4";
 var SKILLHUB_HUBS = {
   bgi: { label: "BGI\u5185\u7F51", apiBase: "https://clawhub.ai", backend: "clawhub" },
   clawhub: { label: "clawhub.ai", apiBase: "https://clawhub.ai", backend: "clawhub" },
