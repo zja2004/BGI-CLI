@@ -15180,10 +15180,12 @@ var SKILL_ROUTES = [
     category: "\u8F6C\u5F55\u7EC4",
     tag: "builtin",
     keywords: [
-      // exact tool names
+      // tool names
       "deseq2",
       "edger",
       "limma-voom",
+      "limma",
+      "voom",
       // explicit analysis terms
       "rna-seq\u5DEE\u5F02",
       "rnaseq\u5DEE\u5F02",
@@ -15193,7 +15195,25 @@ var SKILL_ROUTES = [
       "count matrix",
       "\u539F\u59CBcounts",
       "raw counts",
-      // natural-language synonyms (the main gap in the original)
+      "featurecounts",
+      "htseq-count",
+      "htseq",
+      "rsem",
+      "salmon\u5B9A\u91CF",
+      "kallisto",
+      // data inputs
+      "tpm\u77E9\u9635\u5206\u6790",
+      "fpkm\u77E9\u9635",
+      "\u8868\u8FBE\u77E9\u9635",
+      "star\u6BD4\u5BF9\u7ED3\u679C",
+      "hisat2\u7ED3\u679C",
+      // result types
+      "\u706B\u5C71\u56FE",
+      "volcano plot",
+      "ma\u56FE",
+      "ma plot",
+      "\u5DEE\u5F02\u57FA\u56E0\u70ED\u56FE",
+      // natural-language: what changed
       "\u54EA\u4E9B\u57FA\u56E0\u8868\u8FBE\u91CF\u9AD8",
       "\u54EA\u4E9B\u57FA\u56E0\u4E0A\u8C03",
       "\u54EA\u4E9B\u57FA\u56E0\u4E0B\u8C03",
@@ -15206,7 +15226,37 @@ var SKILL_ROUTES = [
       "differentially expressed",
       "\u5DEE\u5F02\u5206\u6790",
       "\u6BD4\u8F83\u4E24\u7EC4\u57FA\u56E0\u8868\u8FBE",
-      "\u80BF\u7624vs\u6B63\u5E38"
+      // comparison contexts
+      "\u80BF\u7624vs\u6B63\u5E38",
+      "\u80BF\u7624\u764C\u65C1",
+      "\u764C\u65C1\u5BF9\u7167",
+      "\u80BF\u7624\u5BF9\u7167\u6BD4\u8F83",
+      "\u5904\u7406vs\u5BF9\u7167",
+      "\u836F\u7269\u5904\u7406\u5DEE\u5F02",
+      "\u6572\u9664vs\u91CE\u751F\u578B",
+      "\u8FC7\u8868\u8FBEvs\u5BF9\u7167",
+      "\u8010\u836Fvs\u654F\u611F",
+      "\u8010\u836F\u5DEE\u5F02\u8868\u8FBE",
+      "\u5206\u5316\u524D\u540E",
+      "\u65F6\u95F4\u70B9\u5DEE\u5F02",
+      // cancer-specific
+      "\u80BA\u764C\u5DEE\u5F02\u57FA\u56E0",
+      "\u4E73\u817A\u764C\u5DEE\u5F02\u8868\u8FBE",
+      "\u809D\u764C\u8F6C\u5F55\u7EC4\u5DEE\u5F02",
+      "\u7ED3\u76F4\u80A0\u764C\u57FA\u56E0\u8868\u8FBE",
+      "\u80C3\u764C\u5DEE\u5F02\u5206\u6790",
+      "\u524D\u5217\u817A\u764C\u5DEE\u5F02",
+      "\u767D\u8840\u75C5\u8F6C\u5F55\u7EC4",
+      "\u6DCB\u5DF4\u7624\u57FA\u56E0\u8868\u8FBE",
+      "\u80F6\u8D28\u7624\u5DEE\u5F02\u57FA\u56E0",
+      // immune/inflammation context
+      "\u514D\u75AB\u7EC6\u80DE\u5DEE\u5F02\u8868\u8FBE",
+      "\u5DE8\u566C\u7EC6\u80DE\u6FC0\u6D3B\u5DEE\u5F02",
+      "\u708E\u75C7\u76F8\u5173\u5DEE\u5F02\u57FA\u56E0",
+      // natural query style
+      "\u54EA\u4E9B\u57FA\u56E0\u6709\u5DEE\u5F02",
+      "\u627E\u5230\u5DEE\u5F02\u57FA\u56E0",
+      "rna-seq\u6570\u636E\u5206\u6790"
     ]
   },
   {
@@ -15215,23 +15265,54 @@ var SKILL_ROUTES = [
     category: "\u8F6C\u5F55\u7EC4",
     tag: "builtin",
     keywords: [
+      // method names
       "wgcna\u805A\u7C7B",
       "\u5C42\u6B21\u805A\u7C7B",
       "hierarchical clustering",
       "kmeans\u805A\u7C7B",
+      "k-means",
       "hdbscan",
       "\u6837\u672C\u805A\u7C7B",
       "\u7279\u5F81\u805A\u7C7B",
       "omics clustering",
-      // natural-language synonyms
+      "consensus clustering",
+      "\u5171\u8BC6\u805A\u7C7B",
+      "nmf\u5206\u89E3",
+      "non-negative matrix",
+      // dimensionality reduction
+      "pca\u5206\u6790",
+      "\u4E3B\u6210\u5206\u5206\u6790",
+      "umap\u964D\u7EF4",
+      "t-sne",
+      "tsne",
+      "umap",
+      "pca\u56FE",
+      "umap\u56FE",
+      "\u964D\u7EF4\u53EF\u89C6\u5316",
+      // subtyping
+      "\u5206\u5B50\u4E9A\u578B",
+      "\u5206\u5B50\u4E9A\u578B\u9274\u5B9A",
+      "\u764C\u75C7\u5206\u5B50\u5206\u578B",
+      "\u60A3\u8005\u5206\u5C42",
+      "\u6837\u672C\u5206\u578B",
+      "\u4E9A\u578B\u9274\u5B9A",
+      "\u5185\u5728\u4E9A\u578B",
+      "intrinsic subtype",
+      // multi-omics
+      "\u86CB\u767D\u8D28\u7EC4\u805A\u7C7B",
+      "\u4EE3\u8C22\u7EC4\u805A\u7C7B",
+      "\u591A\u7EC4\u5B66\u805A\u7C7B",
+      "\u591A\u7EC4\u5B66\u6574\u5408",
+      // natural-language
       "\u6837\u672C\u5206\u7EC4",
       "\u6837\u672C\u5206\u7C7B",
       "\u805A\u7C7B\u5206\u6790",
       "\u65E0\u76D1\u7763\u805A\u7C7B",
       "\u70ED\u56FE\u805A\u7C7B",
-      "pca\u5206\u6790",
-      "\u4E3B\u6210\u5206\u5206\u6790",
-      "umap\u964D\u7EF4"
+      "\u6837\u672C\u76F8\u4F3C\u6027",
+      "\u6837\u672C\u95F4\u5173\u7CFB",
+      "\u8FD9\u4E9B\u6837\u672C\u5982\u4F55\u5206\u7EC4",
+      "\u627E\u5230\u6837\u672C\u7684\u4E9A\u7FA4"
     ]
   },
   {
@@ -15240,6 +15321,7 @@ var SKILL_ROUTES = [
     category: "\u5355\u7EC6\u80DE",
     tag: "builtin",
     keywords: [
+      // tools
       "scanpy",
       "scrna-seq",
       "single cell rna",
@@ -15248,7 +15330,9 @@ var SKILL_ROUTES = [
       "leiden\u805A\u7C7B",
       "python\u5355\u7EC6\u80DE",
       "anndata\u5206\u6790",
-      // natural-language synonyms
+      "louvain\u805A\u7C7B",
+      "umap\u5355\u7EC6\u80DE",
+      // core analysis
       "\u5355\u7EC6\u80DE\u6D4B\u5E8F",
       "\u5355\u7EC6\u80DE\u5206\u6790",
       "\u5355\u7EC6\u80DE\u6570\u636E",
@@ -15256,7 +15340,60 @@ var SKILL_ROUTES = [
       "\u7EC6\u80DE\u805A\u7C7B",
       "\u7EC6\u80DE\u7C7B\u578B\u9274\u5B9A",
       "scrna",
-      "sc-rna"
+      "sc-rna",
+      // quality control
+      "\u5355\u7EC6\u80DEqc",
+      "\u5355\u7EC6\u80DE\u8D28\u63A7",
+      "\u7EBF\u7C92\u4F53\u6BD4\u4F8B",
+      "doublet\u68C0\u6D4B",
+      "doubletfinder",
+      // cell types
+      "T\u7EC6\u80DE\u4E9A\u7FA4",
+      "B\u7EC6\u80DE\u5206\u6790",
+      "NK\u7EC6\u80DE",
+      "\u5DE8\u566C\u7EC6\u80DE\u4E9A\u7FA4",
+      "\u6811\u7A81\u72B6\u7EC6\u80DE",
+      "\u6210\u7EA4\u7EF4\u7EC6\u80DE",
+      "\u5185\u76AE\u7EC6\u80DE",
+      "\u4E0A\u76AE\u7EC6\u80DE",
+      "\u9AD3\u7CFB\u7EC6\u80DE",
+      "\u6D46\u7EC6\u80DE",
+      "\u81EA\u7136\u6740\u4F24\u7EC6\u80DE",
+      // TME / cancer context
+      "\u80BF\u7624\u5FAE\u73AF\u5883",
+      "tme\u5206\u6790",
+      "\u80BF\u7624\u6D78\u6DA6\u6DCB\u5DF4\u7EC6\u80DE",
+      "til\u5206\u6790",
+      "\u80BF\u7624\u5355\u7EC6\u80DE\u56FE\u8C31",
+      "\u514D\u75AB\u7EC6\u80DE\u6D78\u6DA6\u5355\u7EC6\u80DE",
+      "\u764C\u75C7\u5355\u7EC6\u80DE",
+      // trajectory / pseudotime
+      "\u62DF\u65F6\u5E8F\u5206\u6790",
+      "pseudotime",
+      "trajectory analysis",
+      "\u8F68\u8FF9\u5206\u6790",
+      "\u7EC6\u80DE\u5206\u5316\u8F68\u8FF9",
+      "\u53D1\u80B2\u8F68\u8FF9",
+      "monocle",
+      "diffusion pseudotime",
+      // cell communication
+      "\u7EC6\u80DE\u901A\u8BAF",
+      "cellchat",
+      "nichenet",
+      "\u914D\u4F53\u53D7\u4F53",
+      "ligand receptor",
+      "\u7EC6\u80DE\u95F4\u901A\u8BAF",
+      "\u4FE1\u53F7\u4F20\u5BFC\u7F51\u7EDC",
+      // integration
+      "\u591A\u6837\u672C\u6574\u5408",
+      "harmony\u6279\u6B21\u77EB\u6B63",
+      "\u6279\u6B21\u77EB\u6B63\u5355\u7EC6\u80DE",
+      "scanorama",
+      // natural query
+      "\u5355\u7EC6\u80DE\u56FE\u8C31",
+      "\u7EC6\u80DE\u7C7B\u578B\u6709\u54EA\u4E9B",
+      "\u7EC6\u80DE\u4E9A\u7FA4\u5206\u6790",
+      "\u5355\u7EC6\u80DE\u8F6C\u5F55\u7EC4"
     ]
   },
   {
@@ -15265,16 +15402,37 @@ var SKILL_ROUTES = [
     category: "\u5355\u7EC6\u80DE",
     tag: "builtin",
     keywords: [
+      // tools
       "seurat",
       "r\u8BED\u8A00\u5355\u7EC6\u80DE",
       "findclusters",
       "findneighbors",
       "sctransform",
       "r\u5355\u7EC6\u80DE\u5206\u6790",
-      // natural-language synonyms
+      "findmarkers",
+      "findallmarkers",
+      "doubletfinder r",
+      "harmony r\u6574\u5408",
+      "cca\u6574\u5408",
+      // core workflow
       "r\u505A\u5355\u7EC6\u80DE",
       "seurat\u5206\u6790",
-      "\u7528r\u5206\u6790\u5355\u7EC6\u80DE"
+      "\u7528r\u5206\u6790\u5355\u7EC6\u80DE",
+      "seurat\u5BF9\u8C61",
+      "seurat pipeline",
+      // marker genes
+      "\u6807\u8BB0\u57FA\u56E0",
+      "marker gene",
+      "\u7EC6\u80DEmarker",
+      "\u7EC6\u80DE\u7279\u5F81\u57FA\u56E0",
+      // T/B/NK cells in R
+      "r\u8BED\u8A00t\u7EC6\u80DE",
+      "r\u8BED\u8A00\u80BF\u7624\u5FAE\u73AF\u5883",
+      "\u7528seurat\u505A\u514D\u75AB\u5206\u6790",
+      // integration
+      "rpca\u6574\u5408",
+      "seurat\u6574\u5408",
+      "\u591A\u6837\u672Cseurat"
     ]
   },
   {
@@ -15283,20 +15441,47 @@ var SKILL_ROUTES = [
     category: "\u5355\u7EC6\u80DE",
     tag: "builtin",
     keywords: [
+      // platforms
       "\u7A7A\u95F4\u8F6C\u5F55\u7EC4",
       "spatial transcriptomics",
       "visium",
+      "10x visium",
+      "stereo-seq",
+      "merfish",
+      "seqfish",
+      "slide-seq",
+      "cosmx",
+      "xenium",
+      "dbit-seq",
+      "resolve biosciences",
+      // analysis
       "\u7A7A\u95F4\u89E3\u5377\u79EF",
       "spatial deconvolution",
       "\u914D\u4F53\u53D7\u4F53\u5206\u6790",
       "\u7A7A\u95F4\u57FA\u56E0\u8868\u8FBE",
-      "stereo-seq",
-      // natural-language synonyms
+      "\u7A7A\u95F4\u805A\u7C7B",
+      "\u7A7A\u95F4\u53D8\u5F02\u57FA\u56E0",
+      "spatially variable genes",
+      "\u7A7A\u95F4\u81EA\u76F8\u5173",
+      "moran\u6307\u6570",
+      // deconvolution tools
+      "rctd",
+      "spotlight",
+      "cell2location",
+      "stereoscope",
+      // cell communication spatial
+      "\u7A7A\u95F4\u914D\u4F53\u53D7\u4F53",
+      "\u7A7A\u95F4\u7EC6\u80DE\u901A\u8BAF",
+      "\u7A7A\u95F4\u4E92\u4F5C",
+      // natural-language
       "\u7A7A\u95F4\u7EC4\u5B66",
       "\u7EC4\u7EC7\u5207\u7247\u6D4B\u5E8F",
       "\u7A7A\u95F4\u5206\u8FA8\u7387\u8F6C\u5F55\u7EC4",
       "\u7EC6\u80DE\u7A7A\u95F4\u5206\u5E03",
-      "\u7A7A\u95F4\u5355\u7EC6\u80DE"
+      "\u7A7A\u95F4\u5355\u7EC6\u80DE",
+      "\u7EC4\u7EC7\u7A7A\u95F4\u56FE\u8C31",
+      "\u7EC6\u80DE\u5728\u7EC4\u7EC7\u4E2D\u7684\u4F4D\u7F6E",
+      "\u7A7A\u95F4\u8868\u8FBE\u6A21\u5F0F"
     ]
   },
   {
@@ -15305,17 +15490,38 @@ var SKILL_ROUTES = [
     category: "\u8F6C\u5F55\u7EC4",
     tag: "builtin",
     keywords: [
+      // tool/method
       "wgcna",
       "\u5171\u8868\u8FBE\u7F51\u7EDC",
       "coexpression network",
       "\u57FA\u56E0\u5171\u8868\u8FBE\u6A21\u5757",
       "weighted gene coexpression",
       "\u4E0E\u8868\u578B\u76F8\u5173\u7684\u57FA\u56E0\u6A21\u5757",
-      // natural-language synonyms
+      "blockwisemoduless",
+      "\u8F6F\u9608\u503C",
+      "\u6A21\u5757\u989C\u8272",
+      "\u67A2\u7EBD\u57FA\u56E0",
+      "hub gene",
+      // module-trait
+      "\u6A21\u5757\u6027\u72B6\u5173\u8054",
+      "\u6A21\u5757\u4E0E\u4E34\u5E8A\u7279\u5F81",
+      "\u7279\u5F81\u57FA\u56E0\u76F8\u5173\u6027",
+      "\u6A21\u5757\u7279\u5F81\u503C",
+      "module eigengene",
+      // applications
+      "\u514D\u75AB\u6D78\u6DA6\u4E0E\u6A21\u5757",
+      "\u514D\u75AB\u76F8\u5173\u6A21\u5757",
+      "\u9884\u540E\u76F8\u5173\u57FA\u56E0\u6A21\u5757",
+      "\u4EE3\u8C22\u76F8\u5173\u5171\u8868\u8FBE",
+      "\u5171\u8868\u8FBE\u4E0E\u836F\u7269",
+      // natural-language
       "\u57FA\u56E0\u6A21\u5757",
       "\u5171\u8868\u8FBE",
       "\u57FA\u56E0\u7F51\u7EDC",
-      "\u57FA\u56E0\u76F8\u5173\u6027\u7F51\u7EDC"
+      "\u57FA\u56E0\u76F8\u5173\u6027\u7F51\u7EDC",
+      "\u54EA\u4E9B\u57FA\u56E0\u4E00\u8D77\u53D8\u5316",
+      "\u57FA\u56E0\u8C03\u63A7\u6A21\u5757",
+      "\u6838\u5FC3\u57FA\u56E0\u7F51\u7EDC"
     ]
   },
   {
@@ -15324,11 +15530,16 @@ var SKILL_ROUTES = [
     category: "\u8F6C\u5F55\u7EC4",
     tag: "builtin",
     keywords: [
+      // databases
       "\u5BCC\u96C6\u5206\u6790",
       "go\u5206\u6790",
       "kegg\u5206\u6790",
       "gsea",
       "\u901A\u8DEF\u5206\u6790",
+      "reactome",
+      "wikipathways",
+      "disgenet",
+      "msigdb",
       "pathway enrichment",
       "\u57FA\u56E0\u672C\u4F53",
       "gene ontology",
@@ -15336,30 +15547,60 @@ var SKILL_ROUTES = [
       "\u529F\u80FD\u5BCC\u96C6",
       "deg\u5BCC\u96C6",
       "\u5DEE\u5F02\u57FA\u56E0\u901A\u8DEF",
-      // natural-language synonyms
-      "\u8FD9\u4E9B\u57FA\u56E0\u53C2\u4E0E\u4EC0\u4E48\u901A\u8DEF",
-      "\u57FA\u56E0\u529F\u80FD\u6CE8\u91CA",
-      "\u4FE1\u53F7\u901A\u8DEF",
-      "\u751F\u7269\u5B66\u8FC7\u7A0B",
-      "\u5206\u5B50\u529F\u80FD",
-      "\u7EC6\u80DE\u7EC4\u5206",
+      // analysis types
       "go\u5BCC\u96C6",
       "\u901A\u8DEF\u5BCC\u96C6",
       "\u57FA\u56E0\u96C6\u5206\u6790",
       "ora\u5206\u6790",
       "gsea\u5206\u6790",
-      // mutation → pathway → phenotype
+      "ssgsea",
+      "gsva",
+      "\u57FA\u56E0\u96C6\u53D8\u5F02\u5206\u6790",
+      // specific pathways
+      "wnt\u901A\u8DEF",
+      "notch\u901A\u8DEF",
+      "hedgehog\u901A\u8DEF",
+      "mtor\u901A\u8DEF",
+      "jak-stat\u901A\u8DEF",
+      "nf-kb\u901A\u8DEF",
+      "tgf-beta\u901A\u8DEF",
+      "erk\u901A\u8DEF",
+      "mapk\u901A\u8DEF",
+      "pi3k\u901A\u8DEF",
+      "akt\u4FE1\u53F7",
+      "p53\u901A\u8DEF",
+      "hippo\u901A\u8DEF",
+      "vegf\u901A\u8DEF",
+      "egfr\u4FE1\u53F7\u901A\u8DEF",
+      // mutation → pathway
       "\u7A81\u53D8\u901A\u8DEF",
       "\u7A81\u53D8\u5F71\u54CD\u901A\u8DEF",
       "\u7A81\u53D8\u4E0B\u6E38\u901A\u8DEF",
       "\u6851\u57FA\u56FE\u901A\u8DEF",
       "kras\u901A\u8DEF",
       "ras-raf-mek\u901A\u8DEF",
-      "mapk\u901A\u8DEF",
-      "pi3k\u901A\u8DEF",
-      "\u80BA\u764C\u901A\u8DEF",
       "\u9A71\u52A8\u57FA\u56E0\u901A\u8DEF",
-      "\u4FE1\u53F7\u901A\u8DEF\u5BCC\u96C6"
+      // cancer pathway contexts
+      "\u80BA\u764C\u901A\u8DEF",
+      "\u4E73\u817A\u764C\u4FE1\u53F7\u901A\u8DEF",
+      "\u809D\u764C\u901A\u8DEF\u5206\u6790",
+      "\u514D\u75AB\u901A\u8DEF",
+      "\u708E\u75C7\u901A\u8DEF",
+      "\u7EC6\u80DE\u5468\u671F\u901A\u8DEF",
+      "\u51CB\u4EA1\u901A\u8DEF",
+      "\u4EE3\u8C22\u901A\u8DEF",
+      "\u7CD6\u9175\u89E3\u901A\u8DEF",
+      "\u6C27\u5316\u78F7\u9178\u5316",
+      // natural-language
+      "\u8FD9\u4E9B\u57FA\u56E0\u53C2\u4E0E\u4EC0\u4E48\u901A\u8DEF",
+      "\u57FA\u56E0\u529F\u80FD\u6CE8\u91CA",
+      "\u4FE1\u53F7\u901A\u8DEF",
+      "\u751F\u7269\u5B66\u8FC7\u7A0B",
+      "\u5206\u5B50\u529F\u80FD",
+      "\u7EC6\u80DE\u7EC4\u5206",
+      "\u4FE1\u53F7\u901A\u8DEF\u5BCC\u96C6",
+      "\u57FA\u56E0\u529F\u80FD\u662F\u4EC0\u4E48",
+      "\u54EA\u4E9B\u901A\u8DEF\u88AB\u6FC0\u6D3B"
     ]
   },
   {
@@ -15368,6 +15609,7 @@ var SKILL_ROUTES = [
     category: "\u5355\u7EC6\u80DE",
     tag: "builtin",
     keywords: [
+      // tools
       "pyscenic",
       "scenic",
       "\u57FA\u56E0\u8C03\u63A7\u7F51\u7EDC",
@@ -15375,11 +15617,22 @@ var SKILL_ROUTES = [
       "\u8F6C\u5F55\u56E0\u5B50\u8C03\u63A7\u5B50",
       "tf regulon",
       "grn\u63A8\u65AD",
-      // natural-language synonyms
+      "aucell",
+      "aucell\u8BC4\u5206",
+      "\u8C03\u63A7\u5B50\u6D3B\u6027",
+      // TF analysis
       "\u8F6C\u5F55\u56E0\u5B50\u5206\u6790",
       "\u8F6C\u5F55\u56E0\u5B50\u9776\u57FA\u56E0",
       "tf\u6D3B\u6027",
-      "\u8C03\u63A7\u7F51\u7EDC\u63A8\u65AD"
+      "\u8C03\u63A7\u7F51\u7EDC\u63A8\u65AD",
+      "\u5355\u7EC6\u80DE\u8F6C\u5F55\u56E0\u5B50",
+      "\u7EC6\u80DE\u7C7B\u578B\u8F6C\u5F55\u56E0\u5B50",
+      // applications
+      "\u80BF\u7624\u8F6C\u5F55\u56E0\u5B50",
+      "\u53D1\u80B2\u8F68\u8FF9tf",
+      "\u514D\u75AB\u7EC6\u80DE\u8F6C\u5F55\u56E0\u5B50",
+      "\u5E72\u7EC6\u80DE\u8F6C\u5F55\u56E0\u5B50\u8C03\u63A7",
+      "\u5206\u5316\u76F8\u5173\u8F6C\u5F55\u56E0\u5B50"
     ]
   },
   // ── Genomics ──────────────────────────────────────────────────────────────────
@@ -15389,6 +15642,7 @@ var SKILL_ROUTES = [
     category: "\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // tools
       "\u53D8\u5F02\u6CE8\u91CA",
       "variant annotation",
       "vcf\u6CE8\u91CA",
@@ -15399,6 +15653,49 @@ var SKILL_ROUTES = [
       "\u53D8\u5F02\u81F4\u75C5\u6027\u9884\u6D4B",
       "\u53D8\u5F02\u529F\u80FD\u9884\u6D4B",
       "clinvar\u6CE8\u91CA",
+      "snpeff",
+      "oncokb\u6CE8\u91CA",
+      "civic\u6570\u636E\u5E93",
+      // variant types
+      "\u4F53\u7EC6\u80DE\u7A81\u53D8",
+      "\u80DA\u7CFB\u53D8\u5F02",
+      "germline variant",
+      "somatic mutation",
+      "\u62F7\u8D1D\u6570\u53D8\u5F02",
+      "cnv\u5206\u6790",
+      "\u57FA\u56E0\u878D\u5408",
+      "fusion gene",
+      "\u57FA\u56E0\u91CD\u6392",
+      "\u526A\u63A5\u53D8\u5F02",
+      "splicing variant",
+      "\u79FB\u7801\u7A81\u53D8",
+      "frameshift",
+      "\u65E0\u4E49\u7A81\u53D8",
+      "nonsense mutation",
+      "\u9519\u4E49\u7A81\u53D8",
+      "missense",
+      "\u540C\u4E49\u7A81\u53D8",
+      "synonymous",
+      "\u542F\u52A8\u5B50\u53D8\u5F02",
+      // clinical classification
+      "\u81F4\u75C5\u6027\u5206\u7C7B",
+      "acmg\u5206\u7C7B",
+      "\u53D8\u5F02\u4E34\u5E8A\u610F\u4E49",
+      "\u53D8\u5F02\u89E3\u8BFB",
+      "\u826F\u6027\u53D8\u5F02",
+      "\u81F4\u75C5\u53D8\u5F02",
+      "\u610F\u4E49\u4E0D\u660E\u53D8\u5F02",
+      "vus",
+      // population genetics
+      "\u4EBA\u7FA4\u9891\u7387",
+      "gnomad",
+      "\u5343\u4EBA\u57FA\u56E0\u7EC4",
+      "\u7B49\u4F4D\u57FA\u56E0\u9891\u7387",
+      "maf",
+      "hapmap",
+      "\u8FDE\u9501\u4E0D\u5E73\u8861",
+      "ld",
+      "linkage disequilibrium",
       // natural-language synonyms
       "\u7A81\u53D8\u6CE8\u91CA",
       "\u53D8\u5F02\u89E3\u8BFB",
@@ -15406,7 +15703,7 @@ var SKILL_ROUTES = [
       "\u9057\u4F20\u53D8\u5F02\u89E3\u6790",
       "\u81F4\u75C5\u6027\u8BC4\u4F30",
       "\u53D8\u5F02\u5F71\u54CD\u9884\u6D4B",
-      // specific oncology mutations (KRAS/EGFR/ALK etc.)
+      // oncology mutations
       "kras\u7A81\u53D8",
       "kras g12c",
       "kras g12d",
@@ -15414,11 +15711,28 @@ var SKILL_ROUTES = [
       "kras mutation",
       "egfr\u7A81\u53D8",
       "egfr l858r",
-      "egfr\u5916\u663E\u5B5019\u7F3A\u5931",
+      "egfr\u5916\u663E\u5B5019",
+      "egfr t790m",
       "alk\u878D\u5408",
+      "alk\u91CD\u6392",
       "braf v600e",
+      "braf\u7A81\u53D8",
       "tp53\u7A81\u53D8",
+      "tp53",
       "pik3ca\u7A81\u53D8",
+      "pten\u7F3A\u5931",
+      "brca1\u7A81\u53D8",
+      "brca2\u7A81\u53D8",
+      "brca",
+      "her2\u6269\u589E",
+      "her2\u7A81\u53D8",
+      "cdkn2a\u7F3A\u5931",
+      "met\u6269\u589E",
+      "met\u5916\u663E\u5B5014",
+      "ret\u878D\u5408",
+      "ros1\u878D\u5408",
+      "ntrk\u878D\u5408",
+      "pd-l1",
       // cancer contexts
       "nsclc\u7A81\u53D8",
       "\u80BA\u764C\u7A81\u53D8",
@@ -15427,6 +15741,14 @@ var SKILL_ROUTES = [
       "\u80BF\u7624\u4F53\u7EC6\u80DE\u7A81\u53D8",
       "\u9A71\u52A8\u57FA\u56E0\u7A81\u53D8",
       "\u764C\u75C7\u9A71\u52A8\u7A81\u53D8",
+      "\u4E73\u817A\u764C\u7A81\u53D8",
+      "\u7ED3\u76F4\u80A0\u764C\u7A81\u53D8",
+      "\u9ED1\u8272\u7D20\u7624\u7A81\u53D8",
+      "\u80C3\u764C\u7A81\u53D8",
+      "\u809D\u764C\u7A81\u53D8",
+      "\u5375\u5DE2\u764C\u7A81\u53D8",
+      "\u524D\u5217\u817A\u764C\u7A81\u53D8",
+      "\u80F0\u817A\u764C\u7A81\u53D8",
       // mutation landscape
       "\u7A81\u53D8\u9891\u7387",
       "\u8DE8\u764C\u79CD\u7A81\u53D8",
@@ -15434,7 +15756,13 @@ var SKILL_ROUTES = [
       "\u7A81\u53D8\u666F\u89C2\u56FE",
       "\u7011\u5E03\u56FE\u7A81\u53D8",
       "mutation landscape",
-      "oncoprint"
+      "oncoprint",
+      "\u80BF\u7624\u7A81\u53D8\u8D1F\u8377",
+      "tmb",
+      "\u5FAE\u536B\u661F\u4E0D\u7A33\u5B9A",
+      "msi",
+      "\u540C\u6E90\u91CD\u7EC4\u7F3A\u9677",
+      "hrd"
     ]
   },
   {
@@ -15443,6 +15771,7 @@ var SKILL_ROUTES = [
     category: "\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // methods
       "gwas\u5206\u6790",
       "twas",
       "predixcan",
@@ -15451,13 +15780,49 @@ var SKILL_ROUTES = [
       "genome-wide association",
       "\u56E0\u679C\u57FA\u56E0\u9274\u5B9A",
       "qtl\u6574\u5408",
-      // natural-language synonyms
+      "eqtl",
+      "sqtl",
+      "\u8868\u8FBE\u6570\u91CF\u6027\u72B6\u4F4D\u70B9",
+      "coloc",
+      "colocalization",
+      "ld score regression",
+      "ldsc",
+      "\u9057\u4F20\u529B\u5206\u6790",
+      "heritability",
+      "fine mapping",
+      "\u7CBE\u7EC6\u5B9A\u4F4D",
+      "credible set",
+      "susie",
+      // application areas
+      "\u81EA\u8EAB\u514D\u75ABgwas",
+      "\u7C7B\u98CE\u6E7F\u5173\u8282\u708Egwas",
+      "\u7CFB\u7EDF\u6027\u7EA2\u6591\u72FC\u75AEgwas",
+      "\u7CD6\u5C3F\u75C5gwas",
+      "2\u578B\u7CD6\u5C3F\u75C5\u9057\u4F20\u4F4D\u70B9",
+      "\u80A5\u80D6gwas",
+      "bmi\u9057\u4F20",
+      "\u5FC3\u8840\u7BA1\u75BE\u75C5gwas",
+      "\u51A0\u5FC3\u75C5\u9057\u4F20\u53D8\u5F02",
+      "\u8840\u538Bgwas",
+      "\u795E\u7ECF\u7CFB\u7EDFgwas",
+      "\u963F\u5C14\u8328\u6D77\u9ED8\u75C5gwas",
+      "\u7CBE\u795E\u5206\u88C2\u75C7gwas",
+      "\u708E\u75C7\u6027\u80A0\u75C5gwas",
+      "\u514B\u7F57\u6069\u75C5\u9057\u4F20",
+      "\u6E83\u75A1\u6027\u7ED3\u80A0\u708Egwas",
+      "\u80BF\u7624\u6613\u611F\u6027gwas",
+      "\u4E73\u817A\u764C\u6613\u611F\u4F4D\u70B9",
+      "\u524D\u5217\u817A\u764Cgwas",
+      // natural-language
       "gwas\u7ED3\u679C\u89E3\u8BFB",
       "gwas\u529F\u80FD\u6CE8\u91CA",
       "\u5173\u8054\u4F4D\u70B9\u57FA\u56E0",
       "snp\u529F\u80FD",
       "gwas\u4FE1\u53F7",
-      "\u9057\u4F20\u5173\u8054\u5206\u6790"
+      "\u9057\u4F20\u5173\u8054\u5206\u6790",
+      "snp\u4E0E\u75BE\u75C5",
+      "\u9057\u4F20\u53D8\u5F02\u4E0E\u8868\u578B",
+      "\u529F\u80FD\u6027snp\u9274\u5B9A"
     ]
   },
   {
@@ -15466,6 +15831,7 @@ var SKILL_ROUTES = [
     category: "\u7EDF\u8BA1",
     tag: "builtin",
     keywords: [
+      // methods
       "\u5B5F\u5FB7\u5C14\u968F\u673A\u5316",
       "mendelian randomization",
       "twosamplemr",
@@ -15474,11 +15840,47 @@ var SKILL_ROUTES = [
       "mr-egger",
       "\u53CC\u6837\u672Cmr",
       "\u5DE5\u5177\u53D8\u91CFiv",
-      // natural-language synonyms
+      "weighted median",
+      "mr-presso",
+      "steiger\u8FC7\u6EE4",
+      "\u53CC\u5411\u5B5F\u5FB7\u5C14\u968F\u673A\u5316",
+      "bidirectional mr",
+      "\u591A\u53D8\u91CFmr",
+      // exposures
+      "bmi\u4E0E\u75BE\u75C5",
+      "\u8840\u8102\u4E0E\u75BE\u75C5",
+      "\u708E\u75C7\u56E0\u5B50\u56E0\u679C",
+      "\u4EE3\u8C22\u7269mr",
+      "\u80A0\u9053\u83CC\u7FA4mr",
+      "\u5438\u70DF\u4E0E\u75BE\u75C5",
+      "\u9152\u7CBE\u4E0E\u75BE\u75C5",
+      "\u6559\u80B2\u7A0B\u5EA6\u56E0\u679C",
+      "\u7761\u7720\u65F6\u957Fmr",
+      "\u4F53\u529B\u6D3B\u52A8mr",
+      "il-6\u56E0\u679C",
+      "crp\u4E0E\u75BE\u75C5",
+      "\u80C6\u56FA\u9187\u56E0\u679C",
+      // outcomes
+      "\u51A0\u5FC3\u75C5\u56E0\u679C",
+      "\u5FC3\u8840\u7BA1\u75BE\u75C5mr",
+      "2\u578B\u7CD6\u5C3F\u75C5mr",
+      "\u764C\u75C7\u98CE\u9669\u56E0\u679C",
+      "\u4E73\u817A\u764C\u98CE\u9669mr",
+      "\u524D\u5217\u817A\u764Cmr",
+      "\u963F\u5C14\u8328\u6D77\u9ED8\u75C5\u56E0\u679C",
+      "\u5E15\u91D1\u68EE\u75C5mr",
+      "\u6291\u90C1\u75C7\u56E0\u679C",
+      "\u4E2D\u98CEmr",
+      "\u9AD8\u8840\u538B\u56E0\u679C",
+      "\u6162\u6027\u80BE\u75C5mr",
+      // natural-language
       "\u56E0\u679C\u63A8\u65AD",
       "\u66B4\u9732\u4E0E\u7ED3\u5C40",
       "\u9057\u4F20\u5DE5\u5177\u53D8\u91CF",
-      "mr\u5206\u6790"
+      "mr\u5206\u6790",
+      "\u67D0\u56E0\u7D20\u662F\u5426\u5BFC\u81F4\u67D0\u75BE\u75C5",
+      "\u56E0\u679C\u5173\u7CFB\u9A8C\u8BC1",
+      "iv\u5206\u6790"
     ]
   },
   {
@@ -15487,16 +15889,39 @@ var SKILL_ROUTES = [
     category: "\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // methods
       "prs\u8BC4\u5206",
       "polygenic risk score",
       "\u591A\u57FA\u56E0\u98CE\u9669\u8BC4\u5206",
       "prs-cs",
       "\u9057\u4F20\u98CE\u9669\u9884\u6D4B",
       "prs\u8BA1\u7B97",
-      // natural-language synonyms
+      "prsice",
+      "ldpred",
+      "prscsx",
+      "clumping and thresholding",
+      // applications
+      "\u75BE\u75C5\u98CE\u9669\u9884\u6D4B",
+      "\u9AD8\u98CE\u9669\u4E2A\u4F53\u8BC6\u522B",
+      "\u4EBA\u7FA4\u9057\u4F20\u5206\u5C42",
+      "\u4E73\u817A\u764Cprs",
+      "\u524D\u5217\u817A\u764Cprs",
+      "\u7ED3\u76F4\u80A0\u764Cprs",
+      "\u5FC3\u8840\u7BA1prs",
+      "\u51A0\u5FC3\u75C5\u9057\u4F20\u98CE\u9669",
+      "\u8840\u538Bprs",
+      "2\u578B\u7CD6\u5C3F\u75C5prs",
+      "\u963F\u5C14\u8328\u6D77\u9ED8\u75C5\u9057\u4F20\u98CE\u9669",
+      "\u7CBE\u795E\u75BE\u75C5prs",
+      "\u7CBE\u795E\u5206\u88C2\u75C7prs",
+      "\u53CC\u76F8\u60C5\u611F\u969C\u788Dprs",
+      // natural-language
       "\u9057\u4F20\u98CE\u9669\u8BC4\u5206",
       "\u591A\u57FA\u56E0\u8BC4\u5206",
-      "\u75BE\u75C5\u9057\u4F20\u98CE\u9669"
+      "\u75BE\u75C5\u9057\u4F20\u98CE\u9669",
+      "\u4E2A\u4F53\u9057\u4F20\u98CE\u9669",
+      "\u57FA\u56E0\u7EC4\u98CE\u9669\u9884\u6D4B",
+      "\u9057\u4F20\u6613\u611F\u6027\u8BC4\u5206"
     ]
   },
   {
@@ -15505,6 +15930,7 @@ var SKILL_ROUTES = [
     category: "\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // tools
       "crispr\u6587\u5E93\u7B5B\u9009",
       "crispr screen",
       "mageck",
@@ -15512,12 +15938,31 @@ var SKILL_ROUTES = [
       "sgrna\u7B5B\u9009",
       "pooled crispr",
       "crispr hit\u8BC6\u522B",
-      // natural-language synonyms
+      // library types
+      "crispr\u5168\u57FA\u56E0\u7EC4\u6587\u5E93",
+      "crispri\u6587\u5E93",
+      "crispra\u6587\u5E93",
+      "genome-wide crispr",
+      "crispr\u6572\u9664\u6587\u5E93",
+      // analysis types
+      "\u5FC5\u9700\u57FA\u56E0\u7B5B\u9009",
+      "\u81F4\u6B7B\u57FA\u56E0",
+      "\u5408\u6210\u81F4\u6B7B",
+      "synthetic lethal",
       "crispr\u7B5B\u9009",
       "\u529F\u80FD\u57FA\u56E0\u7EC4\u7B5B\u9009",
-      "\u5FC5\u9700\u57FA\u56E0\u7B5B\u9009",
+      // applications
+      "\u80BF\u7624\u8010\u836Fcrispr",
+      "\u514D\u75AB\u6CBB\u7597crispr\u7B5B\u9009",
+      "\u8010\u836F\u673A\u5236crispr",
+      "\u764C\u75C7\u5FC5\u9700\u57FA\u56E0",
+      "\u80BF\u7624\u8106\u5F31\u6027\u57FA\u56E0",
+      "crispr\u529F\u80FD\u57FA\u56E0\u7EC4",
+      // natural-language
       "crispr\u6572\u9664\u7B5B\u9009",
-      "crispr\u6587\u5E93"
+      "crispr\u6587\u5E93",
+      "\u9AD8\u901A\u91CFcrispr",
+      "\u57FA\u56E0\u5FC5\u9700\u6027"
     ]
   },
   // ── Epigenomics ───────────────────────────────────────────────────────────────
@@ -15527,17 +15972,53 @@ var SKILL_ROUTES = [
     category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // tools/databases
       "chip-atlas",
       "chip-seq\u5CF0\u503C\u5BCC\u96C6",
       "peak enrichment chip",
       "chip atlas\u6570\u636E\u5E93",
       "histone chip\u5206\u6790",
-      // natural-language synonyms
+      // histone marks
+      "h3k27ac",
+      "h3k4me3",
+      "h3k4me1",
+      "h3k27me3",
+      "h3k9me3",
+      "h3k36me3",
+      "h3k9ac",
+      "h4k16ac",
+      "\u7EC4\u86CB\u767D\u4FEE\u9970",
+      "\u6D3B\u6027\u589E\u5F3A\u5B50\u6807\u8BB0",
+      // regulatory elements
+      "\u589E\u5F3A\u5B50\u5206\u6790",
+      "\u542F\u52A8\u5B50\u6D3B\u6027",
+      "\u8D85\u7EA7\u589E\u5F3A\u5B50",
+      "super enhancer",
+      "\u5F00\u653E\u67D3\u8272\u8D28",
+      "atac-seq",
+      "atac\u5206\u6790",
+      "dnase-seq",
+      "ctcf\u7ED3\u5408",
+      "cohesin",
+      "\u62D3\u6251\u57DF",
+      "tad",
+      // TF binding
+      "\u8F6C\u5F55\u56E0\u5B50\u7ED3\u5408chip",
+      "tf\u7ED3\u5408\u4F4D\u70B9",
+      "chip-seq\u5206\u6790",
+      // cancer epigenome
+      "\u80BF\u7624\u8868\u89C2\u57FA\u56E0\u7EC4",
+      "\u764C\u75C7\u7EC4\u86CB\u767D\u4FEE\u9970",
+      "\u80BF\u7624\u589E\u5F3A\u5B50",
+      "\u8868\u89C2\u9057\u4F20\u4FEE\u9970",
+      "\u8868\u89C2\u57FA\u56E0\u7EC4\u6539\u53D8",
+      // natural-language
       "chip-seq\u5206\u6790",
       "chip\u6570\u636E",
-      "\u7EC4\u86CB\u767D\u4FEE\u9970",
-      "h3k27ac",
-      "h3k4me3"
+      "\u7EC4\u86CB\u767D\u4FEE\u9970\u8C31",
+      "\u54EA\u4E9B\u533A\u57DF\u6709h3k27ac",
+      "\u589E\u5F3A\u5B50\u6FC0\u6D3B",
+      "chip-seq\u5CF0"
     ]
   },
   {
@@ -15546,15 +16027,27 @@ var SKILL_ROUTES = [
     category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // tools
       "chip\u5DEE\u5F02\u5206\u6790",
       "differential binding",
       "\u5DEE\u5F02chip-seq",
       "differential peak",
       "chip-seq\u6761\u4EF6\u6BD4\u8F83",
-      // natural-language synonyms
+      "diffbind",
+      "chipseeker\u5DEE\u5F02",
+      // comparison contexts
+      "\u836F\u7269\u5904\u7406chip\u5DEE\u5F02",
+      "\u5904\u7406\u524D\u540Echip-seq",
+      "\u7EC6\u80DE\u5206\u5316chip",
+      "\u75BE\u75C5vs\u6B63\u5E38chip",
+      "\u80BF\u7624vs\u6B63\u5E38chip-seq",
+      // natural-language
       "\u5DEE\u5F02\u5CF0",
       "\u5DEE\u5F02\u7ED3\u5408\u4F4D\u70B9",
-      "chip-seq\u5DEE\u5F02"
+      "chip-seq\u5DEE\u5F02",
+      "\u54EA\u4E9B\u4F4D\u70B9\u7ED3\u5408\u53D1\u751F\u53D8\u5316",
+      "\u5DEE\u5F02\u7EC4\u86CB\u767D\u4FEE\u9970",
+      "\u6FC0\u6D3Bvs\u6291\u5236\u7684\u589E\u5F3A\u5B50"
     ]
   },
   {
@@ -15563,16 +16056,34 @@ var SKILL_ROUTES = [
     category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // tools
       "chip\u9776\u57FA\u56E0",
       "chip target gene",
       "\u8F6C\u5F55\u56E0\u5B50\u9776\u57FA\u56E0chip",
       "tf\u9776\u57FA\u56E0",
       "peak annotation\u9776\u57FA\u56E0",
       "chip-seq peak\u6CE8\u91CA",
-      // natural-language synonyms
+      "great\u5206\u6790",
+      "chipseeker",
+      "annotatepeak",
+      // applications
+      "\u8F6C\u5F55\u56E0\u5B50\u8C03\u63A7\u9776\u57FA\u56E0",
+      "\u589E\u5F3A\u5B50\u9776\u57FA\u56E0",
+      "\u8D85\u7EA7\u589E\u5F3A\u5B50\u9776\u57FA\u56E0",
+      "\u8C03\u63A7\u5143\u4EF6\u9776\u57FA\u56E0",
+      "\u542F\u52A8\u5B50\u6CE8\u91CA",
+      // specific TFs
+      "myc\u9776\u57FA\u56E0",
+      "p53\u9776\u57FA\u56E0",
+      "nrf2\u9776\u57FA\u56E0",
+      "stat3\u9776\u57FA\u56E0",
+      // natural-language
       "peak\u6CE8\u91CA",
       "\u5CF0\u503C\u6CE8\u91CA",
       "\u8F6C\u5F55\u56E0\u5B50\u7ED3\u5408\u4F4D\u70B9",
+      "\u54EA\u4E9B\u57FA\u56E0\u88AB\u8F6C\u5F55\u56E0\u5B50\u8C03\u63A7",
+      "chip\u7ED3\u679C\u6CE8\u91CA\u5230\u57FA\u56E0",
+      "\u5CF0\u503C\u6CE8\u91CA\u5230\u6700\u8FD1\u57FA\u56E0",
       "chip\u9776\u70B9"
     ]
   },
@@ -15583,16 +16094,56 @@ var SKILL_ROUTES = [
     category: "\u4E34\u5E8A",
     tag: "builtin",
     keywords: [
+      // core terms
       "clinicaltrials\u5206\u6790",
       "clinical trial landscape",
       "ct.gov\u6570\u636E\u5206\u6790",
       "\u4E34\u5E8A\u8BD5\u9A8C\u683C\u5C40",
       "\u4E34\u5E8A\u7814\u7A76\u5206\u6790",
-      // natural-language synonyms
+      // trial phases
+      "\u4E00\u671F\u4E34\u5E8A",
+      "\u4E8C\u671F\u4E34\u5E8A",
+      "\u4E09\u671F\u4E34\u5E8A",
+      "\u4E34\u5E8A\u8BD5\u9A8C\u5206\u671F",
+      "phase 1",
+      "phase 2",
+      "phase 3",
+      "phase i",
+      "phase ii",
+      "phase iii",
+      // study types
+      "\u968F\u673A\u5BF9\u7167\u8BD5\u9A8C",
+      "rct",
+      "\u5F00\u653E\u6807\u7B7E\u8BD5\u9A8C",
+      "\u5355\u81C2\u7814\u7A76",
+      // drug types
+      "\u9776\u5411\u836F\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u514D\u75AB\u6CBB\u7597\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u7EC6\u80DE\u6CBB\u7597\u4E34\u5E8A\u8BD5\u9A8C",
+      "car-t\u4E34\u5E8A",
+      "pd-1\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u6297\u4F53\u836F\u4E34\u5E8A",
+      "\u5C0F\u5206\u5B50\u6291\u5236\u5242\u4E34\u5E8A",
+      "adc\u4E34\u5E8A\u8BD5\u9A8C",
+      // disease areas
+      "\u80BF\u7624\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u80BA\u764C\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u4E73\u817A\u764C\u4E34\u5E8A",
+      "\u809D\u764C\u4E34\u5E8A",
+      "\u81EA\u8EAB\u514D\u75AB\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u5FC3\u8840\u7BA1\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u795E\u7ECF\u75BE\u75C5\u4E34\u5E8A",
+      "\u7A00\u6709\u75C5\u4E34\u5E8A",
+      "\u7F55\u89C1\u75C5\u4E34\u5E8A\u8BD5\u9A8C",
+      // natural-language
       "\u4E34\u5E8A\u8BD5\u9A8C",
       "\u5728\u7814\u836F\u7269",
       "\u4E34\u5E8A\u7BA1\u7EBF",
-      "\u4E34\u5E8A\u7814\u7A76\u73B0\u72B6"
+      "\u4E34\u5E8A\u7814\u7A76\u73B0\u72B6",
+      "\u67D0\u836F\u7269\u6709\u54EA\u4E9B\u4E34\u5E8A\u8BD5\u9A8C",
+      "\u8BE5\u9002\u5E94\u75C7\u7684\u4E34\u5E8A\u683C\u5C40",
+      "\u7ADE\u4E89\u683C\u5C40\u5206\u6790",
+      "\u7814\u53D1\u7BA1\u7EBF"
     ]
   },
   {
@@ -15601,16 +16152,39 @@ var SKILL_ROUTES = [
     category: "\u6587\u732E",
     tag: "builtin",
     keywords: [
+      // methods
       "\u4E34\u5E8A\u524D\u6587\u732E",
       "preclinical literature",
       "\u7CFB\u7EDF\u6587\u732E\u63D0\u53D6",
       "literature extraction",
       "\u6587\u732E\u7CFB\u7EDF\u7EFC\u5408",
-      // natural-language synonyms
-      "\u6587\u732E\u7EFC\u8FF0",
+      "\u7CFB\u7EDF\u8BC4\u4EF7",
       "\u7CFB\u7EDF\u7EFC\u8FF0",
+      "systematic review",
+      "meta\u5206\u6790",
+      "meta-analysis",
+      "\u6587\u732E\u8BA1\u91CF",
+      "bibliometric",
+      // data extraction
+      "\u52A8\u7269\u5B9E\u9A8C\u6570\u636E\u63D0\u53D6",
+      "\u4F53\u5916\u5B9E\u9A8C\u6570\u636E\u63D0\u53D6",
+      "\u7EC6\u80DE\u5B9E\u9A8C\u6587\u732E",
+      "\u5C0F\u9F20\u6A21\u578B\u6587\u732E",
+      "\u4E34\u5E8A\u524D\u52A8\u7269\u6570\u636E",
+      // application
+      "\u6587\u732E\u8BC1\u636E\u7EFC\u5408",
+      "\u8BC1\u636E\u8D28\u91CF\u8BC4\u4F30",
+      "prisma",
+      "cochrane",
+      // natural-language
+      "\u6587\u732E\u7EFC\u8FF0",
       "\u6587\u732E\u6574\u7406",
-      "\u6587\u732E\u6316\u6398"
+      "\u6587\u732E\u6316\u6398",
+      "\u67E5\u9605\u76F8\u5173\u6587\u732E",
+      "\u63D0\u53D6\u6587\u732E\u6570\u636E",
+      "\u7CFB\u7EDF\u641C\u96C6\u6587\u732E",
+      "\u7EFC\u5408\u5206\u6790\u73B0\u6709\u7814\u7A76",
+      "\u7814\u7A76\u73B0\u72B6\u603B\u7ED3"
     ]
   },
   {
@@ -15619,6 +16193,7 @@ var SKILL_ROUTES = [
     category: "\u7EDF\u8BA1",
     tag: "builtin",
     keywords: [
+      // sample size
       "\u6837\u672C\u91CF\u8BA1\u7B97",
       "\u7EDF\u8BA1\u68C0\u9A8C\u9009\u62E9",
       "sample size calculation",
@@ -15626,17 +16201,70 @@ var SKILL_ROUTES = [
       "\u968F\u673A\u5316\u8BBE\u8BA1",
       "\u5B9E\u9A8C\u8BBE\u8BA1\u7EDF\u8BA1",
       "\u5047\u8BBE\u68C0\u9A8C\u9009\u62E9",
-      "t\u68C0\u9A8C\u8FD8\u662F",
+      // parametric tests
+      "t\u68C0\u9A8C",
+      "student t test",
+      "\u72EC\u7ACB\u6837\u672Ct",
+      "\u914D\u5BF9t\u68C0\u9A8C",
       "anova\u65B9\u5DEE\u5206\u6790",
-      // natural-language synonyms
+      "\u5355\u56E0\u7D20anova",
+      "\u53CC\u56E0\u7D20anova",
+      "\u91CD\u590D\u6D4B\u91CFanova",
+      // non-parametric tests
+      "mann-whitney",
+      "wilcoxon\u68C0\u9A8C",
+      "kruskal-wallis",
+      "friedman\u68C0\u9A8C",
+      "\u79E9\u548C\u68C0\u9A8C",
+      "\u975E\u53C2\u6570\u68C0\u9A8C",
+      // categorical
+      "fisher\u68C0\u9A8C",
+      "fisher exact",
+      "\u5361\u65B9\u68C0\u9A8C",
+      "chi-square",
+      // correlation
+      "pearson\u76F8\u5173",
+      "spearman\u76F8\u5173",
+      "\u76F8\u5173\u7CFB\u6570",
+      "\u76F8\u5173\u5206\u6790",
+      // multiple testing
+      "\u591A\u91CD\u68C0\u9A8C\u6821\u6B63",
+      "bonferroni",
+      "fdr\u6821\u6B63",
+      "holm\u6821\u6B63",
+      // regression
+      "\u7EBF\u6027\u56DE\u5F52",
+      "\u591A\u5143\u56DE\u5F52",
+      "logistic\u56DE\u5F52",
+      "\u591A\u53D8\u91CF\u5206\u6790",
+      // diagnostic
+      "roc\u66F2\u7EBF",
+      "auc\u8BA1\u7B97",
+      "\u8BCA\u65AD\u51C6\u786E\u6027",
+      "\u7075\u654F\u5EA6\u7279\u5F02\u6027",
+      "\u7EA6\u767B\u6307\u6570",
+      "\u6700\u4F73\u622A\u65AD\u503C",
+      // propensity score
+      "\u503E\u5411\u8BC4\u5206\u5339\u914D",
+      "psm",
+      "\u503E\u5411\u8BC4\u5206",
+      "\u6DF7\u6742\u56E0\u7D20\u63A7\u5236",
+      // study design
+      "\u968F\u673A\u5BF9\u7167\u8BBE\u8BA1",
+      "\u4EA4\u53C9\u8BBE\u8BA1",
+      "\u6790\u56E0\u8BBE\u8BA1",
+      "\u533A\u7EC4\u8BBE\u8BA1",
+      // natural-language
       "\u7528\u4EC0\u4E48\u7EDF\u8BA1\u65B9\u6CD5",
       "\u7EDF\u8BA1\u663E\u8457\u6027",
       "\u68C0\u9A8C\u65B9\u6CD5",
       "\u9700\u8981\u591A\u5C11\u6837\u672C",
       "\u529F\u6548\u5206\u6790",
       "\u7EDF\u8BA1\u529F\u6548",
-      "p\u503C",
-      "\u663E\u8457\u6027\u68C0\u9A8C"
+      "\u663E\u8457\u6027\u68C0\u9A8C",
+      "\u4E24\u7EC4\u600E\u4E48\u6BD4\u8F83",
+      "\u8BE5\u7528\u4EC0\u4E48\u68C0\u9A8C",
+      "\u7EDF\u8BA1\u65B9\u6CD5\u9009\u62E9"
     ]
   },
   {
@@ -15645,18 +16273,54 @@ var SKILL_ROUTES = [
     category: "\u7EDF\u8BA1",
     tag: "builtin",
     keywords: [
+      // methods
       "lasso\u56DE\u5F52\u7B5B\u9009",
       "lasso\u751F\u7269\u6807\u5FD7\u7269",
       "biomarker panel\u7B5B\u9009",
       "\u6700\u5C0F\u6807\u5FD7\u7269\u9762\u677F",
       "feature selection lasso",
       "\u8BCA\u65AD\u6807\u5FD7\u7269\u7B5B\u9009",
-      // natural-language synonyms
+      "elastic net",
+      "ridge\u56DE\u5F52",
+      "\u6B63\u5219\u5316\u56DE\u5F52",
+      "\u968F\u673A\u68EE\u6797\u7279\u5F81\u7B5B\u9009",
+      "random forest\u7279\u5F81\u91CD\u8981\u6027",
+      // biomarker types
+      "\u86CB\u767D\u8D28\u6807\u5FD7\u7269",
+      "\u4EE3\u8C22\u6807\u5FD7\u7269",
+      "mrna\u6807\u5FD7\u7269",
+      "mirna\u6807\u5FD7\u7269",
+      "\u591A\u7EC4\u5B66\u6807\u5FD7\u7269",
+      "\u8840\u6E05\u6807\u5FD7\u7269",
+      "\u8840\u6D46\u6807\u5FD7\u7269",
+      "\u5C3F\u6DB2\u751F\u7269\u6807\u5FD7\u7269",
+      "\u5FAA\u73AF\u6807\u5FD7\u7269",
+      // applications
+      "\u8BCA\u65AD\u6807\u5FD7\u7269",
+      "\u9884\u540E\u6807\u5FD7\u7269",
+      "\u9884\u6D4B\u6027\u6807\u5FD7\u7269",
+      "\u54CD\u5E94\u9884\u6D4B\u6807\u5FD7\u7269",
+      "\u65E9\u671F\u8BCA\u65AD\u6A21\u578B",
+      "\u8BCA\u65ADpanel",
+      "\u9884\u540E\u6A21\u578B\u6784\u5EFA",
+      "\u764C\u75C7\u65E9\u7B5B\u6807\u5FD7\u7269",
+      "\u6DB2\u4F53\u6D3B\u68C0\u6807\u5FD7\u7269",
+      "ctdna\u6807\u5FD7\u7269",
+      // performance
+      "auc\u8BC4\u4F30",
+      "roc\u66F2\u7EBF\u9A8C\u8BC1",
+      "\u8BCA\u65AD\u6548\u80FD",
+      "\u9884\u6D4B\u51C6\u786E\u6027",
+      "\u4EA4\u53C9\u9A8C\u8BC1\u6A21\u578B",
+      "\u5916\u90E8\u9A8C\u8BC1",
+      // natural-language
       "\u751F\u7269\u6807\u5FD7\u7269\u7B5B\u9009",
       "\u6807\u5FD7\u7269\u7EC4\u5408",
       "\u8BCA\u65AD\u6A21\u578B",
       "\u9884\u6D4B\u6A21\u578B\u7279\u5F81\u7B5B\u9009",
-      "biomarker",
+      "\u627E\u6700\u5C0F\u6709\u6548\u6807\u5FD7\u7269",
+      "\u54EA\u4E9B\u6807\u5FD7\u7269\u7EC4\u5408\u6700\u597D",
+      "\u7B5B\u9009\u5173\u952E\u7279\u5F81",
       "\u7279\u5F81\u9009\u62E9"
     ]
   },
@@ -15666,6 +16330,7 @@ var SKILL_ROUTES = [
     category: "\u5206\u5B50\u751F\u7269\u5B66",
     tag: "builtin",
     keywords: [
+      // tools/methods
       "\u5F15\u7269\u8BBE\u8BA1",
       "primer design",
       "qpcr\u5F15\u7269",
@@ -15674,11 +16339,40 @@ var SKILL_ROUTES = [
       "qrt-pcr\u8BBE\u8BA1",
       "\u6269\u589E\u5B50\u8BBE\u8BA1",
       "\u5F15\u7269\u7279\u5F02\u6027\u9A8C\u8BC1",
-      // natural-language synonyms
+      // qPCR specifics
+      "\u5185\u53C2\u57FA\u56E0",
+      "gapdh",
+      "beta-actin",
+      "\u5B9A\u91CFpcr",
+      "\u76F8\u5BF9\u5B9A\u91CF",
+      "ct\u503C",
+      "\u6269\u589E\u6548\u7387",
+      "\u7194\u89E3\u66F2\u7EBF",
+      // applications
+      "\u57FA\u56E0\u8868\u8FBE\u9A8C\u8BC1\u5F15\u7269",
+      "\u57FA\u56E0\u514B\u9686\u5F15\u7269",
+      "\u6D4B\u5E8F\u5F15\u7269",
+      "sanger\u6D4B\u5E8F\u5F15\u7269",
+      "crispr\u9A8C\u8BC1\u5F15\u7269",
+      "\u6572\u9664\u9A8C\u8BC1pcr",
+      "\u8FC7\u8868\u8FBE\u9A8C\u8BC1",
+      "\u7532\u57FA\u5316\u7279\u5F02\u6027pcr",
+      "chip\u9A8C\u8BC1\u5F15\u7269",
+      "chip-pcr",
+      // types
+      "\u7B80\u5E76\u5F15\u7269",
+      "\u7B80\u5E76\u5F15\u7269\u8BBE\u8BA1",
+      "\u5168\u957F\u6269\u589E",
+      "\u5D4C\u5957pcr\u5F15\u7269",
+      "\u591A\u91CDpcr",
+      "\u5B9E\u65F6\u8367\u5149pcr",
+      // natural-language
       "\u8BBE\u8BA1\u5F15\u7269",
       "\u6269\u589E\u5F15\u7269",
       "rt-pcr\u5F15\u7269",
-      "\u5B9A\u91CFpcr"
+      "\u5E2E\u6211\u8BBE\u8BA1\u5F15\u7269",
+      "\u8BBE\u8BA1qpcr\u5F15\u7269",
+      "\u9A8C\u8BC1\u57FA\u56E0\u8868\u8FBE\u7684\u5F15\u7269"
     ]
   },
   // ── Survival Analysis ─────────────────────────────────────────────────────────
@@ -15711,11 +16405,10 @@ var SKILL_ROUTES = [
       "\u590D\u53D1\u751F\u5B58",
       "relapse-free survival",
       "rfs\u5206\u6790",
-      // natural-language synonyms
-      "\u60A3\u8005\u9884\u540E",
-      "\u9884\u540E\u5206\u6790",
-      "\u751F\u5B58\u9884\u540E",
-      "\u4E34\u5E8A\u9884\u540E",
+      "\u65E0\u4E8B\u4EF6\u751F\u5B58",
+      "event-free survival",
+      "efs",
+      // statistical terms
       "\u5220\u5931\u6570\u636E",
       "\u53F3\u5220\u5931",
       "censored data",
@@ -15725,12 +16418,54 @@ var SKILL_ROUTES = [
       "\u7ADE\u4E89\u98CE\u9669",
       "competing risk",
       "fine-gray",
+      "\u7D2F\u79EF\u53D1\u751F\u7387",
       "\u4E2D\u4F4D\u751F\u5B58\u65F6\u95F4",
       "5\u5E74\u751F\u5B58\u7387",
       "3\u5E74\u751F\u5B58\u7387",
+      "1\u5E74\u751F\u5B58\u7387",
+      // Cox covariates
+      "\u591A\u53D8\u91CFcox",
+      "\u5355\u56E0\u7D20cox",
+      "\u72EC\u7ACB\u9884\u540E\u56E0\u7D20",
+      "\u9884\u540E\u72EC\u7ACB\u53D8\u91CF",
+      "ecog\u8BC4\u5206",
+      "\u80BF\u7624\u5206\u671F",
+      "tnm\u5206\u671F",
+      "\u6DCB\u5DF4\u7ED3\u8F6C\u79FB",
+      // expression-based
       "\u9AD8\u8868\u8FBE\u9884\u540E\u5DEE",
       "\u57FA\u56E0\u8868\u8FBE\u4E0E\u9884\u540E",
-      "\u7A81\u53D8\u4E0E\u9884\u540E"
+      "\u7A81\u53D8\u4E0E\u9884\u540E",
+      "\u86CB\u767D\u8868\u8FBE\u4E0E\u751F\u5B58",
+      "\u7532\u57FA\u5316\u4E0E\u9884\u540E",
+      // cancer types
+      "\u80BA\u764C\u9884\u540E",
+      "\u4E73\u817A\u764C\u751F\u5B58\u5206\u6790",
+      "\u809D\u764C\u9884\u540E",
+      "\u80C3\u764C\u751F\u5B58",
+      "\u7ED3\u76F4\u80A0\u764C\u9884\u540E",
+      "\u5375\u5DE2\u764C\u751F\u5B58",
+      "\u80F0\u817A\u764C\u9884\u540E",
+      "\u767D\u8840\u75C5\u751F\u5B58",
+      "\u6DCB\u5DF4\u7624\u9884\u540E",
+      "\u80F6\u8D28\u7624\u751F\u5B58\u5206\u6790",
+      "\u524D\u5217\u817A\u764C\u9884\u540E",
+      "\u80BE\u764C\u751F\u5B58",
+      "\u9ED1\u8272\u7D20\u7624\u9884\u540E",
+      // clinical contexts
+      "\u8F85\u52A9\u5316\u7597\u9884\u540E",
+      "\u514D\u75AB\u6CBB\u7597\u7597\u6548\u9884\u6D4B",
+      "\u9776\u5411\u6CBB\u7597\u751F\u5B58",
+      "tcga\u751F\u5B58\u6570\u636E",
+      "\u4E34\u5E8A\u961F\u5217\u751F\u5B58",
+      // natural-language
+      "\u60A3\u8005\u9884\u540E",
+      "\u9884\u540E\u5206\u6790",
+      "\u751F\u5B58\u9884\u540E",
+      "\u4E34\u5E8A\u9884\u540E",
+      "\u753B\u751F\u5B58\u66F2\u7EBF",
+      "\u60A3\u8005\u80FD\u6D3B\u591A\u4E45",
+      "\u54EA\u4E9B\u56E0\u7D20\u5F71\u54CD\u9884\u540E"
     ]
   },
   // ── Extended Skills (key routable entries) ───────────────────────────────────
@@ -15746,7 +16481,16 @@ var SKILL_ROUTES = [
       "\u8BBA\u6587\u641C\u7D22",
       "\u67E5\u627E\u6587\u732E",
       "\u68C0\u7D22pubmed",
-      "pubmed\u6587\u732E"
+      "pubmed\u6587\u732E",
+      "medline\u68C0\u7D22",
+      "ncbi\u68C0\u7D22",
+      "\u533B\u5B66\u6587\u732E",
+      "\u4E34\u5E8A\u6587\u732E\u68C0\u7D22",
+      "\u67E5\u6700\u65B0\u6587\u732E",
+      "\u627E\u76F8\u5173\u8BBA\u6587",
+      "\u8FD1\u671F\u53D1\u8868\u6587\u7AE0",
+      "\u6570\u636E\u5E93\u6587\u732E\u68C0\u7D22",
+      "\u751F\u7269\u533B\u5B66\u6587\u732E"
     ]
   },
   {
@@ -15754,7 +16498,20 @@ var SKILL_ROUTES = [
     name: "arXiv \u9884\u5370\u672C\u68C0\u7D22",
     category: "\u6587\u732E",
     tag: "builtin",
-    keywords: ["arxiv\u68C0\u7D22", "arxiv\u641C\u7D22", "\u9884\u5370\u672C\u68C0\u7D22", "\u9884\u5370\u672C\u8BBA\u6587", "arxiv\u6587\u732E"]
+    keywords: [
+      "arxiv\u68C0\u7D22",
+      "arxiv\u641C\u7D22",
+      "\u9884\u5370\u672C\u68C0\u7D22",
+      "\u9884\u5370\u672C\u8BBA\u6587",
+      "arxiv\u6587\u732E",
+      "\u6700\u65B0\u9884\u5370\u672C",
+      "biorxiv",
+      "medrxiv",
+      "\u672A\u53D1\u8868\u8BBA\u6587",
+      "ai\u76F8\u5173\u9884\u5370\u672C",
+      "\u6DF1\u5EA6\u5B66\u4E60\u751F\u7269\u4FE1\u606F",
+      "\u5927\u6A21\u578B\u751F\u7269\u533B\u5B66"
+    ]
   },
   {
     id: "alphafold",
@@ -15762,12 +16519,43 @@ var SKILL_ROUTES = [
     category: "\u7ED3\u6784\u751F\u7269\u5B66",
     tag: "builtin",
     keywords: [
+      // tools
       "alphafold\u7ED3\u6784\u9884\u6D4B",
       "alphafold\u8FD0\u884C",
       "af2",
       "af3",
       "\u86CB\u767D\u8D28\u7ED3\u6784\u9884\u6D4B\u4EFB\u52A1",
-      "\u7528alphafold\u9884\u6D4B"
+      "\u7528alphafold\u9884\u6D4B",
+      "colabfold",
+      "esmfold",
+      "rosettafold",
+      // applications
+      "\u86CB\u767D\u8D28\u7ED3\u6784\u9884\u6D4B",
+      "\u4E09\u7EF4\u7ED3\u6784\u9884\u6D4B",
+      "\u86CB\u767D\u6298\u53E0\u9884\u6D4B",
+      "\u7A81\u53D8\u5BF9\u7ED3\u6784\u7684\u5F71\u54CD",
+      "\u7ED3\u6784\u529F\u80FD\u5206\u6790",
+      "\u914D\u4F53\u7ED3\u5408\u53E3\u888B\u9884\u6D4B",
+      "\u836F\u7269\u9776\u70B9\u7ED3\u6784",
+      // protein interaction
+      "\u86CB\u767D\u86CB\u767D\u76F8\u4E92\u4F5C\u7528\u7ED3\u6784",
+      "ppi\u7ED3\u6784",
+      "\u590D\u5408\u7269\u7ED3\u6784\u9884\u6D4B",
+      "multimer\u9884\u6D4B",
+      "\u86CB\u767D\u590D\u5408\u7269",
+      // structural biology
+      "\u540C\u6E90\u5EFA\u6A21",
+      "homology modeling",
+      "\u5E8F\u5217\u7ED3\u6784\u5173\u7CFB",
+      "\u86CB\u767D\u8D28\u7ED3\u6784\u6BD4\u8F83",
+      "\u7ED3\u6784\u5BF9\u9F50",
+      "\u7ED3\u6784\u53E0\u5408",
+      // natural-language
+      "\u9884\u6D4B\u86CB\u767D\u7ED3\u6784",
+      "\u86CB\u767D3d\u7ED3\u6784",
+      "\u86CB\u767D\u8D28\u4E09\u7EF4\u6784\u8C61",
+      "\u8FD9\u4E2A\u86CB\u767D\u7684\u7ED3\u6784\u662F\u4EC0\u4E48",
+      "\u7528ai\u9884\u6D4B\u7ED3\u6784"
     ]
   },
   {
@@ -15780,7 +16568,15 @@ var SKILL_ROUTES = [
       "alphafold db",
       "uniprot\u7ED3\u6784\u67E5\u8BE2",
       "\u86CB\u767D\u8D28\u7ED3\u6784\u6570\u636E\u5E93",
-      "af\u6570\u636E\u5E93"
+      "af\u6570\u636E\u5E93",
+      "\u5DF2\u77E5\u86CB\u767D\u7ED3\u6784\u67E5\u8BE2",
+      "\u86CB\u767D\u7ED3\u6784\u4E0B\u8F7D",
+      "rcsb pdb",
+      "pdb\u7ED3\u6784",
+      "\u86CB\u767D\u6570\u636E\u5E93",
+      "pdb\u67E5\u8BE2",
+      "\u86CB\u767Did\u67E5\u7ED3\u6784",
+      "uniprot\u86CB\u767D\u7ED3\u6784"
     ]
   },
   {
@@ -15794,7 +16590,17 @@ var SKILL_ROUTES = [
       "binder design",
       "protein binder",
       "\u86CB\u767D\u8D28\u7ED3\u5408\u7269\u8BBE\u8BA1",
-      "de novo binder"
+      "de novo binder",
+      // therapeutic protein design
+      "\u6CBB\u7597\u6027\u86CB\u767D\u8BBE\u8BA1",
+      "\u86CB\u767D\u8D28\u5DE5\u7A0B",
+      "\u86CB\u767D\u8D28\u6539\u9020",
+      "\u7ED3\u5408\u4EB2\u548C\u529B\u8BBE\u8BA1",
+      "\u86CB\u767D\u8D28\u8BBE\u8BA1",
+      // applications
+      "\u6291\u5236\u5242\u86CB\u767D\u8BBE\u8BA1",
+      "\u9776\u70B9\u7ED3\u5408\u86CB\u767D",
+      "\u53D7\u4F53\u7ED3\u5408\u8BBE\u8BA1"
     ]
   },
   {
@@ -15808,7 +16614,16 @@ var SKILL_ROUTES = [
       "adata\u5B50\u96C6",
       "anndata\u683C\u5F0F",
       "\u5355\u7EC6\u80DEh5ad",
-      "obs var layers"
+      "obs var layers",
+      "h5ad\u8BFB\u53D6",
+      "\u5355\u7EC6\u80DE\u6570\u636E\u683C\u5F0F\u8F6C\u6362",
+      "loom\u683C\u5F0F",
+      "seurat\u8F6Canndata",
+      "anndata\u5408\u5E76",
+      "adata\u62FC\u63A5",
+      "obs\u7B5B\u9009",
+      "var\u7B5B\u9009",
+      "uns\u5B57\u6BB5"
     ]
   },
   {
@@ -15822,7 +16637,24 @@ var SKILL_ROUTES = [
       "cellagent",
       "\u81EA\u52A8\u7EC6\u80DE\u6CE8\u91CA",
       "\u7EC6\u80DE\u6CE8\u91CA\u81EA\u52A8\u5316",
-      "\u5355\u7EC6\u80DE\u6CE8\u91CA"
+      "\u5355\u7EC6\u80DE\u6CE8\u91CA",
+      // reference-based
+      "\u53C2\u8003\u96C6\u6CE8\u91CA",
+      "sctype",
+      "celltypist",
+      "singler\u6CE8\u91CA",
+      "scmap\u6CE8\u91CA",
+      "\u8FC1\u79FB\u5B66\u4E60\u7EC6\u80DE\u6CE8\u91CA",
+      // specific cell types
+      "t\u7EC6\u80DE\u6CE8\u91CA",
+      "\u514D\u75AB\u7EC6\u80DE\u6CE8\u91CA",
+      "\u80BF\u7624\u7EC6\u80DE\u6CE8\u91CA",
+      "\u4E0A\u76AE\u7EC6\u80DE\u6CE8\u91CA",
+      "\u6210\u7EA4\u7EF4\u7EC6\u80DE\u9274\u5B9A",
+      "\u5185\u76AE\u7EC6\u80DE\u8BC6\u522B",
+      // marker-based
+      "\u6807\u5FD7\u7269\u9A71\u52A8\u6CE8\u91CA",
+      "\u7EC6\u80DE\u7279\u5F81\u57FA\u56E0\u6CE8\u91CA"
     ]
   },
   {
@@ -15836,7 +16668,20 @@ var SKILL_ROUTES = [
       "\u5355\u7EC6\u80DE\u53D8\u5206\u63A8\u65AD",
       "batch correction scvi",
       "totalvi",
-      "scvi\u6279\u6B21\u77EB\u6B63"
+      "scvi\u6279\u6B21\u77EB\u6B63",
+      // related models
+      "scarches",
+      "scarchess",
+      "peakvi",
+      "multivi",
+      "\u6DF1\u5EA6\u5B66\u4E60\u5355\u7EC6\u80DE",
+      "\u53D8\u5206\u81EA\u7F16\u7801\u5668\u5355\u7EC6\u80DE",
+      "vae\u5355\u7EC6\u80DE",
+      // applications
+      "\u6279\u6B21\u6548\u5E94\u53BB\u9664\u6DF1\u5EA6\u5B66\u4E60",
+      "\u591A\u6A21\u6001\u5355\u7EC6\u80DE\u6574\u5408",
+      "\u5355\u7EC6\u80DEimputation",
+      "\u57FA\u56E0\u8868\u8FBE\u63D2\u8865"
     ]
   },
   {
@@ -15845,13 +16690,14 @@ var SKILL_ROUTES = [
     category: "\u836F\u7269",
     tag: "builtin",
     keywords: [
+      // core drug discovery
       "\u836F\u7269\u53D1\u73B0\u6D41\u7A0B",
       "drug discovery",
       "\u5019\u9009\u836F\u7269\u7B5B\u9009",
       "\u5148\u5BFC\u5316\u5408\u7269",
       "hit\u5316\u5408\u7269",
       "\u836F\u7269\u9776\u70B9\u53D1\u73B0",
-      // drug target analysis
+      // target analysis
       "\u9776\u70B9\u8BC4\u4F30",
       "\u9776\u70B9\u53EF\u89C6\u5316",
       "\u9776\u70B9\u62A5\u544A",
@@ -15863,6 +16709,9 @@ var SKILL_ROUTES = [
       "target visualization",
       "drug target report",
       "target assessment",
+      "\u9776\u70B9\u9A8C\u8BC1",
+      "\u9776\u70B9\u786E\u8BA4",
+      "\u9776\u70B9\u4F18\u5148\u7EA7\u6392\u5E8F",
       // specific target contexts
       "kras\u9776\u70B9",
       "kras\u53EF\u6210\u836F\u6027",
@@ -15873,17 +16722,60 @@ var SKILL_ROUTES = [
       "braf\u9776\u70B9",
       "her2\u9776\u70B9",
       "met\u9776\u70B9",
-      // visualization types for target reports
+      "pd-1\u9776\u70B9",
+      "pd-l1\u9776\u70B9",
+      "ctla4\u9776\u70B9",
+      "vegfr\u9776\u70B9",
+      "fgfr\u9776\u70B9",
+      "idh1\u9776\u70B9",
+      "idh2\u9776\u70B9",
+      // virtual screening
+      "\u865A\u62DF\u7B5B\u9009",
+      "\u5206\u5B50\u5BF9\u63A5",
+      "molecular docking",
+      "\u5BF9\u63A5\u6253\u5206",
+      "glide docking",
+      "autodock",
+      "vina",
+      "\u9AD8\u901A\u91CF\u865A\u62DF\u7B5B\u9009",
+      // ADMET
+      "admet\u9884\u6D4B",
+      "\u836F\u4EE3\u52A8\u529B\u5B66\u9884\u6D4B",
+      "pk\u9884\u6D4B",
+      "adme\u9884\u6D4B",
+      "\u53E3\u670D\u751F\u7269\u5229\u7528\u5EA6",
+      "\u8840\u8111\u5C4F\u969C",
+      "bbb\u9884\u6D4B",
+      "\u6BD2\u6027\u9884\u6D4B",
+      "\u4EE3\u8C22\u7A33\u5B9A\u6027",
+      "herg\u6BD2\u6027",
+      // drug repurposing
+      "\u836F\u7269\u91CD\u5B9A\u4F4D",
+      "\u8001\u836F\u65B0\u7528",
+      "drug repurposing",
+      "\u836F\u7269\u518D\u5229\u7528",
+      // network pharmacology
+      "\u7F51\u7EDC\u836F\u7406\u5B66",
+      "\u9776\u70B9\u7F51\u7EDC",
+      "\u4E2D\u836F\u7F51\u7EDC\u836F\u7406\u5B66",
+      "\u4E2D\u836F\u6D3B\u6027\u6210\u5206",
+      "\u5929\u7136\u4EA7\u7269\u6D3B\u6027",
+      "\u4E2D\u8349\u836F\u6709\u6548\u6210\u5206",
+      "\u4E2D\u836F\u9776\u70B9",
+      // visualization
       "\u96F7\u8FBE\u56FE\u8BC4\u5206",
       "\u6C14\u6CE1\u56FE\u9776\u70B9",
       "\u6851\u57FA\u56FE\u7A81\u53D8\u901A\u8DEF",
       "\u9776\u70B9\u70ED\u56FE",
-      // natural-language synonyms
+      // natural-language
       "\u54EA\u4E9B\u9776\u70B9\u503C\u5F97\u5F00\u53D1",
       "\u9776\u70B9\u4F18\u5148\u7EA7",
       "\u9776\u70B9\u6210\u836F\u6027\u5206\u6790",
       "\u9776\u5411\u6CBB\u7597\u9776\u70B9",
-      "\u7CBE\u51C6\u533B\u5B66\u9776\u70B9"
+      "\u7CBE\u51C6\u533B\u5B66\u9776\u70B9",
+      "\u5F00\u53D1\u4EC0\u4E48\u836F\u7269",
+      "\u9488\u5BF9\u67D0\u9776\u70B9\u7684\u836F",
+      "\u9776\u70B9\u53EF\u884C\u6027\u8BC4\u4F30"
     ]
   },
   {
@@ -15897,7 +16789,19 @@ var SKILL_ROUTES = [
       "\u5316\u5408\u7269\u6D3B\u6027\u6570\u636E",
       "bioactivity\u6570\u636E",
       "chembl\u5316\u5408\u7269",
-      "\u9776\u70B9\u6D3B\u6027\u5316\u5408\u7269"
+      "\u9776\u70B9\u6D3B\u6027\u5316\u5408\u7269",
+      // activity data
+      "ic50\u67E5\u8BE2",
+      "ki\u503C",
+      "kd\u503C",
+      "ec50",
+      "\u6D3B\u6027\u5316\u5408\u7269\u67E5\u8BE2",
+      "\u5316\u5408\u7269\u9776\u70B9\u6D3B\u6027",
+      "\u591A\u9776\u70B9\u6D3B\u6027\u8C31",
+      // drug data
+      "\u6279\u51C6\u836F\u7269\u6570\u636E",
+      "\u4E34\u5E8A\u5316\u5408\u7269",
+      "fda\u6279\u51C6\u836F\u7269"
     ]
   },
   {
@@ -15912,7 +16816,36 @@ var SKILL_ROUTES = [
       "\u5206\u5B50\u63CF\u8FF0\u7B26\u8BA1\u7B97",
       "\u5206\u5B50\u76F8\u4F3C\u5EA6",
       "smiles\u5206\u5B50\u64CD\u4F5C",
-      "\u5316\u5B66\u7ED3\u6784\u5904\u7406"
+      "\u5316\u5B66\u7ED3\u6784\u5904\u7406",
+      // fingerprints
+      "\u5206\u5B50\u6307\u7EB9",
+      "morgan\u6307\u7EB9",
+      "ecfp",
+      "maccs\u6307\u7EB9",
+      "topological fingerprint",
+      // scaffold
+      "\u9AA8\u67B6\u5206\u6790",
+      "scaffold hopping",
+      "\u9AA8\u67B6\u8DF3\u8DC3",
+      "\u836F\u6548\u56E2",
+      "pharmacophore",
+      // properties
+      "\u5206\u5B50\u91CF\u8BA1\u7B97",
+      "logp\u8BA1\u7B97",
+      "\u6C22\u952E\u53D7\u4F53\u4F9B\u4F53",
+      "\u65CB\u8F6C\u952E",
+      "lipinski\u4E94\u89C4\u5219",
+      "\u7C7B\u836F\u6027",
+      "drug-likeness",
+      // QSAR/ML
+      "qsar\u5EFA\u6A21",
+      "\u6784\u6548\u5173\u7CFB",
+      "\u5206\u5B50\u673A\u5668\u5B66\u4E60",
+      "\u5316\u5B66\u7A7A\u95F4",
+      // reactions
+      "\u53CD\u5E94\u9884\u6D4B",
+      "\u9006\u5408\u6210\u5206\u6790",
+      "retrosynthesis"
     ]
   },
   {
@@ -15921,13 +16854,47 @@ var SKILL_ROUTES = [
     category: "\u57FA\u56E0\u7EC4",
     tag: "builtin",
     keywords: [
+      // tools
       "\u53D8\u5F02\u68C0\u6D4B\u6D41\u7A0B",
       "variant calling\u6D41\u7A0B",
       "somatic\u53D8\u5F02\u68C0\u6D4B",
       "\u4F53\u7EC6\u80DE\u7A81\u53D8\u68C0\u6D4B",
       "mutect2",
       "gatk\u53D8\u5F02\u68C0\u6D4B",
-      "\u80BF\u7624\u53D8\u5F02\u68C0\u6D4B"
+      "\u80BF\u7624\u53D8\u5F02\u68C0\u6D4B",
+      "haplotypecaller",
+      "deepvariant",
+      "strelka2",
+      "varscan",
+      // sequencing types
+      "wes\u5206\u6790",
+      "\u5168\u5916\u663E\u5B50\u6D4B\u5E8F\u5206\u6790",
+      "wgs\u5206\u6790",
+      "\u5168\u57FA\u56E0\u7EC4\u6D4B\u5E8F",
+      "panel\u6D4B\u5E8F",
+      "\u9776\u5411\u6D4B\u5E8F",
+      "ngs\u53D8\u5F02\u68C0\u6D4B",
+      "tumor-normal\u914D\u5BF9",
+      "\u80BF\u7624\u6B63\u5E38\u914D\u5BF9\u6D4B\u5E8F",
+      // variant types
+      "\u70B9\u7A81\u53D8\u68C0\u6D4B",
+      "snp calling",
+      "indel\u68C0\u6D4B",
+      "cnv\u68C0\u6D4B",
+      "\u7ED3\u6784\u53D8\u5F02\u68C0\u6D4B",
+      "sv calling",
+      "\u57FA\u56E0\u878D\u5408\u68C0\u6D4B",
+      // quality
+      "\u53D8\u5F02\u8FC7\u6EE4",
+      "vqsr",
+      "\u53D8\u5F02\u8D28\u63A7",
+      "\u6D4B\u5E8F\u8D28\u63A7",
+      // natural-language
+      "\u4ECEbam\u6587\u4EF6\u627E\u7A81\u53D8",
+      "\u4ECEfastq\u5230\u7A81\u53D8",
+      "\u6D4B\u5E8F\u6570\u636E\u627E\u53D8\u5F02",
+      "\u80BF\u7624\u57FA\u56E0\u7EC4\u6D4B\u5E8F\u5206\u6790",
+      "ngs\u6570\u636E\u5206\u6790\u6D41\u7A0B"
     ]
   },
   {
@@ -15936,12 +16903,50 @@ var SKILL_ROUTES = [
     category: "\u6297\u4F53",
     tag: "builtin",
     keywords: [
+      // core
       "\u6297\u4F53\u8BBE\u8BA1",
       "antibody design",
       "\u6297\u4F53\u4F18\u5316",
       "cdr\u8BBE\u8BA1",
       "\u5355\u514B\u9686\u6297\u4F53\u8BBE\u8BA1",
-      "\u6297\u4F53\u5DE5\u7A0B\u6539\u9020"
+      "\u6297\u4F53\u5DE5\u7A0B\u6539\u9020",
+      // types
+      "\u6CBB\u7597\u6027\u6297\u4F53",
+      "\u4E2D\u548C\u6297\u4F53",
+      "\u53CC\u7279\u5F02\u6027\u6297\u4F53",
+      "bispecific antibody",
+      "\u7EB3\u7C73\u6297\u4F53",
+      "nanobody",
+      "\u5355\u57DF\u6297\u4F53",
+      "sdab",
+      "\u5168\u4EBA\u6E90\u6297\u4F53",
+      "\u4EBA\u6E90\u5316\u6297\u4F53",
+      "humanization",
+      // optimization
+      "\u6297\u4F53\u4EB2\u548C\u529B\u6210\u719F",
+      "affinity maturation",
+      "cdr\u4F18\u5316",
+      "\u6297\u4F53\u7A33\u5B9A\u6027\u6539\u9020",
+      "\u6297\u4F53\u53EF\u6EB6\u6027\u63D0\u9AD8",
+      // antibody-drug conjugate
+      "adc\u8BBE\u8BA1",
+      "\u6297\u4F53\u5076\u8054\u836F\u7269",
+      "\u5076\u8054\u4F4D\u70B9\u8BBE\u8BA1",
+      // function
+      "fc\u5DE5\u7A0B\u6539\u9020",
+      "effector function\u4F18\u5316",
+      "adcc",
+      "cdc",
+      // immune checkpoint
+      "\u514D\u75AB\u68C0\u67E5\u70B9\u6297\u4F53",
+      "pd-1\u6297\u4F53",
+      "pd-l1\u6297\u4F53",
+      "ctla4\u6297\u4F53",
+      // natural-language
+      "\u8BBE\u8BA1\u65B0\u6297\u4F53",
+      "\u6539\u9020\u6297\u4F53",
+      "\u6297\u4F53\u5982\u4F55\u4F18\u5316",
+      "\u5F00\u53D1\u6297\u4F53\u836F\u7269"
     ]
   },
   {
@@ -15950,12 +16955,53 @@ var SKILL_ROUTES = [
     category: "\u6297\u4F53",
     tag: "builtin",
     keywords: [
+      // core
       "car-t\u8BBE\u8BA1",
       "cart\u7EC6\u80DE\u8BBE\u8BA1",
       "\u5D4C\u5408\u6297\u539F\u53D7\u4F53\u8BBE\u8BA1",
       "chimeric antigen receptor",
       "armored cart",
-      "\u514D\u75AB\u7EC6\u80DE\u6CBB\u7597\u8BBE\u8BA1"
+      "\u514D\u75AB\u7EC6\u80DE\u6CBB\u7597\u8BBE\u8BA1",
+      // CAR structure
+      "\u5171\u523A\u6FC0\u57DF\u8BBE\u8BA1",
+      "costimulatory domain",
+      "cd28\u5171\u523A\u6FC0",
+      "4-1bb\u8BBE\u8BA1",
+      "\u94F0\u94FE\u533A\u8BBE\u8BA1",
+      "\u8DE8\u819C\u533A\u4F18\u5316",
+      "\u80DE\u5185\u4FE1\u53F7\u57DF",
+      // applications
+      "\u8840\u6DB2\u80BF\u7624car-t",
+      "b\u7EC6\u80DE\u6DCB\u5DF4\u7624car-t",
+      "\u591A\u53D1\u6027\u9AA8\u9AD3\u7624cart",
+      "\u5B9E\u4F53\u7624car-t",
+      "\u5B9E\u4F53\u80BF\u7624\u7EC6\u80DE\u6CBB\u7597",
+      // targets
+      "cd19 cart",
+      "cd22 cart",
+      "bcma cart",
+      "cd33 cart",
+      "her2 cart",
+      "gd2 cart",
+      "egfr cart",
+      // engineering
+      "\u901A\u7528car-t",
+      "\u5F02\u4F53cart",
+      "allogeneic cart",
+      "tcr\u03B1\u03B2\u6572\u9664",
+      "\u6301\u4E45\u6027\u6539\u9020",
+      "persistence",
+      // related therapies
+      "car-nk\u8BBE\u8BA1",
+      "tcr-t\u7EC6\u80DE",
+      "til\u6CBB\u7597",
+      "\u80BF\u7624\u6D78\u6DA6\u6DCB\u5DF4\u7EC6\u80DE",
+      // natural-language
+      "\u8BBE\u8BA1car-t",
+      "\u5F00\u53D1\u7EC6\u80DE\u6CBB\u7597",
+      "\u514D\u75AB\u7EC6\u80DE\u7597\u6CD5\u8BBE\u8BA1",
+      "cart\u6CBB\u7597\u4EC0\u4E48\u764C\u75C7",
+      "cart\u6301\u4E45\u6027"
     ]
   }
 ];
@@ -16104,7 +17150,7 @@ function clearCheckpoints(sessionId) {
 
 // src/index.ts
 var import_fs7 = require("fs");
-var VERSION2 = "2.4.4";
+var VERSION2 = "2.4.6";
 var SKILLHUB_HUBS = {
   bgi: { label: "BGI\u5185\u7F51", apiBase: "https://clawhub.ai", backend: "clawhub" },
   clawhub: { label: "clawhub.ai", apiBase: "https://clawhub.ai", backend: "clawhub" },
