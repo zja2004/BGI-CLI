@@ -2149,18 +2149,38 @@ async function main(): Promise<void> {
     const { routes: suggestedRoutes, topScore } = routeSkill(trimmed);
     const newRoutes = suggestedRoutes.filter((r) => !injectedSkills.has(r.id));
     if (newRoutes.length === 1 && topScore >= 8) {
-      // High-confidence single match → auto-inject silently
-      const r = newRoutes[0];
-      const ok = await injectSkill(r.id, history, injectedSkills, rl, true);
-      if (ok) {
-        console.log(chalk.dim('  (提示: /clear 可清除上下文后切换 Skill)'));
-      }
-    } else if (newRoutes.length >= 2 && topScore >= 4) {
-      // Multiple candidates → show suggestions, let user choose
-      console.log(chalk.dim('\n💡 检测到相关技能，输入 /sk <id> 激活:'));
-      newRoutes.slice(0, 3).forEach((r) => {
-        console.log(chalk.dim(`   /sk ${r.id}  — ${r.name}`));
+      // High-confidence single match → show confirmation box and inject
+      await injectSkill(newRoutes[0].id, history, injectedSkills, rl, false);
+    } else if (newRoutes.length >= 1 && topScore >= 2) {
+      // One or more candidates → show interactive numbered list
+      const candidates = newRoutes.slice(0, 3);
+      console.log();
+      console.log(chalk.bold.yellow('┌─ 🔍 检测到相关技能 ─────────────────────────────────────'));
+      candidates.forEach((r, i) => {
+        console.log(`│  ${chalk.bold.cyan(`[${i + 1}]`)} ${chalk.cyan(r.id)}${chalk.dim('  —')} ${r.name}`);
       });
+      console.log(chalk.bold.yellow('└────────────────────────────────────────────────────────'));
+      const pickPrompt = candidates.length > 1
+        ? `  激活哪个技能？输入编号 (如 1 或 1,2)，回车跳过 › `
+        : `  激活此技能？[Y/n] › `;
+      const skillChoice = await question(rl, chalk.yellow(pickPrompt));
+      const choiceTrimmed = skillChoice.trim().toLowerCase();
+      if (choiceTrimmed !== '' && choiceTrimmed !== 'n') {
+        let indices: number[];
+        if (candidates.length === 1) {
+          // Single candidate: Y/enter = activate
+          indices = (choiceTrimmed === 'y' || choiceTrimmed === '') ? [0] : [];
+        } else {
+          // Multiple: parse comma-separated numbers
+          indices = choiceTrimmed
+            .split(',')
+            .map((s) => parseInt(s.trim(), 10) - 1)
+            .filter((i) => i >= 0 && i < candidates.length);
+        }
+        for (const idx of indices) {
+          await injectSkill(candidates[idx].id, history, injectedSkills, rl, true);
+        }
+      }
       console.log();
     }
 

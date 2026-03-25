@@ -107,6 +107,10 @@ export const SKILL_ROUTES: SkillRoute[] = [
       '这些基因参与什么通路', '基因功能注释', '信号通路',
       '生物学过程', '分子功能', '细胞组分', 'go富集',
       '通路富集', '基因集分析', 'ora分析', 'gsea分析',
+      // mutation → pathway → phenotype
+      '突变通路', '突变影响通路', '突变下游通路', '桑基图通路',
+      'kras通路', 'ras-raf-mek通路', 'mapk通路', 'pi3k通路',
+      '肺癌通路', '驱动基因通路', '信号通路富集',
     ],
   },
   {
@@ -130,6 +134,16 @@ export const SKILL_ROUTES: SkillRoute[] = [
       // natural-language synonyms
       '突变注释', '变异解读', 'vcf文件分析', '遗传变异解析',
       '致病性评估', '变异影响预测',
+      // specific oncology mutations (KRAS/EGFR/ALK etc.)
+      'kras突变', 'kras g12c', 'kras g12d', 'kras g12v', 'kras mutation',
+      'egfr突变', 'egfr l858r', 'egfr外显子19缺失',
+      'alk融合', 'braf v600e', 'tp53突变', 'pik3ca突变',
+      // cancer contexts
+      'nsclc突变', '肺癌突变', '非小细胞肺癌突变', '肺腺癌突变',
+      '肿瘤体细胞突变', '驱动基因突变', '癌症驱动突变',
+      // mutation landscape
+      '突变频率', '跨癌种突变', '突变热图', '突变景观图', '瀑布图突变',
+      'mutation landscape', 'oncoprint',
     ],
   },
   {
@@ -352,6 +366,18 @@ export const SKILL_ROUTES: SkillRoute[] = [
     keywords: [
       '药物发现流程', 'drug discovery', '候选药物筛选', '先导化合物',
       'hit化合物', '药物靶点发现',
+      // drug target analysis
+      '靶点评估', '靶点可视化', '靶点报告', '靶点分析', '靶点可成药性',
+      'druggability', '可成药性评估', '靶点综合评分',
+      'target visualization', 'drug target report', 'target assessment',
+      // specific target contexts
+      'kras靶点', 'kras可成药性', 'kras抑制剂', 'kras突变靶点',
+      'egfr靶点', 'alk靶点', 'braf靶点', 'her2靶点', 'met靶点',
+      // visualization types for target reports
+      '雷达图评分', '气泡图靶点', '桑基图突变通路', '靶点热图',
+      // natural-language synonyms
+      '哪些靶点值得开发', '靶点优先级', '靶点成药性分析',
+      '靶向治疗靶点', '精准医学靶点',
     ],
   },
   {

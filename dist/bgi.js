@@ -14617,10 +14617,37 @@ You have access to these tools:
 - **search_files**: Find files by pattern (glob)
 - **fetch_geo**: Query NCBI GEO database by accession (GSE/GDS/GPL/GSM). Returns metadata, sample info, organism, platform, and ready-to-use R/Python download code. **Always call this first when the user mentions a GEO accession number \u2014 never ask them to download manually.**
 
-**MANDATORY**: When the user gives you a bioinformatics task:
-1. Check if a matching pre-built skill exists (see Skill Library below)
-2. If yes: read the skill's SKILL.md first, then follow it strictly
-3. If no: plan a principled approach and explain your reasoning
+## \u26A1 SKILL-FIRST PROTOCOL\uFF08\u5F3A\u5236\u6267\u884C\uFF0C\u4E0D\u53EF\u8DF3\u8FC7\uFF09
+
+\u5F53\u7528\u6237\u63D0\u51FA\u4EFB\u4F55\u751F\u7269\u4FE1\u606F\u5B66 / \u836F\u7269\u53D1\u73B0 / \u4E34\u5E8A\u5206\u6790\u4EFB\u52A1\u65F6\uFF0C**\u5FC5\u987B\u4E25\u683C\u6309\u4EE5\u4E0B\u987A\u5E8F\u6267\u884C\uFF0C\u7981\u6B62\u4E71\u5E8F**\uFF1A
+
+**\u7B2C\u4E00\u6B65 \u2014 \u8BC6\u522B\u6280\u80FD\uFF08\u5728\u8F93\u51FA\u4EFB\u4F55\u6B63\u6587\u524D\uFF09**
+\u626B\u63CF\u4E0B\u65B9 Skill Library\uFF0C\u627E\u51FA\u6240\u6709\u4E0E\u7528\u6237\u4EFB\u52A1\u76F8\u5173\u7684\u6280\u80FD\u3002\u5982\u679C Skill Library \u6CA1\u6709\u7CBE\u786E\u5339\u914D\uFF0C\u4E5F\u5E94\u641C\u7D22 Extended Skills \u76EE\u5F55\u3002
+
+**\u7B2C\u4E8C\u6B65 \u2014 \u5C55\u793A\u5019\u9009\u6280\u80FD\u5E76\u8BF7\u7528\u6237\u786E\u8BA4**
+\u7528\u5982\u4E0B\u683C\u5F0F\uFF08\u4E2D\u6587\uFF09\u544A\u77E5\u7528\u6237\uFF0C**\u4E0D\u8981\u5148\u505A\u5176\u4ED6\u4E8B**\uFF1A
+> \u{1F50D} \u68C0\u6D4B\u5230\u4EE5\u4E0B\u76F8\u5173\u6280\u80FD\uFF1A
+>
+> \u2022 \`skill-id-1\` \u2014 **[\u6280\u80FD\u540D\u79F0]**\uFF1A[\u4E00\u53E5\u8BDD\u8BF4\u660E\u4E3A\u4F55\u5339\u914D\u8BE5\u4EFB\u52A1]
+> \u2022 \`skill-id-2\` \u2014 **[\u6280\u80FD\u540D\u79F0]**\uFF1A[\u4E00\u53E5\u8BDD\u8BF4\u660E]
+>
+> \u662F\u5426\u6FC0\u6D3B\u8FD9\u4E9B\u6280\u80FD\u5F00\u59CB\u5206\u6790\uFF1F
+
+**\u7B2C\u4E09\u6B65 \u2014 \u6FC0\u6D3B\u6280\u80FD\uFF0C\u8BFB\u53D6 SKILL.md**
+\u7528\u6237\u786E\u8BA4\u540E\u7ACB\u5373\u6267\u884C\uFF1A\`cat ${WORKFLOWS_DIR}/<skill-id>/SKILL.md\`
+\u4E25\u683C\u6309\u7167 SKILL.md \u7684\u6BCF\u4E00\u6B65\u6267\u884C\uFF0C\u4E0D\u8DF3\u8FC7\u3001\u4E0D\u81EA\u884C\u53D1\u6325\u3002
+
+**\u7B2C\u56DB\u6B65 \u2014 \u53EA\u95EE\u771F\u6B63\u5FC5\u8981\u7684\u6570\u636E\u95EE\u9898**
+SKILL.md \u8BFB\u5B8C\u540E\uFF0C\u53EA\u8BE2\u95EE\u6267\u884C\u6240\u9700\u7684\u5173\u952E\u4FE1\u606F\uFF08\u5982\u672C\u5730\u6587\u4EF6\u8DEF\u5F84\u3001\u6837\u672C\u5206\u7EC4\u540D\uFF09\u3002
+
+\u274C **\u7EDD\u5BF9\u7981\u6B62**\uFF1A\u5728\u5B8C\u6210\u7B2C\u4E00\u6B65\uFF08\u8BC6\u522B\u6280\u80FD\uFF09\u4E4B\u524D\uFF0C\u8BE2\u95EE\u901A\u7528\u6570\u636E\u6536\u96C6\u95EE\u9898\u3002
+\u4F8B\u5982\u4E0B\u5217\u63D0\u95EE\u65B9\u5F0F\u662F**\u9519\u8BEF\u7684**\uFF0C\u5FC5\u987B\u907F\u514D\uFF1A
+- "\u60A8\u6709 GEO \u6570\u636E\u96C6\u5417\uFF1F"
+- "\u6570\u636E\u6765\u6E90\u662F\u4EC0\u4E48\uFF1F"
+- "\u60A8\u7684\u6570\u636E\u683C\u5F0F\u662F\u4EC0\u4E48\uFF1F"
+- "\u8BF7\u63D0\u4F9B\u4EE5\u4E0B\u4FE1\u606F\uFF1A1. \u6570\u636E\u6765\u6E90 2. \u6570\u636E\u5185\u5BB9 ..."
+
+\u5982\u679C\u5B9E\u5728\u627E\u4E0D\u5230\u4EFB\u4F55\u5339\u914D\u6280\u80FD\uFF0C\u624D\u5141\u8BB8\u63D0\u95EE\u5E76\u8BF4\u660E\u7406\u7531\u3002
 
 ---
 
@@ -15320,7 +15347,19 @@ var SKILL_ROUTES = [
       "\u901A\u8DEF\u5BCC\u96C6",
       "\u57FA\u56E0\u96C6\u5206\u6790",
       "ora\u5206\u6790",
-      "gsea\u5206\u6790"
+      "gsea\u5206\u6790",
+      // mutation → pathway → phenotype
+      "\u7A81\u53D8\u901A\u8DEF",
+      "\u7A81\u53D8\u5F71\u54CD\u901A\u8DEF",
+      "\u7A81\u53D8\u4E0B\u6E38\u901A\u8DEF",
+      "\u6851\u57FA\u56FE\u901A\u8DEF",
+      "kras\u901A\u8DEF",
+      "ras-raf-mek\u901A\u8DEF",
+      "mapk\u901A\u8DEF",
+      "pi3k\u901A\u8DEF",
+      "\u80BA\u764C\u901A\u8DEF",
+      "\u9A71\u52A8\u57FA\u56E0\u901A\u8DEF",
+      "\u4FE1\u53F7\u901A\u8DEF\u5BCC\u96C6"
     ]
   },
   {
@@ -15366,7 +15405,36 @@ var SKILL_ROUTES = [
       "vcf\u6587\u4EF6\u5206\u6790",
       "\u9057\u4F20\u53D8\u5F02\u89E3\u6790",
       "\u81F4\u75C5\u6027\u8BC4\u4F30",
-      "\u53D8\u5F02\u5F71\u54CD\u9884\u6D4B"
+      "\u53D8\u5F02\u5F71\u54CD\u9884\u6D4B",
+      // specific oncology mutations (KRAS/EGFR/ALK etc.)
+      "kras\u7A81\u53D8",
+      "kras g12c",
+      "kras g12d",
+      "kras g12v",
+      "kras mutation",
+      "egfr\u7A81\u53D8",
+      "egfr l858r",
+      "egfr\u5916\u663E\u5B5019\u7F3A\u5931",
+      "alk\u878D\u5408",
+      "braf v600e",
+      "tp53\u7A81\u53D8",
+      "pik3ca\u7A81\u53D8",
+      // cancer contexts
+      "nsclc\u7A81\u53D8",
+      "\u80BA\u764C\u7A81\u53D8",
+      "\u975E\u5C0F\u7EC6\u80DE\u80BA\u764C\u7A81\u53D8",
+      "\u80BA\u817A\u764C\u7A81\u53D8",
+      "\u80BF\u7624\u4F53\u7EC6\u80DE\u7A81\u53D8",
+      "\u9A71\u52A8\u57FA\u56E0\u7A81\u53D8",
+      "\u764C\u75C7\u9A71\u52A8\u7A81\u53D8",
+      // mutation landscape
+      "\u7A81\u53D8\u9891\u7387",
+      "\u8DE8\u764C\u79CD\u7A81\u53D8",
+      "\u7A81\u53D8\u70ED\u56FE",
+      "\u7A81\u53D8\u666F\u89C2\u56FE",
+      "\u7011\u5E03\u56FE\u7A81\u53D8",
+      "mutation landscape",
+      "oncoprint"
     ]
   },
   {
@@ -15782,7 +15850,40 @@ var SKILL_ROUTES = [
       "\u5019\u9009\u836F\u7269\u7B5B\u9009",
       "\u5148\u5BFC\u5316\u5408\u7269",
       "hit\u5316\u5408\u7269",
-      "\u836F\u7269\u9776\u70B9\u53D1\u73B0"
+      "\u836F\u7269\u9776\u70B9\u53D1\u73B0",
+      // drug target analysis
+      "\u9776\u70B9\u8BC4\u4F30",
+      "\u9776\u70B9\u53EF\u89C6\u5316",
+      "\u9776\u70B9\u62A5\u544A",
+      "\u9776\u70B9\u5206\u6790",
+      "\u9776\u70B9\u53EF\u6210\u836F\u6027",
+      "druggability",
+      "\u53EF\u6210\u836F\u6027\u8BC4\u4F30",
+      "\u9776\u70B9\u7EFC\u5408\u8BC4\u5206",
+      "target visualization",
+      "drug target report",
+      "target assessment",
+      // specific target contexts
+      "kras\u9776\u70B9",
+      "kras\u53EF\u6210\u836F\u6027",
+      "kras\u6291\u5236\u5242",
+      "kras\u7A81\u53D8\u9776\u70B9",
+      "egfr\u9776\u70B9",
+      "alk\u9776\u70B9",
+      "braf\u9776\u70B9",
+      "her2\u9776\u70B9",
+      "met\u9776\u70B9",
+      // visualization types for target reports
+      "\u96F7\u8FBE\u56FE\u8BC4\u5206",
+      "\u6C14\u6CE1\u56FE\u9776\u70B9",
+      "\u6851\u57FA\u56FE\u7A81\u53D8\u901A\u8DEF",
+      "\u9776\u70B9\u70ED\u56FE",
+      // natural-language synonyms
+      "\u54EA\u4E9B\u9776\u70B9\u503C\u5F97\u5F00\u53D1",
+      "\u9776\u70B9\u4F18\u5148\u7EA7",
+      "\u9776\u70B9\u6210\u836F\u6027\u5206\u6790",
+      "\u9776\u5411\u6CBB\u7597\u9776\u70B9",
+      "\u7CBE\u51C6\u533B\u5B66\u9776\u70B9"
     ]
   },
   {
@@ -17880,16 +17981,29 @@ async function main() {
     const { routes: suggestedRoutes, topScore } = routeSkill(trimmed);
     const newRoutes = suggestedRoutes.filter((r2) => !injectedSkills.has(r2.id));
     if (newRoutes.length === 1 && topScore >= 8) {
-      const r2 = newRoutes[0];
-      const ok = await injectSkill(r2.id, history, injectedSkills, rl, true);
-      if (ok) {
-        console.log(source_default.dim("  (\u63D0\u793A: /clear \u53EF\u6E05\u9664\u4E0A\u4E0B\u6587\u540E\u5207\u6362 Skill)"));
-      }
-    } else if (newRoutes.length >= 2 && topScore >= 4) {
-      console.log(source_default.dim("\n\u{1F4A1} \u68C0\u6D4B\u5230\u76F8\u5173\u6280\u80FD\uFF0C\u8F93\u5165 /sk <id> \u6FC0\u6D3B:"));
-      newRoutes.slice(0, 3).forEach((r2) => {
-        console.log(source_default.dim(`   /sk ${r2.id}  \u2014 ${r2.name}`));
+      await injectSkill(newRoutes[0].id, history, injectedSkills, rl, false);
+    } else if (newRoutes.length >= 1 && topScore >= 2) {
+      const candidates = newRoutes.slice(0, 3);
+      console.log();
+      console.log(source_default.bold.yellow("\u250C\u2500 \u{1F50D} \u68C0\u6D4B\u5230\u76F8\u5173\u6280\u80FD \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+      candidates.forEach((r2, i2) => {
+        console.log(`\u2502  ${source_default.bold.cyan(`[${i2 + 1}]`)} ${source_default.cyan(r2.id)}${source_default.dim("  \u2014")} ${r2.name}`);
       });
+      console.log(source_default.bold.yellow("\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+      const pickPrompt = candidates.length > 1 ? `  \u6FC0\u6D3B\u54EA\u4E2A\u6280\u80FD\uFF1F\u8F93\u5165\u7F16\u53F7 (\u5982 1 \u6216 1,2)\uFF0C\u56DE\u8F66\u8DF3\u8FC7 \u203A ` : `  \u6FC0\u6D3B\u6B64\u6280\u80FD\uFF1F[Y/n] \u203A `;
+      const skillChoice = await question(rl, source_default.yellow(pickPrompt));
+      const choiceTrimmed = skillChoice.trim().toLowerCase();
+      if (choiceTrimmed !== "" && choiceTrimmed !== "n") {
+        let indices;
+        if (candidates.length === 1) {
+          indices = choiceTrimmed === "y" || choiceTrimmed === "" ? [0] : [];
+        } else {
+          indices = choiceTrimmed.split(",").map((s2) => parseInt(s2.trim(), 10) - 1).filter((i2) => i2 >= 0 && i2 < candidates.length);
+        }
+        for (const idx of indices) {
+          await injectSkill(candidates[idx].id, history, injectedSkills, rl, true);
+        }
+      }
       console.log();
     }
     const expanded = expandFileRefs(trimmed);
