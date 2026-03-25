@@ -23,6 +23,15 @@ npm run build
 npm link
 ```
 
+> **macOS / Linux 无 root 权限时**，`npm link` 可能报 EACCES 权限错误，需先配置 npm 用户目录：
+> ```bash
+> mkdir -p ~/.npm-global
+> npm config set prefix '~/.npm-global'
+> echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.zshrc  # bash 用户改为 ~/.bashrc
+> source ~/.zshrc
+> npm link   # 再次执行
+> ```
+
 安装完成后直接运行：
 
 ```bash
