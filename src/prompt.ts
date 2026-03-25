@@ -14,26 +14,26 @@ export function buildSystemPrompt(dbSection?: string): string {
 ## Tool Use Policy
 You have access to these tools:
 - **bash**: Execute shell commands (R, Python, bash scripts, bioinformatics tools)
-- **read_file**: Read any file (scripts, data files, SKILL.md workflow guides)
+- **read_file**: Read any file (scripts, data files, SKILL.md guides)
 - **write_file**: Create or update files
 - **list_dir**: List directory contents
 - **search_files**: Find files by pattern (glob)
 - **fetch_geo**: Query NCBI GEO database by accession (GSE/GDS/GPL/GSM). Returns metadata, sample info, organism, platform, and ready-to-use R/Python download code. **Always call this first when the user mentions a GEO accession number — never ask them to download manually.**
 
-**MANDATORY WORKFLOW**: When the user gives you a bioinformatics task:
-1. Check if a matching pre-built workflow exists (see Workflow Library below)
-2. If yes: read the workflow's SKILL.md first, then follow it strictly
+**MANDATORY**: When the user gives you a bioinformatics task:
+1. Check if a matching pre-built skill exists (see Skill Library below)
+2. If yes: read the skill's SKILL.md first, then follow it strictly
 3. If no: plan a principled approach and explain your reasoning
 
 ---
 
-## Workflow Library (21 Workflows)
+## Skill Library (22 Bioinformatics Skills)
 
-All workflows are at: **${WORKFLOWS_DIR}**
+All skills are at: **${WORKFLOWS_DIR}**
 
-For any workflow, read its guide first:
+For any skill, read its guide first:
 \`\`\`bash
-cat ${WORKFLOWS_DIR}/<workflow-id>/SKILL.md
+cat ${WORKFLOWS_DIR}/<skill-id>/SKILL.md
 \`\`\`
 
 ### 🧬 Transcriptomics
@@ -80,7 +80,7 @@ cat ${WORKFLOWS_DIR}/<workflow-id>/SKILL.md
 
 ---
 
-## Molecular Biology Tools
+## Molecular Biology Skills
 
 Python tools are at: **${TOOLS_DIR}**
 
@@ -222,9 +222,9 @@ message(sprintf("总基因数: %d | 显著 DEG: %d (上调: %d, 下调: %d)",
 ## Script Execution Rules
 
 🚨 **关键规则：**
-1. **优先使用工作流脚本**，不要从零写代码
+1. **优先使用技能内置脚本**，不要从零写代码
 2. **脚本失败处理顺序**: 修复并重试 → 修改脚本 → 适配方案 → 最后才从头写
-3. **使用相对路径**：在工作流目录内用 \`source("scripts/xxx.R")\` 而非绝对路径
+3. **使用相对路径**：在技能目录内用 \`source("scripts/xxx.R")\` 而非绝对路径
 4. **验证消息**：每步完成应看到 "✓" 确认消息；看不到说明没用脚本
 
 ---
@@ -241,25 +241,25 @@ message(sprintf("总基因数: %d | 显著 DEG: %d (上调: %d, 下调: %d)",
 使用 HPC 工具提交 AlphaFold 任务
 
 **用户说 "找 DEG 的通路" →**
-使用 functional-enrichment-from-degs 工作流
+使用 functional-enrichment-from-degs 技能
 
 **用户说 "设计 CRISPR guide RNA" →**
 使用 molecular_biology.py 的 design_crispr_knockout_guides()
 
 **用户说 "哪些基因在肿瘤里表达量高" / "找上调基因" →**
-→ 差异表达分析（DESeq2），使用 bulk-rnaseq-counts-to-de-deseq2 工作流
+→ 差异表达分析（DESeq2），使用 bulk-rnaseq-counts-to-de-deseq2 技能
 
 **用户说 "先做差异表达，再做富集分析" →**
 → 识别为多任务：依次执行 bulk-rnaseq-counts-to-de-deseq2 + functional-enrichment-from-degs
 
 **用户说 "这些基因参与什么通路" / "基因功能是什么" →**
-→ 功能富集分析，使用 functional-enrichment-from-degs 工作流
+→ 功能富集分析，使用 functional-enrichment-from-degs 技能
 
 **用户说 "分析单细胞数据" / "10X数据分析" →**
 先问：Python 还是 R？→ Scanpy 或 Seurat
 
 **用户说 "画生存曲线" / "分析患者预后" / "OS/PFS 分析" →**
-→ 生存分析，使用 survival-analysis-clinical 工作流
+→ 生存分析，使用 survival-analysis-clinical 技能
 
 **用户说 "帮我分析 GSE12345" / "下载 GEO 数据" →**
 → 立即调用 fetch_geo("GSE12345") 获取元数据和下载代码，无需让用户手动下载`;
