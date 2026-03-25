@@ -2,7 +2,7 @@
 
 **BGI CLI** 是面向中国生物学研究者的 AI 终端工具，开箱即用，无需额外配置。
 
-- ✅ **开箱即用** — `npm install -g @bgicli/bgicli` 即可
+- ✅ **开箱即用** — clone 仓库后一键安装即可
 - ✅ **内置 889 个技能** — 21 个生信工作流 + 868 个 OpenClaw 医学技能，自动安装
 - ✅ **智能技能路由** — 描述任务自动激活对应技能，无需手动搜索
 - ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen、DeepSeek、Kimi、MiniMax 等 20+ 模型
@@ -13,24 +13,32 @@
 
 ## 安装
 
+**环境要求：** Node.js 18+
+
 ```bash
-# 需要 Node.js 18+
-npm install -g @bgicli/bgicli --registry https://registry.npmjs.org
+git clone https://gitlab.genomics.cn/ai/bgi-cli.git
+cd bgi-cli
+npm install
+npm run build
+npm link
 ```
 
-首次运行自动初始化工作流和技能库（约 16MB），无需额外操作。
+安装完成后直接运行：
 
 ```bash
 bgi
 ```
+
+首次运行自动初始化工作流和技能库（约 16MB），无需额外操作。
 
 ---
 
 ## 卸载
 
 ```bash
-# 卸载 npm 包
-npm uninstall -g @bgicli/bgicli
+# 卸载命令行工具
+cd bgi-cli
+npm unlink
 
 # 删除本地数据（配置、工作流、技能库）
 # Linux / macOS
@@ -220,18 +228,6 @@ bgi                    # 启动
 ### OpenClaw Medical Skills（868个）
 
 覆盖结构生物学、单细胞、药物发现、抗体设计、文献检索等领域，使用 `/cat` 浏览分类目录。
-
----
-
-## 从源码安装
-
-```bash
-git clone https://github.com/zja2004/BGI-CLI.git
-cd BGI-CLI
-npm install
-npm run build
-npm link
-```
 
 ---
 
