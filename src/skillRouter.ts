@@ -3,7 +3,7 @@ export interface SkillRoute {
   name: string;
   category: string;
   keywords: string[];
-  tag: 'workflow' | 'skill';
+  tag: 'builtin' | 'user';
 }
 
 export const SKILL_CATEGORIES: Record<string, { label: string; icon: string }> = {
@@ -24,12 +24,12 @@ export const SKILL_CATEGORIES: Record<string, { label: string; icon: string }> =
 // Scoring: each matched keyword contributes (1 + keyword.length * 0.1) points,
 // so longer/more-specific keywords score higher, but multiple short matches
 // can still beat a single long match. Top-5 results are returned to support
-// multi-workflow tasks (e.g. "先做差异表达，再做富集分析").
+// multi-skill tasks (e.g. "先做差异表达，再做富集分析").
 export const SKILL_ROUTES: SkillRoute[] = [
   // ── Transcriptomics ──────────────────────────────────────────────────────────
   {
     id: 'bulk-rnaseq-counts-to-de-deseq2', name: 'DESeq2 差异表达分析',
-    category: '转录组', tag: 'workflow',
+    category: '转录组', tag: 'builtin',
     keywords: [
       // exact tool names
       'deseq2', 'edger', 'limma-voom',
@@ -45,7 +45,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'bulk-omics-clustering', name: '样本 / 特征聚类',
-    category: '转录组', tag: 'workflow',
+    category: '转录组', tag: 'builtin',
     keywords: [
       'wgcna聚类', '层次聚类', 'hierarchical clustering', 'kmeans聚类',
       'hdbscan', '样本聚类', '特征聚类', 'omics clustering',
@@ -56,7 +56,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'scrnaseq-scanpy-core-analysis', name: 'scRNA-seq (Scanpy / Python)',
-    category: '单细胞', tag: 'workflow',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       'scanpy', 'scrna-seq', 'single cell rna', '单细胞rna测序',
       '10x chromium', 'leiden聚类', 'python单细胞', 'anndata分析',
@@ -67,7 +67,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'scrnaseq-seurat-core-analysis', name: 'scRNA-seq (Seurat / R)',
-    category: '单细胞', tag: 'workflow',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       'seurat', 'r语言单细胞', 'findclusters', 'findneighbors',
       'sctransform', 'r单细胞分析',
@@ -77,7 +77,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'spatial-transcriptomics', name: '空间转录组',
-    category: '单细胞', tag: 'workflow',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       '空间转录组', 'spatial transcriptomics', 'visium', '空间解卷积',
       'spatial deconvolution', '配体受体分析', '空间基因表达', 'stereo-seq',
@@ -88,7 +88,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'coexpression-network', name: 'WGCNA 共表达网络',
-    category: '转录组', tag: 'workflow',
+    category: '转录组', tag: 'builtin',
     keywords: [
       'wgcna', '共表达网络', 'coexpression network', '基因共表达模块',
       'weighted gene coexpression', '与表型相关的基因模块',
@@ -98,7 +98,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'functional-enrichment-from-degs', name: 'GO / KEGG / GSEA 富集分析',
-    category: '转录组', tag: 'workflow',
+    category: '转录组', tag: 'builtin',
     keywords: [
       '富集分析', 'go分析', 'kegg分析', 'gsea', '通路分析',
       'pathway enrichment', '基因本体', 'gene ontology', 'functional enrichment',
@@ -111,7 +111,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'grn-pyscenic', name: 'pySCENIC 基因调控网络',
-    category: '单细胞', tag: 'workflow',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       'pyscenic', 'scenic', '基因调控网络', 'gene regulatory network',
       '转录因子调控子', 'tf regulon', 'grn推断',
@@ -123,7 +123,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   // ── Genomics ──────────────────────────────────────────────────────────────────
   {
     id: 'genetic-variant-annotation', name: '遗传变异注释',
-    category: '基因组', tag: 'workflow',
+    category: '基因组', tag: 'builtin',
     keywords: [
       '变异注释', 'variant annotation', 'vcf注释', 'snv注释', 'indel注释',
       'vep注释', 'annovar', '变异致病性预测', '变异功能预测', 'clinvar注释',
@@ -134,7 +134,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'gwas-to-function-twas', name: 'GWAS → TWAS 功能解析',
-    category: '基因组', tag: 'workflow',
+    category: '基因组', tag: 'builtin',
     keywords: [
       'gwas分析', 'twas', 'predixcan', 'fusion分析', '全基因组关联分析',
       'genome-wide association', '因果基因鉴定', 'qtl整合',
@@ -145,7 +145,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'mendelian-randomization-twosamplemr', name: '孟德尔随机化 (MR)',
-    category: '统计', tag: 'workflow',
+    category: '统计', tag: 'builtin',
     keywords: [
       '孟德尔随机化', 'mendelian randomization', 'twosamplemr',
       'mr因果推断', 'ivw方法', 'mr-egger', '双样本mr', '工具变量iv',
@@ -155,7 +155,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'polygenic-risk-score-prs-catalog', name: 'PRS 多基因风险评分',
-    category: '基因组', tag: 'workflow',
+    category: '基因组', tag: 'builtin',
     keywords: [
       'prs评分', 'polygenic risk score', '多基因风险评分',
       'prs-cs', '遗传风险预测', 'prs计算',
@@ -165,7 +165,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'pooled-crispr-screens', name: 'CRISPR 文库筛选 (MAGeCK/BAGEL2)',
-    category: '基因组', tag: 'workflow',
+    category: '基因组', tag: 'builtin',
     keywords: [
       'crispr文库筛选', 'crispr screen', 'mageck', 'bagel2',
       'sgrna筛选', 'pooled crispr', 'crispr hit识别',
@@ -178,7 +178,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   // ── Epigenomics ───────────────────────────────────────────────────────────────
   {
     id: 'chip-atlas-peak-enrichment', name: 'ChIP-seq 峰值富集 (ChIP-Atlas)',
-    category: '表观基因组', tag: 'workflow',
+    category: '表观基因组', tag: 'builtin',
     keywords: [
       'chip-atlas', 'chip-seq峰值富集', 'peak enrichment chip',
       'chip atlas数据库', 'histone chip分析',
@@ -188,7 +188,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'chip-atlas-diff-analysis', name: 'ChIP-seq 差异结合分析',
-    category: '表观基因组', tag: 'workflow',
+    category: '表观基因组', tag: 'builtin',
     keywords: [
       'chip差异分析', 'differential binding', '差异chip-seq',
       'differential peak', 'chip-seq条件比较',
@@ -198,7 +198,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'chip-atlas-target-genes', name: 'ChIP-seq 靶基因鉴定',
-    category: '表观基因组', tag: 'workflow',
+    category: '表观基因组', tag: 'builtin',
     keywords: [
       'chip靶基因', 'chip target gene', '转录因子靶基因chip',
       'tf靶基因', 'peak annotation靶基因', 'chip-seq peak注释',
@@ -210,7 +210,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   // ── Clinical ──────────────────────────────────────────────────────────────────
   {
     id: 'clinicaltrials-landscape', name: '临床试验格局分析',
-    category: '临床', tag: 'workflow',
+    category: '临床', tag: 'builtin',
     keywords: [
       'clinicaltrials分析', 'clinical trial landscape', 'ct.gov数据分析',
       '临床试验格局', '临床研究分析',
@@ -220,7 +220,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'literature-preclinical', name: '临床前文献系统提取',
-    category: '文献', tag: 'workflow',
+    category: '文献', tag: 'builtin',
     keywords: [
       '临床前文献', 'preclinical literature', '系统文献提取',
       'literature extraction', '文献系统综合',
@@ -230,7 +230,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'experimental-design-statistics', name: '实验设计与统计检验',
-    category: '统计', tag: 'workflow',
+    category: '统计', tag: 'builtin',
     keywords: [
       '样本量计算', '统计检验选择', 'sample size calculation', 'power analysis功效',
       '随机化设计', '实验设计统计', '假设检验选择', 't检验还是', 'anova方差分析',
@@ -241,7 +241,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'lasso-biomarker-panel', name: 'LASSO 生物标志物面板筛选',
-    category: '统计', tag: 'workflow',
+    category: '统计', tag: 'builtin',
     keywords: [
       'lasso回归筛选', 'lasso生物标志物', 'biomarker panel筛选',
       '最小标志物面板', 'feature selection lasso', '诊断标志物筛选',
@@ -252,7 +252,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'pcr-primer-design', name: 'PCR / qPCR 引物设计',
-    category: '分子生物学', tag: 'workflow',
+    category: '分子生物学', tag: 'builtin',
     keywords: [
       '引物设计', 'primer design', 'qpcr引物', 'pcr引物', 'primer3',
       'qrt-pcr设计', '扩增子设计', '引物特异性验证',
@@ -264,7 +264,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   // ── Survival Analysis ─────────────────────────────────────────────────────────
   {
     id: 'survival-analysis-clinical', name: '临床生存分析 (KM + Cox)',
-    category: '临床', tag: 'workflow',
+    category: '临床', tag: 'builtin',
     keywords: [
       // exact method names
       'kaplan-meier', 'kaplan meier', 'km曲线', 'cox回归', 'cox regression',
@@ -284,10 +284,10 @@ export const SKILL_ROUTES: SkillRoute[] = [
     ],
   },
 
-  // ── OpenClaw Key Skills ────────────────────────────────────────────────────────
+  // ── Extended Skills (key routable entries) ───────────────────────────────────
   {
     id: 'pubmed-search', name: 'PubMed 文献检索',
-    category: '文献', tag: 'skill',
+    category: '文献', tag: 'builtin',
     keywords: [
       'pubmed检索', 'pubmed搜索', '文献检索', '论文搜索', '查找文献',
       '检索pubmed', 'pubmed文献',
@@ -295,12 +295,12 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'arxiv-search', name: 'arXiv 预印本检索',
-    category: '文献', tag: 'skill',
+    category: '文献', tag: 'builtin',
     keywords: ['arxiv检索', 'arxiv搜索', '预印本检索', '预印本论文', 'arxiv文献'],
   },
   {
     id: 'alphafold', name: 'AlphaFold 蛋白质结构预测',
-    category: '结构生物学', tag: 'skill',
+    category: '结构生物学', tag: 'builtin',
     keywords: [
       'alphafold结构预测', 'alphafold运行', 'af2', 'af3',
       '蛋白质结构预测任务', '用alphafold预测',
@@ -308,7 +308,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'alphafold-database', name: 'AlphaFold 数据库查询',
-    category: '结构生物学', tag: 'skill',
+    category: '结构生物学', tag: 'builtin',
     keywords: [
       'alphafold数据库', 'alphafold db', 'uniprot结构查询',
       '蛋白质结构数据库', 'af数据库',
@@ -316,7 +316,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'bindcraft', name: 'BindCraft 蛋白质结合体设计',
-    category: '结构生物学', tag: 'skill',
+    category: '结构生物学', tag: 'builtin',
     keywords: [
       'bindcraft', '结合体设计', 'binder design', 'protein binder',
       '蛋白质结合物设计', 'de novo binder',
@@ -324,7 +324,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'anndata', name: 'AnnData 单细胞数据操作',
-    category: '单细胞', tag: 'skill',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       'anndata操作', 'h5ad文件处理', 'adata子集', 'anndata格式',
       '单细胞h5ad', 'obs var layers',
@@ -332,7 +332,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'cellagent-annotation', name: 'CellAgent 细胞类型自动注释',
-    category: '单细胞', tag: 'skill',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       '细胞类型注释', 'cell type annotation', 'cellagent', '自动细胞注释',
       '细胞注释自动化', '单细胞注释',
@@ -340,7 +340,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'scvi-tools', name: 'scVI 单细胞深度学习',
-    category: '单细胞', tag: 'skill',
+    category: '单细胞', tag: 'builtin',
     keywords: [
       'scvi-tools', 'scvi模型', '单细胞变分推断', 'batch correction scvi',
       'totalvi', 'scvi批次矫正',
@@ -348,7 +348,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'agentd-drug-discovery', name: '药物发现 Agent',
-    category: '药物', tag: 'skill',
+    category: '药物', tag: 'builtin',
     keywords: [
       '药物发现流程', 'drug discovery', '候选药物筛选', '先导化合物',
       'hit化合物', '药物靶点发现',
@@ -356,7 +356,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'chembl-database', name: 'ChEMBL 化合物活性数据库',
-    category: '药物', tag: 'skill',
+    category: '药物', tag: 'builtin',
     keywords: [
       'chembl查询', 'chembl数据库', '化合物活性数据', 'bioactivity数据',
       'chembl化合物', '靶点活性化合物',
@@ -364,7 +364,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'rdkit', name: 'RDKit 化学信息学',
-    category: '药物', tag: 'skill',
+    category: '药物', tag: 'builtin',
     keywords: [
       'rdkit', '化学信息学', 'cheminformatics', '分子描述符计算',
       '分子相似度', 'smiles分子操作', '化学结构处理',
@@ -372,7 +372,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'bio-variant-calling', name: '变异检测流程 (GATK/Mutect2)',
-    category: '基因组', tag: 'skill',
+    category: '基因组', tag: 'builtin',
     keywords: [
       '变异检测流程', 'variant calling流程', 'somatic变异检测',
       '体细胞突变检测', 'mutect2', 'gatk变异检测', '肿瘤变异检测',
@@ -380,7 +380,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'antibody-design-agent', name: '抗体设计 Agent',
-    category: '抗体', tag: 'skill',
+    category: '抗体', tag: 'builtin',
     keywords: [
       '抗体设计', 'antibody design', '抗体优化', 'cdr设计',
       '单克隆抗体设计', '抗体工程改造',
@@ -388,7 +388,7 @@ export const SKILL_ROUTES: SkillRoute[] = [
   },
   {
     id: 'armored-cart-design-agent', name: 'Armored CAR-T 设计',
-    category: '抗体', tag: 'skill',
+    category: '抗体', tag: 'builtin',
     keywords: [
       'car-t设计', 'cart细胞设计', '嵌合抗原受体设计',
       'chimeric antigen receptor', 'armored cart', '免疫细胞治疗设计',
@@ -427,7 +427,7 @@ export function routeSkill(
 
   const sorted = Array.from(scores.values())
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5);  // top-5 to support multi-workflow tasks
+    .slice(0, 5);  // top-5 to support multi-skill tasks
 
   return {
     routes: sorted.map((v) => v.route),

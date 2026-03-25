@@ -182,7 +182,7 @@ let systemPrompt = '';
 
 // ── Bundled data installer ─────────────────────────────────────────────────────
 // When installed via npm, the data/ directory is bundled alongside dist/bgi.js.
-// On first run we copy it to ~/.bgicli/ so the CLI can find workflows/tools/skills.
+// On first run we copy it to ~/.bgicli/ so the CLI can find skills/tools.
 
 function installBundledData(): void {
   // __dirname points to the dist/ folder of the installed npm package
@@ -200,8 +200,8 @@ function installBundledData(): void {
   const needsUpdate = installedDataVersion !== VERSION;
 
   const targets: Array<{ src: string; dest: string; name: string }> = [
-    { src: join(bundledData, 'workflows'), dest: WORKFLOWS_DIR, name: 'Skills (生信工作流)' },
-    { src: join(bundledData, 'skills'),    dest: SKILLS_DIR,    name: 'Skills (医学专科)' },
+    { src: join(bundledData, 'workflows'), dest: WORKFLOWS_DIR, name: 'Skills (分析类)' },
+    { src: join(bundledData, 'skills'),    dest: SKILLS_DIR,    name: 'Skills (扩展类)' },
     { src: join(bundledData, 'tools'),     dest: TOOLS_DIR,     name: '工具' },
   ];
 
@@ -287,7 +287,7 @@ function printHelp(): void {
   console.log(`  ${chalk.cyan('!<命令>')}             绕过 AI 直接执行 Shell 命令（实时输出）`);
   console.log(chalk.dim('  示例: !ls -la  !Rscript analysis.R  !python script.py  !samtools view -h a.bam'));
   console.log();
-  console.log(chalk.bold.cyan('─── 工作流向导 ───────────────────────────────────────────'));
+  console.log(chalk.bold.cyan('─── Skill 向导 ───────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/run')} <skill-id>     交互式参数向导，自动生成并执行分析脚本`);
   console.log(`  ${chalk.cyan('/check-env')} [id]     检测 Skill 所需 R/Python 包是否已安装`);
   console.log(`  ${chalk.cyan('/search')} <关键词>    在 SkillHub 搜索并下载技能 ${chalk.dim('[--hub=bgi|clawhub|tencent]')}`);
@@ -1127,7 +1127,7 @@ async function handleCommand(
       break;
     }
 
-    // ── /run workflow wizard ─────────────────────────────────────────────────
+    // ── /run skill wizard ────────────────────────────────────────────────────
     case 'run': {
       const targetId = arg;
       if (!targetId) {
@@ -1186,7 +1186,7 @@ async function handleCommand(
         .map(([k, v]) => `- ${k}: ${v}`)
         .join('\n');
 
-      const runPrompt = `请根据以下参数，使用 ${skillName || runMatch.id} 工作流生成完整的分析脚本并立即执行：
+      const runPrompt = `请根据以下参数，使用 ${skillName || runMatch.id} 技能生成完整的分析脚本并立即执行：
 
 用户提供的参数：
 ${paramSummary}

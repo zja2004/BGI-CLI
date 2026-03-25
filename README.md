@@ -3,7 +3,7 @@
 **BGI CLI** 是面向中国生物学研究者的 AI 终端工具，开箱即用，无需额外配置。
 
 - ✅ **开箱即用** — clone 仓库后一键安装即可
-- ✅ **内置 1001 个技能** — 22 个生信工作流 + 979 个 OpenClaw 医学技能，自动安装
+- ✅ **内置 1001 个技能** — 涵盖生信分析、结构生物学、药物发现、临床等全领域，自动安装
 - ✅ **智能技能路由** — 描述任务自动激活对应技能，无需手动搜索
 - ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen、DeepSeek、Kimi、MiniMax 等 20+ 模型
 - ✅ **真实工具调用** — 执行 bash、读写文件、运行 R/Python 脚本
@@ -38,7 +38,7 @@ sudo npm link
 bgi
 ```
 
-首次运行自动初始化工作流和技能库（约 16MB），无需额外操作。
+首次运行自动初始化技能库（约 16MB），无需额外操作。
 
 ---
 
@@ -49,7 +49,7 @@ bgi
 cd bgi-cli
 npm unlink
 
-# 删除本地数据（配置、工作流、技能库）
+# 删除本地数据（配置、技能库）
 # Linux / macOS
 rm -rf ~/.bgicli
 
@@ -65,7 +65,7 @@ Remove-Item -Recurse -Force "$env:USERPROFILE\.bgicli"
 bgi                    # 启动
 /connect               # 首次配置 API Key
 /cat                   # 浏览技能分类目录
-/sk deseq2             # 搜索并激活 DESeq2 工作流
+/sk deseq2             # 搜索并激活 DESeq2 技能
 /help                  # 查看全部命令
 ```
 
@@ -120,13 +120,15 @@ bgi                    # 启动
 | `/connect [provider]` | 配置 API Key |
 | `/status` | 显示当前配置 |
 
-### 技能与工作流
+### 技能
 | 命令 | 说明 |
 |------|------|
 | `/cat` | 按领域浏览技能分类目录（11个领域） |
-| `/sk` | 列出全部技能（工作流 + OpenClaw Medical） |
+| `/sk` | 列出全部技能 |
 | `/sk <关键词>` | 搜索并激活技能（如 `/sk deseq2`、`/sk alphafold`） |
 | `/wf` | 同 `/sk`，别名 |
+| `/install <url\|slug>` | 从 GitHub 或 SkillHub 安装新技能 |
+| `/uninstall <id>` | 卸载已安装的技能 |
 
 > **智能路由**：直接描述任务，BGI CLI 自动识别并激活对应技能。
 
@@ -198,13 +200,13 @@ bgi                    # 启动
 
 ---
 
-## 内置技能库
+## 内置技能库（1001个）
 
-### 生物信息学工作流（21个）
+使用 `/cat` 浏览分类目录，`/sk <关键词>` 搜索，`/install` 安装更多技能。
 
-#### 转录组学
-| ID | 说明 |
-|----|------|
+### 🧬 转录组学
+| 技能 ID | 说明 |
+|---------|------|
 | `bulk-rnaseq-counts-to-de-deseq2` | DESeq2 差异表达分析 |
 | `bulk-omics-clustering` | 样本/特征聚类（K-Means / HDBSCAN） |
 | `scrnaseq-scanpy-core-analysis` | 单细胞 RNA-seq（Scanpy/Python） |
@@ -214,25 +216,25 @@ bgi                    # 启动
 | `functional-enrichment-from-degs` | 功能富集（GO / KEGG / GSEA） |
 | `grn-pyscenic` | 基因调控网络（pySCENIC） |
 
-#### 基因组学
-| ID | 说明 |
-|----|------|
+### 🧪 基因组学
+| 技能 ID | 说明 |
+|---------|------|
 | `genetic-variant-annotation` | VCF 变异注释（VEP / ANNOVAR） |
 | `gwas-to-function-twas` | GWAS → TWAS 因果基因 |
 | `mendelian-randomization-twosamplemr` | 孟德尔随机化 |
 | `polygenic-risk-score-prs-catalog` | 多基因风险评分（PRS） |
 | `pooled-crispr-screens` | CRISPR 文库筛选（MAGeCK / BAGEL2） |
 
-#### 表观基因组
-| ID | 说明 |
-|----|------|
+### 🔗 表观基因组
+| 技能 ID | 说明 |
+|---------|------|
 | `chip-atlas-peak-enrichment` | ChIP-seq 峰值富集 |
 | `chip-atlas-diff-analysis` | 差异结合分析 |
 | `chip-atlas-target-genes` | 转录因子靶基因鉴定 |
 
-#### 临床与流行病学
-| ID | 说明 |
-|----|------|
+### 🏥 临床与流行病学
+| 技能 ID | 说明 |
+|---------|------|
 | `survival-analysis-clinical` | 临床生存分析（KM 曲线 / Cox 回归 / 竞争风险） |
 | `clinicaltrials-landscape` | 临床试验格局分析 |
 | `literature-preclinical` | 临床前文献系统提取 |
@@ -240,9 +242,9 @@ bgi                    # 启动
 | `lasso-biomarker-panel` | LASSO 生物标志物筛选 |
 | `pcr-primer-design` | PCR/qPCR 引物设计 |
 
-### OpenClaw Medical Skills（979个）
+### 📦 更多技能（979个）
 
-覆盖结构生物学、单细胞、药物发现、抗体设计、文献检索等领域，使用 `/cat` 浏览分类目录。
+结构生物学、单细胞、药物发现、抗体设计、文献检索、临床 AI 等，使用 `/cat` 或 `/sk <关键词>` 查找。
 
 ---
 
@@ -259,7 +261,7 @@ bgi
 ├── src/prompt.ts       — 生物信息学系统提示
 ├── src/providers.ts    — 中国 AI 服务商配置
 ├── src/config.ts       — 配置管理（~/.bgicli/config.json）
-└── data/               — 内置数据（工作流 + Skills + Python 工具）
+└── data/               — 内置数据（Skills + Python 工具）
 ```
 
 ---

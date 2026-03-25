@@ -13868,7 +13868,7 @@ var TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "read_file",
-      description: "Read the contents of a file. Use to inspect data files, SKILL.md workflow guides, R/Python scripts, results files, etc.",
+      description: "Read the contents of a file. Use to inspect data files, SKILL.md guides, R/Python scripts, results files, etc.",
       parameters: {
         type: "object",
         properties: {
@@ -13919,7 +13919,7 @@ var TOOL_DEFINITIONS = [
     type: "function",
     function: {
       name: "search_files",
-      description: "Search for files matching a pattern using glob syntax. Use to find scripts, data files, or workflow references.",
+      description: "Search for files matching a pattern using glob syntax. Use to find scripts, data files, or skill references.",
       parameters: {
         type: "object",
         properties: {
@@ -14561,7 +14561,7 @@ async function compactMessages(messages, config) {
     messages: [
       {
         role: "system",
-        content: "\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u8BF7\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u5386\u53F2\u538B\u7F29\u4E3A\u7B80\u6D01\u7684\u4E2D\u6587\u6458\u8981\uFF0C\u4FDD\u7559\u6240\u6709\u5173\u952E\u6280\u672F\u4FE1\u606F\uFF1A\u6587\u4EF6\u8DEF\u5F84\u3001\u547D\u4EE4\u3001\u5206\u6790\u7ED3\u679C\u3001\u7528\u6237\u51B3\u7B56\u3001\u5DF2\u6FC0\u6D3B\u7684\u5DE5\u4F5C\u6D41/\u6280\u80FD\u3002\u6458\u8981\u5E94\u8BA9\u5BF9\u8BDD\u80FD\u591F\u65E0\u7F1D\u7EE7\u7EED\u3002"
+        content: "\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u8BF7\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u5386\u53F2\u538B\u7F29\u4E3A\u7B80\u6D01\u7684\u4E2D\u6587\u6458\u8981\uFF0C\u4FDD\u7559\u6240\u6709\u5173\u952E\u6280\u672F\u4FE1\u606F\uFF1A\u6587\u4EF6\u8DEF\u5F84\u3001\u547D\u4EE4\u3001\u5206\u6790\u7ED3\u679C\u3001\u7528\u6237\u51B3\u7B56\u3001\u5DF2\u6FC0\u6D3B\u7684\u6280\u80FD\u3002\u6458\u8981\u5E94\u8BA9\u5BF9\u8BDD\u80FD\u591F\u65E0\u7F1D\u7EE7\u7EED\u3002"
       },
       {
         role: "user",
@@ -14603,7 +14603,7 @@ function buildSystemPrompt(dbSection) {
 ## Core Identity
 - You are purpose-built for bioinformatics, NOT a general coding assistant
 - You default to speaking Chinese unless the user writes in English
-- You always prefer using existing, validated workflow scripts over writing new code from scratch
+- You always prefer using existing, validated skill scripts over writing new code from scratch
 - You are pragmatic: suggest concrete commands, not theory
 
 ---
@@ -14710,16 +14710,16 @@ ${dbSection ?? "\uFF08\u6682\u672A\u6CE8\u518C\u4EFB\u4F55\u6570\u636E\u5E93\u30
 
 ---
 
-## OpenClaw Medical Skills (979\u4E2A\u4E13\u79D1\u6280\u80FD)
+## Extended Skills (979\u4E2A)
 
-\u6280\u80FD\u5E93\u4F4D\u4E8E: **${SKILLS_DIR}**
+\u66F4\u591A\u5185\u7F6E\u6280\u80FD\u4F4D\u4E8E: **${SKILLS_DIR}**
 
 \u6BCF\u4E2A\u6280\u80FD\u76EE\u5F55\u5305\u542B\u4E00\u4E2A \`SKILL.md\` \u6587\u4EF6\uFF0C\u8BFB\u53D6\u65B9\u5F0F:
 \`\`\`bash
 cat ${SKILLS_DIR}/<skill-id>/SKILL.md
 \`\`\`
 
-**\u6280\u80FD\u6DB5\u76D6\u7684\u4E3B\u8981\u9886\u57DF**\uFF08\u7528\u6237\u5DF2\u901A\u8FC7 /sk \u547D\u4EE4\u52A0\u8F7D\u65F6\u81EA\u52A8\u6CE8\u5165\u4E0A\u4E0B\u6587\uFF09:
+**\u6DB5\u76D6\u9886\u57DF**\uFF08\u7528\u6237\u901A\u8FC7 /sk \u547D\u4EE4\u52A0\u8F7D\u540E\u81EA\u52A8\u6CE8\u5165\u4E0A\u4E0B\u6587\uFF09:
 - \u6587\u732E\u68C0\u7D22: pubmed-search, arxiv-search, bgpt-paper-search
 - \u7ED3\u6784\u751F\u7269\u5B66: alphafold, alphafold-database, bindcraft, binder-design
 - \u5355\u7EC6\u80DE: anndata, cellagent-annotation, scvi-tools
@@ -14728,7 +14728,9 @@ cat ${SKILLS_DIR}/<skill-id>/SKILL.md
 - \u6297\u4F53\u8BBE\u8BA1: antibody-design-agent, armored-cart-design-agent
 - \u4E34\u5E8A: clinical-*, ehr-fhir-integration, autonomous-oncology-agent
 
-\u5F53\u7528\u6237\u63D0\u5230\u67D0\u4E2A\u4E13\u79D1\u4EFB\u52A1\u65F6\uFF0C\u5EFA\u8BAE\u4ED6\u4EEC\u4F7F\u7528 **/sk <\u5173\u952E\u8BCD>** \u641C\u7D22\u5E76\u52A0\u8F7D\u5BF9\u5E94\u6280\u80FD\u6307\u5357\u3002
+\u7528\u6237\u4E5F\u53EF\u4EE5\u901A\u8FC7 **/install** \u5B89\u88C5\u81EA\u5B9A\u4E49\u6280\u80FD\uFF0C\u5B89\u88C5\u540E\u4E0E\u5185\u7F6E\u6280\u80FD\u5B8C\u5168\u7B49\u4EF7\u3002
+
+\u5F53\u7528\u6237\u63D0\u5230\u67D0\u4E2A\u4EFB\u52A1\u65F6\uFF0C\u5EFA\u8BAE\u4F7F\u7528 **/sk <\u5173\u952E\u8BCD>** \u641C\u7D22\u5E76\u52A0\u8F7D\u5BF9\u5E94\u6280\u80FD\u3002
 
 ---
 
@@ -15149,7 +15151,7 @@ var SKILL_ROUTES = [
     id: "bulk-rnaseq-counts-to-de-deseq2",
     name: "DESeq2 \u5DEE\u5F02\u8868\u8FBE\u5206\u6790",
     category: "\u8F6C\u5F55\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       // exact tool names
       "deseq2",
@@ -15184,7 +15186,7 @@ var SKILL_ROUTES = [
     id: "bulk-omics-clustering",
     name: "\u6837\u672C / \u7279\u5F81\u805A\u7C7B",
     category: "\u8F6C\u5F55\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "wgcna\u805A\u7C7B",
       "\u5C42\u6B21\u805A\u7C7B",
@@ -15209,7 +15211,7 @@ var SKILL_ROUTES = [
     id: "scrnaseq-scanpy-core-analysis",
     name: "scRNA-seq (Scanpy / Python)",
     category: "\u5355\u7EC6\u80DE",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "scanpy",
       "scrna-seq",
@@ -15234,7 +15236,7 @@ var SKILL_ROUTES = [
     id: "scrnaseq-seurat-core-analysis",
     name: "scRNA-seq (Seurat / R)",
     category: "\u5355\u7EC6\u80DE",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "seurat",
       "r\u8BED\u8A00\u5355\u7EC6\u80DE",
@@ -15252,7 +15254,7 @@ var SKILL_ROUTES = [
     id: "spatial-transcriptomics",
     name: "\u7A7A\u95F4\u8F6C\u5F55\u7EC4",
     category: "\u5355\u7EC6\u80DE",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u7A7A\u95F4\u8F6C\u5F55\u7EC4",
       "spatial transcriptomics",
@@ -15274,7 +15276,7 @@ var SKILL_ROUTES = [
     id: "coexpression-network",
     name: "WGCNA \u5171\u8868\u8FBE\u7F51\u7EDC",
     category: "\u8F6C\u5F55\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "wgcna",
       "\u5171\u8868\u8FBE\u7F51\u7EDC",
@@ -15293,7 +15295,7 @@ var SKILL_ROUTES = [
     id: "functional-enrichment-from-degs",
     name: "GO / KEGG / GSEA \u5BCC\u96C6\u5206\u6790",
     category: "\u8F6C\u5F55\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u5BCC\u96C6\u5206\u6790",
       "go\u5206\u6790",
@@ -15325,7 +15327,7 @@ var SKILL_ROUTES = [
     id: "grn-pyscenic",
     name: "pySCENIC \u57FA\u56E0\u8C03\u63A7\u7F51\u7EDC",
     category: "\u5355\u7EC6\u80DE",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "pyscenic",
       "scenic",
@@ -15346,7 +15348,7 @@ var SKILL_ROUTES = [
     id: "genetic-variant-annotation",
     name: "\u9057\u4F20\u53D8\u5F02\u6CE8\u91CA",
     category: "\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u53D8\u5F02\u6CE8\u91CA",
       "variant annotation",
@@ -15371,7 +15373,7 @@ var SKILL_ROUTES = [
     id: "gwas-to-function-twas",
     name: "GWAS \u2192 TWAS \u529F\u80FD\u89E3\u6790",
     category: "\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "gwas\u5206\u6790",
       "twas",
@@ -15394,7 +15396,7 @@ var SKILL_ROUTES = [
     id: "mendelian-randomization-twosamplemr",
     name: "\u5B5F\u5FB7\u5C14\u968F\u673A\u5316 (MR)",
     category: "\u7EDF\u8BA1",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u5B5F\u5FB7\u5C14\u968F\u673A\u5316",
       "mendelian randomization",
@@ -15415,7 +15417,7 @@ var SKILL_ROUTES = [
     id: "polygenic-risk-score-prs-catalog",
     name: "PRS \u591A\u57FA\u56E0\u98CE\u9669\u8BC4\u5206",
     category: "\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "prs\u8BC4\u5206",
       "polygenic risk score",
@@ -15433,7 +15435,7 @@ var SKILL_ROUTES = [
     id: "pooled-crispr-screens",
     name: "CRISPR \u6587\u5E93\u7B5B\u9009 (MAGeCK/BAGEL2)",
     category: "\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "crispr\u6587\u5E93\u7B5B\u9009",
       "crispr screen",
@@ -15455,7 +15457,7 @@ var SKILL_ROUTES = [
     id: "chip-atlas-peak-enrichment",
     name: "ChIP-seq \u5CF0\u503C\u5BCC\u96C6 (ChIP-Atlas)",
     category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "chip-atlas",
       "chip-seq\u5CF0\u503C\u5BCC\u96C6",
@@ -15474,7 +15476,7 @@ var SKILL_ROUTES = [
     id: "chip-atlas-diff-analysis",
     name: "ChIP-seq \u5DEE\u5F02\u7ED3\u5408\u5206\u6790",
     category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "chip\u5DEE\u5F02\u5206\u6790",
       "differential binding",
@@ -15491,7 +15493,7 @@ var SKILL_ROUTES = [
     id: "chip-atlas-target-genes",
     name: "ChIP-seq \u9776\u57FA\u56E0\u9274\u5B9A",
     category: "\u8868\u89C2\u57FA\u56E0\u7EC4",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "chip\u9776\u57FA\u56E0",
       "chip target gene",
@@ -15511,7 +15513,7 @@ var SKILL_ROUTES = [
     id: "clinicaltrials-landscape",
     name: "\u4E34\u5E8A\u8BD5\u9A8C\u683C\u5C40\u5206\u6790",
     category: "\u4E34\u5E8A",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "clinicaltrials\u5206\u6790",
       "clinical trial landscape",
@@ -15529,7 +15531,7 @@ var SKILL_ROUTES = [
     id: "literature-preclinical",
     name: "\u4E34\u5E8A\u524D\u6587\u732E\u7CFB\u7EDF\u63D0\u53D6",
     category: "\u6587\u732E",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u4E34\u5E8A\u524D\u6587\u732E",
       "preclinical literature",
@@ -15547,7 +15549,7 @@ var SKILL_ROUTES = [
     id: "experimental-design-statistics",
     name: "\u5B9E\u9A8C\u8BBE\u8BA1\u4E0E\u7EDF\u8BA1\u68C0\u9A8C",
     category: "\u7EDF\u8BA1",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u6837\u672C\u91CF\u8BA1\u7B97",
       "\u7EDF\u8BA1\u68C0\u9A8C\u9009\u62E9",
@@ -15573,7 +15575,7 @@ var SKILL_ROUTES = [
     id: "lasso-biomarker-panel",
     name: "LASSO \u751F\u7269\u6807\u5FD7\u7269\u9762\u677F\u7B5B\u9009",
     category: "\u7EDF\u8BA1",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "lasso\u56DE\u5F52\u7B5B\u9009",
       "lasso\u751F\u7269\u6807\u5FD7\u7269",
@@ -15594,7 +15596,7 @@ var SKILL_ROUTES = [
     id: "pcr-primer-design",
     name: "PCR / qPCR \u5F15\u7269\u8BBE\u8BA1",
     category: "\u5206\u5B50\u751F\u7269\u5B66",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       "\u5F15\u7269\u8BBE\u8BA1",
       "primer design",
@@ -15616,7 +15618,7 @@ var SKILL_ROUTES = [
     id: "survival-analysis-clinical",
     name: "\u4E34\u5E8A\u751F\u5B58\u5206\u6790 (KM + Cox)",
     category: "\u4E34\u5E8A",
-    tag: "workflow",
+    tag: "builtin",
     keywords: [
       // exact method names
       "kaplan-meier",
@@ -15663,12 +15665,12 @@ var SKILL_ROUTES = [
       "\u7A81\u53D8\u4E0E\u9884\u540E"
     ]
   },
-  // ── OpenClaw Key Skills ────────────────────────────────────────────────────────
+  // ── Extended Skills (key routable entries) ───────────────────────────────────
   {
     id: "pubmed-search",
     name: "PubMed \u6587\u732E\u68C0\u7D22",
     category: "\u6587\u732E",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "pubmed\u68C0\u7D22",
       "pubmed\u641C\u7D22",
@@ -15683,14 +15685,14 @@ var SKILL_ROUTES = [
     id: "arxiv-search",
     name: "arXiv \u9884\u5370\u672C\u68C0\u7D22",
     category: "\u6587\u732E",
-    tag: "skill",
+    tag: "builtin",
     keywords: ["arxiv\u68C0\u7D22", "arxiv\u641C\u7D22", "\u9884\u5370\u672C\u68C0\u7D22", "\u9884\u5370\u672C\u8BBA\u6587", "arxiv\u6587\u732E"]
   },
   {
     id: "alphafold",
     name: "AlphaFold \u86CB\u767D\u8D28\u7ED3\u6784\u9884\u6D4B",
     category: "\u7ED3\u6784\u751F\u7269\u5B66",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "alphafold\u7ED3\u6784\u9884\u6D4B",
       "alphafold\u8FD0\u884C",
@@ -15704,7 +15706,7 @@ var SKILL_ROUTES = [
     id: "alphafold-database",
     name: "AlphaFold \u6570\u636E\u5E93\u67E5\u8BE2",
     category: "\u7ED3\u6784\u751F\u7269\u5B66",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "alphafold\u6570\u636E\u5E93",
       "alphafold db",
@@ -15717,7 +15719,7 @@ var SKILL_ROUTES = [
     id: "bindcraft",
     name: "BindCraft \u86CB\u767D\u8D28\u7ED3\u5408\u4F53\u8BBE\u8BA1",
     category: "\u7ED3\u6784\u751F\u7269\u5B66",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "bindcraft",
       "\u7ED3\u5408\u4F53\u8BBE\u8BA1",
@@ -15731,7 +15733,7 @@ var SKILL_ROUTES = [
     id: "anndata",
     name: "AnnData \u5355\u7EC6\u80DE\u6570\u636E\u64CD\u4F5C",
     category: "\u5355\u7EC6\u80DE",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "anndata\u64CD\u4F5C",
       "h5ad\u6587\u4EF6\u5904\u7406",
@@ -15745,7 +15747,7 @@ var SKILL_ROUTES = [
     id: "cellagent-annotation",
     name: "CellAgent \u7EC6\u80DE\u7C7B\u578B\u81EA\u52A8\u6CE8\u91CA",
     category: "\u5355\u7EC6\u80DE",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "\u7EC6\u80DE\u7C7B\u578B\u6CE8\u91CA",
       "cell type annotation",
@@ -15759,7 +15761,7 @@ var SKILL_ROUTES = [
     id: "scvi-tools",
     name: "scVI \u5355\u7EC6\u80DE\u6DF1\u5EA6\u5B66\u4E60",
     category: "\u5355\u7EC6\u80DE",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "scvi-tools",
       "scvi\u6A21\u578B",
@@ -15773,7 +15775,7 @@ var SKILL_ROUTES = [
     id: "agentd-drug-discovery",
     name: "\u836F\u7269\u53D1\u73B0 Agent",
     category: "\u836F\u7269",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "\u836F\u7269\u53D1\u73B0\u6D41\u7A0B",
       "drug discovery",
@@ -15787,7 +15789,7 @@ var SKILL_ROUTES = [
     id: "chembl-database",
     name: "ChEMBL \u5316\u5408\u7269\u6D3B\u6027\u6570\u636E\u5E93",
     category: "\u836F\u7269",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "chembl\u67E5\u8BE2",
       "chembl\u6570\u636E\u5E93",
@@ -15801,7 +15803,7 @@ var SKILL_ROUTES = [
     id: "rdkit",
     name: "RDKit \u5316\u5B66\u4FE1\u606F\u5B66",
     category: "\u836F\u7269",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "rdkit",
       "\u5316\u5B66\u4FE1\u606F\u5B66",
@@ -15816,7 +15818,7 @@ var SKILL_ROUTES = [
     id: "bio-variant-calling",
     name: "\u53D8\u5F02\u68C0\u6D4B\u6D41\u7A0B (GATK/Mutect2)",
     category: "\u57FA\u56E0\u7EC4",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "\u53D8\u5F02\u68C0\u6D4B\u6D41\u7A0B",
       "variant calling\u6D41\u7A0B",
@@ -15831,7 +15833,7 @@ var SKILL_ROUTES = [
     id: "antibody-design-agent",
     name: "\u6297\u4F53\u8BBE\u8BA1 Agent",
     category: "\u6297\u4F53",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "\u6297\u4F53\u8BBE\u8BA1",
       "antibody design",
@@ -15845,7 +15847,7 @@ var SKILL_ROUTES = [
     id: "armored-cart-design-agent",
     name: "Armored CAR-T \u8BBE\u8BA1",
     category: "\u6297\u4F53",
-    tag: "skill",
+    tag: "builtin",
     keywords: [
       "car-t\u8BBE\u8BA1",
       "cart\u7EC6\u80DE\u8BBE\u8BA1",
@@ -16151,8 +16153,8 @@ function installBundledData() {
   const installedDataVersion = (0, import_fs6.existsSync)(DATA_VERSION_FILE) ? (0, import_fs6.readFileSync)(DATA_VERSION_FILE, "utf8").trim() : "";
   const needsUpdate = installedDataVersion !== VERSION2;
   const targets = [
-    { src: (0, import_path6.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u751F\u4FE1\u5DE5\u4F5C\u6D41)" },
-    { src: (0, import_path6.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u533B\u5B66\u4E13\u79D1)" },
+    { src: (0, import_path6.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u5206\u6790\u7C7B)" },
+    { src: (0, import_path6.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u6269\u5C55\u7C7B)" },
     { src: (0, import_path6.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
   ];
   let installed = false;
@@ -16231,7 +16233,7 @@ function printHelp() {
   console.log(`  ${source_default.cyan("!<\u547D\u4EE4>")}             \u7ED5\u8FC7 AI \u76F4\u63A5\u6267\u884C Shell \u547D\u4EE4\uFF08\u5B9E\u65F6\u8F93\u51FA\uFF09`);
   console.log(source_default.dim("  \u793A\u4F8B: !ls -la  !Rscript analysis.R  !python script.py  !samtools view -h a.bam"));
   console.log();
-  console.log(source_default.bold.cyan("\u2500\u2500\u2500 \u5DE5\u4F5C\u6D41\u5411\u5BFC \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(source_default.bold.cyan("\u2500\u2500\u2500 Skill \u5411\u5BFC \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
   console.log(`  ${source_default.cyan("/run")} <skill-id>     \u4EA4\u4E92\u5F0F\u53C2\u6570\u5411\u5BFC\uFF0C\u81EA\u52A8\u751F\u6210\u5E76\u6267\u884C\u5206\u6790\u811A\u672C`);
   console.log(`  ${source_default.cyan("/check-env")} [id]     \u68C0\u6D4B Skill \u6240\u9700 R/Python \u5305\u662F\u5426\u5DF2\u5B89\u88C5`);
   console.log(`  ${source_default.cyan("/search")} <\u5173\u952E\u8BCD>    \u5728 SkillHub \u641C\u7D22\u5E76\u4E0B\u8F7D\u6280\u80FD ${source_default.dim("[--hub=bgi|clawhub|tencent]")}`);
@@ -16976,7 +16978,7 @@ async function handleCommand(input, rl, history, thinkMode, injectedSkills) {
       }
       break;
     }
-    // ── /run workflow wizard ─────────────────────────────────────────────────
+    // ── /run skill wizard ────────────────────────────────────────────────────
     case "run": {
       const targetId = arg;
       if (!targetId) {
@@ -17017,7 +17019,7 @@ async function handleCommand(input, rl, history, thinkMode, injectedSkills) {
         if (ans.trim()) answers[q2] = ans.trim();
       }
       const paramSummary = Object.entries(answers).map(([k2, v2]) => `- ${k2}: ${v2}`).join("\n");
-      const runPrompt = `\u8BF7\u6839\u636E\u4EE5\u4E0B\u53C2\u6570\uFF0C\u4F7F\u7528 ${skillName || runMatch.id} \u5DE5\u4F5C\u6D41\u751F\u6210\u5B8C\u6574\u7684\u5206\u6790\u811A\u672C\u5E76\u7ACB\u5373\u6267\u884C\uFF1A
+      const runPrompt = `\u8BF7\u6839\u636E\u4EE5\u4E0B\u53C2\u6570\uFF0C\u4F7F\u7528 ${skillName || runMatch.id} \u6280\u80FD\u751F\u6210\u5B8C\u6574\u7684\u5206\u6790\u811A\u672C\u5E76\u7ACB\u5373\u6267\u884C\uFF1A
 
 \u7528\u6237\u63D0\u4F9B\u7684\u53C2\u6570\uFF1A
 ${paramSummary}

@@ -51,7 +51,7 @@ export const TOOL_DEFINITIONS: OpenAI.Chat.ChatCompletionTool[] = [
     function: {
       name: 'read_file',
       description:
-        'Read the contents of a file. Use to inspect data files, SKILL.md workflow guides, R/Python scripts, results files, etc.',
+        'Read the contents of a file. Use to inspect data files, SKILL.md guides, R/Python scripts, results files, etc.',
       parameters: {
         type: 'object',
         properties: {
@@ -104,7 +104,7 @@ export const TOOL_DEFINITIONS: OpenAI.Chat.ChatCompletionTool[] = [
     function: {
       name: 'search_files',
       description:
-        'Search for files matching a pattern using glob syntax. Use to find scripts, data files, or workflow references.',
+        'Search for files matching a pattern using glob syntax. Use to find scripts, data files, or skill references.',
       parameters: {
         type: 'object',
         properties: {
