@@ -20,7 +20,7 @@ git clone https://gitlab.genomics.cn/ai/bgi-cli.git
 cd bgi-cli
 npm install
 npm run build
-npm link
+sudo npm link
 ```
 
 > **macOS / Linux 无 root 权限时**，`npm link` 可能报 EACCES 权限错误，需先配置 npm 用户目录：
