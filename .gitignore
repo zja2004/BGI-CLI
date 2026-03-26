@@ -4,3 +4,4 @@ node_modules/
 *.bak
 __pycache__/
 *.pyc
+dist/
