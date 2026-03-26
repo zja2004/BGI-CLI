@@ -1,8 +1,11 @@
 # BGI CLI
 
+[![npm version](https://img.shields.io/npm/v/@bgicli/bgicli.svg)](https://www.npmjs.com/package/@bgicli/bgicli)
+[![npm downloads](https://img.shields.io/npm/dm/@bgicli/bgicli.svg)](https://www.npmjs.com/package/@bgicli/bgicli)
+
 **BGI CLI** 是面向中国生物学研究者的 AI 终端工具，开箱即用，无需额外配置。
 
-- ✅ **开箱即用** — clone 仓库后一键安装即可
+- ✅ **一行安装** — `npm install -g @bgicli/bgicli`，无需克隆仓库
 - ✅ **内置 1001 个技能** — 涵盖生信分析、结构生物学、药物发现、临床等全领域，自动安装
 - ✅ **智能技能路由** — 描述任务自动激活对应技能，无需手动搜索
 - ✅ **中国 AI 服务商** — 百炼(DashScope)聚合：Qwen、DeepSeek、Kimi、MiniMax 等 20+ 模型
@@ -16,21 +19,8 @@
 **环境要求：** Node.js 18+
 
 ```bash
-git clone https://gitlab.genomics.cn/ai/bgi-cli.git
-cd bgi-cli
-npm install
-npm run build
-sudo npm link
+npm install -g @bgicli/bgicli
 ```
-
-> **macOS / Linux 无 root 权限时**，`npm link` 可能报 EACCES 权限错误，需先配置 npm 用户目录：
-> ```bash
-> mkdir -p ~/.npm-global
-> npm config set prefix '~/.npm-global'
-> echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc  # zsh 用户改为 ~/.zshrc
-> source ~/.bashrc
-> npm link   # 再次执行
-> ```
 
 安装完成后直接运行：
 
@@ -46,8 +36,7 @@ bgi
 
 ```bash
 # 卸载命令行工具
-cd bgi-cli
-npm unlink
+npm uninstall -g @bgicli/bgicli
 
 # 删除本地数据（配置、技能库）
 # Linux / macOS
