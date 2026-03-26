@@ -13,7 +13,6 @@ export interface BgiConfig {
 }
 
 export const BGI_DIR = join(homedir(), '.bgicli');
-export const WORKFLOWS_DIR = join(BGI_DIR, 'workflows');
 export const TOOLS_DIR = join(BGI_DIR, 'tools');
 export const SKILLS_DIR = join(BGI_DIR, 'skills');
 /** User-installed skills (/install command). Never overwritten by package updates. */
@@ -24,7 +23,7 @@ export const DATA_VERSION_FILE = join(BGI_DIR, '.data-version');
 const CONFIG_FILE = join(BGI_DIR, 'config.json');
 
 export function ensureDirs(): void {
-  for (const dir of [BGI_DIR, WORKFLOWS_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR]) {
+  for (const dir of [BGI_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR]) {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   }
 }

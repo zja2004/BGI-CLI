@@ -1,13 +1,13 @@
 import readline from 'readline';
 import { createInterface } from 'readline';
 import chalk from 'chalk';
-import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync, mkdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync, mkdirSync, rmSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, WORKFLOWS_DIR, SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
@@ -191,6 +191,21 @@ function installBundledData(): void {
 
   ensureDirs();
 
+  // Migration: move legacy ~/.bgicli/workflows/ contents into ~/.bgicli/skills/
+  const legacyWorkflowsDir = join(BGI_DIR, 'workflows');
+  if (existsSync(legacyWorkflowsDir)) {
+    try {
+      for (const entry of readdirSync(legacyWorkflowsDir)) {
+        const src = join(legacyWorkflowsDir, entry);
+        const dest = join(SKILLS_DIR, entry);
+        if (statSync(src).isDirectory() && !existsSync(dest)) {
+          cpSync(src, dest, { recursive: true });
+        }
+      }
+      rmSync(legacyWorkflowsDir, { recursive: true, force: true });
+    } catch { /* best-effort migration */ }
+  }
+
   // Compare installed data version with current package version.
   // If they differ (new package version), re-sync bundled data so users always
   // get the latest built-in skills after `npm update`.
@@ -200,9 +215,8 @@ function installBundledData(): void {
   const needsUpdate = installedDataVersion !== VERSION;
 
   const targets: Array<{ src: string; dest: string; name: string }> = [
-    { src: join(bundledData, 'workflows'), dest: WORKFLOWS_DIR, name: 'Skills (分析类)' },
-    { src: join(bundledData, 'skills'),    dest: SKILLS_DIR,    name: 'Skills (扩展类)' },
-    { src: join(bundledData, 'tools'),     dest: TOOLS_DIR,     name: '工具' },
+    { src: join(bundledData, 'skills'), dest: SKILLS_DIR, name: 'Skills' },
+    { src: join(bundledData, 'tools'),  dest: TOOLS_DIR,  name: '工具' },
   ];
 
   let installed = false;
@@ -420,7 +434,7 @@ async function firstRunIfNeeded(rl: readline.Interface): Promise<void> {
 
 interface SkillEntry { id: string; dir: string; tag: string; }
 
-/** Collect all skills from SKILLS_DIR, WORKFLOWS_DIR, and USER_SKILLS_DIR */
+/** Collect all skills from SKILLS_DIR and USER_SKILLS_DIR */
 function collectAllSkills(): SkillEntry[] {
   const entries: SkillEntry[] = [];
   const addFrom = (dir: string, tag: string) => {
@@ -432,7 +446,6 @@ function collectAllSkills(): SkillEntry[] {
     });
   };
   addFrom(SKILLS_DIR, 'skill');
-  addFrom(WORKFLOWS_DIR, 'skill');   // workflows are skills too
   addFrom(USER_SKILLS_DIR, 'user');  // user-installed via /install
   return entries;
 }

@@ -245,12 +245,17 @@ export const SKILL_ROUTES: SkillRoute[] = [
       // natural-language synonyms
       '突变注释', '变异解读', 'vcf文件分析', '遗传变异解析',
       '致病性评估', '变异影响预测',
-      // oncology mutations
+      // standalone gene/cancer keywords (no space dependency)
+      'kras', 'egfr', 'alk', 'braf', 'ros1', 'ret', 'met', 'ntrk', 'erbb2', 'her2',
+      'tp53', 'brca', 'brca1', 'brca2', 'pik3ca', 'pten', 'cdkn2a',
+      'nsclc', 'luad', 'lusc', '非小细胞肺癌', '肺腺癌', '肺鳞癌',
+      '驱动基因', '变异报告', '突变报告',
+      // oncology mutations (compound keywords — bonus score for specificity)
       'kras突变', 'kras g12c', 'kras g12d', 'kras g12v', 'kras mutation',
       'egfr突变', 'egfr l858r', 'egfr外显子19', 'egfr t790m',
       'alk融合', 'alk重排', 'braf v600e', 'braf突变',
-      'tp53突变', 'tp53', 'pik3ca突变', 'pten缺失',
-      'brca1突变', 'brca2突变', 'brca', 'her2扩增', 'her2突变',
+      'tp53突变', 'pik3ca突变', 'pten缺失',
+      'brca1突变', 'brca2突变', 'her2扩增', 'her2突变',
       'cdkn2a缺失', 'met扩增', 'met外显子14', 'ret融合',
       'ros1融合', 'ntrk融合', 'pd-l1',
       // cancer contexts
@@ -703,6 +708,9 @@ export const SKILL_ROUTES: SkillRoute[] = [
       'druggability', '可成药性评估', '靶点综合评分',
       'target visualization', 'drug target report', 'target assessment',
       '靶点验证', '靶点确认', '靶点优先级排序',
+      // cancer + target keywords (standalone — no space dependency)
+      'nsclc靶点', 'nsclc靶向', 'nsclc治疗靶点', '肺癌靶点', '非小细胞肺癌靶点',
+      '肿瘤靶点', '癌症靶点', '靶向治疗', '精准治疗',
       // specific target contexts
       'kras靶点', 'kras可成药性', 'kras抑制剂', 'kras突变靶点',
       'egfr靶点', 'alk靶点', 'braf靶点', 'her2靶点', 'met靶点',

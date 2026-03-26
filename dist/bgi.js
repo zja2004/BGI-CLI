@@ -13602,7 +13602,6 @@ var DEFAULT_PROVIDER = "bailian";
 
 // src/config.ts
 var BGI_DIR = (0, import_path2.join)((0, import_os.homedir)(), ".bgicli");
-var WORKFLOWS_DIR = (0, import_path2.join)(BGI_DIR, "workflows");
 var TOOLS_DIR = (0, import_path2.join)(BGI_DIR, "tools");
 var SKILLS_DIR = (0, import_path2.join)(BGI_DIR, "skills");
 var USER_SKILLS_DIR = (0, import_path2.join)(BGI_DIR, "user-skills");
@@ -13610,7 +13609,7 @@ var DATABASES_FILE = (0, import_path2.join)(BGI_DIR, "databases.json");
 var DATA_VERSION_FILE = (0, import_path2.join)(BGI_DIR, ".data-version");
 var CONFIG_FILE = (0, import_path2.join)(BGI_DIR, "config.json");
 function ensureDirs() {
-  for (const dir of [BGI_DIR, WORKFLOWS_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR]) {
+  for (const dir of [BGI_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR]) {
     if (!(0, import_fs2.existsSync)(dir)) (0, import_fs2.mkdirSync)(dir, { recursive: true });
   }
 }
@@ -14634,30 +14633,45 @@ You have access to these tools:
 > \u662F\u5426\u6FC0\u6D3B\u8FD9\u4E9B\u6280\u80FD\u5F00\u59CB\u5206\u6790\uFF1F
 
 **\u7B2C\u4E09\u6B65 \u2014 \u6FC0\u6D3B\u6280\u80FD\uFF0C\u8BFB\u53D6 SKILL.md**
-\u7528\u6237\u786E\u8BA4\u540E\u7ACB\u5373\u6267\u884C\uFF1A\`cat ${WORKFLOWS_DIR}/<skill-id>/SKILL.md\`
+\u7528\u6237\u786E\u8BA4\u540E\u7ACB\u5373\u6267\u884C\uFF1A\`cat ${SKILLS_DIR}/<skill-id>/SKILL.md\`
 \u4E25\u683C\u6309\u7167 SKILL.md \u7684\u6BCF\u4E00\u6B65\u6267\u884C\uFF0C\u4E0D\u8DF3\u8FC7\u3001\u4E0D\u81EA\u884C\u53D1\u6325\u3002
 
 **\u7B2C\u56DB\u6B65 \u2014 \u53EA\u95EE\u771F\u6B63\u5FC5\u8981\u7684\u6570\u636E\u95EE\u9898**
 SKILL.md \u8BFB\u5B8C\u540E\uFF0C\u53EA\u8BE2\u95EE\u6267\u884C\u6240\u9700\u7684\u5173\u952E\u4FE1\u606F\uFF08\u5982\u672C\u5730\u6587\u4EF6\u8DEF\u5F84\u3001\u6837\u672C\u5206\u7EC4\u540D\uFF09\u3002
 
 \u274C **\u7EDD\u5BF9\u7981\u6B62**\uFF1A\u5728\u5B8C\u6210\u7B2C\u4E00\u6B65\uFF08\u8BC6\u522B\u6280\u80FD\uFF09\u4E4B\u524D\uFF0C\u8BE2\u95EE\u901A\u7528\u6570\u636E\u6536\u96C6\u95EE\u9898\u3002
-\u4F8B\u5982\u4E0B\u5217\u63D0\u95EE\u65B9\u5F0F\u662F**\u9519\u8BEF\u7684**\uFF0C\u5FC5\u987B\u907F\u514D\uFF1A
-- "\u60A8\u6709 GEO \u6570\u636E\u96C6\u5417\uFF1F"
-- "\u6570\u636E\u6765\u6E90\u662F\u4EC0\u4E48\uFF1F"
-- "\u60A8\u7684\u6570\u636E\u683C\u5F0F\u662F\u4EC0\u4E48\uFF1F"
-- "\u8BF7\u63D0\u4F9B\u4EE5\u4E0B\u4FE1\u606F\uFF1A1. \u6570\u636E\u6765\u6E90 2. \u6570\u636E\u5185\u5BB9 ..."
 
-\u5982\u679C\u5B9E\u5728\u627E\u4E0D\u5230\u4EFB\u4F55\u5339\u914D\u6280\u80FD\uFF0C\u624D\u5141\u8BB8\u63D0\u95EE\u5E76\u8BF4\u660E\u7406\u7531\u3002
+### \u{1F6AB} \u9519\u8BEF\u793A\u8303\uFF08\u4F60\u7EDD\u5BF9\u4E0D\u80FD\u8FD9\u6837\u505A\uFF09
+
+> \u7528\u6237\uFF1A\u5E2E\u6211\u505A KRAS \u7A81\u53D8 NSCLC \u9776\u70B9\u53EF\u89C6\u5316
+>
+> ~~AI\uFF1A\u4F60\u597D\uFF01\u9488\u5BF9\u8FD9\u4E2A\u9700\u6C42\uFF0C\u6211\u9700\u8981\u5148\u4E86\u89E3\u66F4\u591A\u4FE1\u606F\uFF1A~~
+> ~~1. \u4F60\u60F3\u53EF\u89C6\u5316\u4EC0\u4E48\uFF1F~~
+> ~~2. \u4F60\u6709\u6570\u636E\u5417\uFF1F~~
+> ~~3. \u5206\u6790\u76EE\u7684\u662F\u4EC0\u4E48\uFF1F~~
+
+### \u2705 \u6B63\u786E\u793A\u8303\uFF08\u4F60\u5FC5\u987B\u8FD9\u6837\u505A\uFF09
+
+> \u7528\u6237\uFF1A\u5E2E\u6211\u505A KRAS \u7A81\u53D8 NSCLC \u9776\u70B9\u53EF\u89C6\u5316
+>
+> \u{1F50D} \u68C0\u6D4B\u5230\u4EE5\u4E0B\u76F8\u5173\u6280\u80FD\uFF1A
+>
+> \u2022 \`genetic-variant-annotation\` \u2014 **\u9057\u4F20\u53D8\u5F02\u6CE8\u91CA**\uFF1AKRAS \u7A81\u53D8\u6CE8\u91CA\u3001\u81F4\u75C5\u6027\u89E3\u8BFB\u3001oncoprint \u53EF\u89C6\u5316
+> \u2022 \`agentd-drug-discovery\` \u2014 **\u836F\u7269\u9776\u70B9\u5206\u6790**\uFF1A\u9776\u70B9\u53EF\u6210\u836F\u6027\u8BC4\u4F30\u3001\u9776\u70B9\u7EFC\u5408\u53EF\u89C6\u5316\u62A5\u544A
+>
+> \u662F\u5426\u6FC0\u6D3B\u8FD9\u4E9B\u6280\u80FD\u5F00\u59CB\u5206\u6790\uFF1F
+
+**\u53EA\u6709\u5728 Skill Library \u548C\u6269\u5C55\u6280\u80FD\u76EE\u5F55\u4E2D\u786E\u5B9E\u627E\u4E0D\u5230\u4EFB\u4F55\u5339\u914D\u6280\u80FD\u65F6\uFF0C\u624D\u5141\u8BB8\u63D0\u95EE\uFF0C\u5E76\u5FC5\u987B\u8BF4\u660E"\u672A\u627E\u5230\u5339\u914D\u6280\u80FD\uFF0C\u539F\u56E0\u662F\u2026"\u3002**
 
 ---
 
-## Skill Library (22 Bioinformatics Skills)
+## Skill Library
 
-All skills are at: **${WORKFLOWS_DIR}**
+All skills are at: **${SKILLS_DIR}**
 
 For any skill, read its guide first:
 \`\`\`bash
-cat ${WORKFLOWS_DIR}/<skill-id>/SKILL.md
+cat ${SKILLS_DIR}/<skill-id>/SKILL.md
 \`\`\`
 
 ### \u{1F9EC} Transcriptomics
@@ -14737,16 +14751,9 @@ ${dbSection ?? "\uFF08\u6682\u672A\u6CE8\u518C\u4EFB\u4F55\u6570\u636E\u5E93\u30
 
 ---
 
-## Extended Skills (979\u4E2A)
+## More Skills
 
-\u66F4\u591A\u5185\u7F6E\u6280\u80FD\u4F4D\u4E8E: **${SKILLS_DIR}**
-
-\u6BCF\u4E2A\u6280\u80FD\u76EE\u5F55\u5305\u542B\u4E00\u4E2A \`SKILL.md\` \u6587\u4EF6\uFF0C\u8BFB\u53D6\u65B9\u5F0F:
-\`\`\`bash
-cat ${SKILLS_DIR}/<skill-id>/SKILL.md
-\`\`\`
-
-**\u6DB5\u76D6\u9886\u57DF**\uFF08\u7528\u6237\u901A\u8FC7 /sk \u547D\u4EE4\u52A0\u8F7D\u540E\u81EA\u52A8\u6CE8\u5165\u4E0A\u4E0B\u6587\uFF09:
+\u6240\u6709\u5185\u7F6E\u6280\u80FD\u5747\u4F4D\u4E8E **${SKILLS_DIR}**\uFF0C\u6DB5\u76D6\u9886\u57DF\uFF08\u7528\u6237\u901A\u8FC7 /sk \u547D\u4EE4\u52A0\u8F7D\u540E\u81EA\u52A8\u6CE8\u5165\u4E0A\u4E0B\u6587\uFF09:
 - \u6587\u732E\u68C0\u7D22: pubmed-search, arxiv-search, bgpt-paper-search
 - \u7ED3\u6784\u751F\u7269\u5B66: alphafold, alphafold-database, bindcraft, binder-design
 - \u5355\u7EC6\u80DE: anndata, cellagent-annotation, scvi-tools
@@ -15703,7 +15710,34 @@ var SKILL_ROUTES = [
       "\u9057\u4F20\u53D8\u5F02\u89E3\u6790",
       "\u81F4\u75C5\u6027\u8BC4\u4F30",
       "\u53D8\u5F02\u5F71\u54CD\u9884\u6D4B",
-      // oncology mutations
+      // standalone gene/cancer keywords (no space dependency)
+      "kras",
+      "egfr",
+      "alk",
+      "braf",
+      "ros1",
+      "ret",
+      "met",
+      "ntrk",
+      "erbb2",
+      "her2",
+      "tp53",
+      "brca",
+      "brca1",
+      "brca2",
+      "pik3ca",
+      "pten",
+      "cdkn2a",
+      "nsclc",
+      "luad",
+      "lusc",
+      "\u975E\u5C0F\u7EC6\u80DE\u80BA\u764C",
+      "\u80BA\u817A\u764C",
+      "\u80BA\u9CDE\u764C",
+      "\u9A71\u52A8\u57FA\u56E0",
+      "\u53D8\u5F02\u62A5\u544A",
+      "\u7A81\u53D8\u62A5\u544A",
+      // oncology mutations (compound keywords — bonus score for specificity)
       "kras\u7A81\u53D8",
       "kras g12c",
       "kras g12d",
@@ -15718,12 +15752,10 @@ var SKILL_ROUTES = [
       "braf v600e",
       "braf\u7A81\u53D8",
       "tp53\u7A81\u53D8",
-      "tp53",
       "pik3ca\u7A81\u53D8",
       "pten\u7F3A\u5931",
       "brca1\u7A81\u53D8",
       "brca2\u7A81\u53D8",
-      "brca",
       "her2\u6269\u589E",
       "her2\u7A81\u53D8",
       "cdkn2a\u7F3A\u5931",
@@ -16712,6 +16744,16 @@ var SKILL_ROUTES = [
       "\u9776\u70B9\u9A8C\u8BC1",
       "\u9776\u70B9\u786E\u8BA4",
       "\u9776\u70B9\u4F18\u5148\u7EA7\u6392\u5E8F",
+      // cancer + target keywords (standalone — no space dependency)
+      "nsclc\u9776\u70B9",
+      "nsclc\u9776\u5411",
+      "nsclc\u6CBB\u7597\u9776\u70B9",
+      "\u80BA\u764C\u9776\u70B9",
+      "\u975E\u5C0F\u7EC6\u80DE\u80BA\u764C\u9776\u70B9",
+      "\u80BF\u7624\u9776\u70B9",
+      "\u764C\u75C7\u9776\u70B9",
+      "\u9776\u5411\u6CBB\u7597",
+      "\u7CBE\u51C6\u6CBB\u7597",
       // specific target contexts
       "kras\u9776\u70B9",
       "kras\u53EF\u6210\u836F\u6027",
@@ -17150,7 +17192,7 @@ function clearCheckpoints(sessionId) {
 
 // src/index.ts
 var import_fs7 = require("fs");
-var VERSION2 = "2.4.6";
+var VERSION2 = "2.4.9";
 var SKILLHUB_HUBS = {
   bgi: { label: "BGI\u5185\u7F51", apiBase: "https://clawhub.ai", backend: "clawhub" },
   clawhub: { label: "clawhub.ai", apiBase: "https://clawhub.ai", backend: "clawhub" },
@@ -17297,11 +17339,24 @@ function installBundledData() {
   const bundledData = (0, import_path6.join)(__dirname, "..", "data");
   if (!(0, import_fs6.existsSync)(bundledData)) return;
   ensureDirs();
+  const legacyWorkflowsDir = (0, import_path6.join)(BGI_DIR, "workflows");
+  if ((0, import_fs6.existsSync)(legacyWorkflowsDir)) {
+    try {
+      for (const entry of (0, import_fs6.readdirSync)(legacyWorkflowsDir)) {
+        const src = (0, import_path6.join)(legacyWorkflowsDir, entry);
+        const dest = (0, import_path6.join)(SKILLS_DIR, entry);
+        if ((0, import_fs6.statSync)(src).isDirectory() && !(0, import_fs6.existsSync)(dest)) {
+          (0, import_fs6.cpSync)(src, dest, { recursive: true });
+        }
+      }
+      (0, import_fs6.rmSync)(legacyWorkflowsDir, { recursive: true, force: true });
+    } catch {
+    }
+  }
   const installedDataVersion = (0, import_fs6.existsSync)(DATA_VERSION_FILE) ? (0, import_fs6.readFileSync)(DATA_VERSION_FILE, "utf8").trim() : "";
   const needsUpdate = installedDataVersion !== VERSION2;
   const targets = [
-    { src: (0, import_path6.join)(bundledData, "workflows"), dest: WORKFLOWS_DIR, name: "Skills (\u5206\u6790\u7C7B)" },
-    { src: (0, import_path6.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills (\u6269\u5C55\u7C7B)" },
+    { src: (0, import_path6.join)(bundledData, "skills"), dest: SKILLS_DIR, name: "Skills" },
     { src: (0, import_path6.join)(bundledData, "tools"), dest: TOOLS_DIR, name: "\u5DE5\u5177" }
   ];
   let installed = false;
@@ -17505,7 +17560,6 @@ function collectAllSkills() {
     });
   };
   addFrom(SKILLS_DIR, "skill");
-  addFrom(WORKFLOWS_DIR, "skill");
   addFrom(USER_SKILLS_DIR, "user");
   return entries;
 }
