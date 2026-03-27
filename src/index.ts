@@ -2518,23 +2518,36 @@ async function main(): Promise<void> {
       const currentCfg = loadConfig();
       currentAbortController = new AbortController();
 
-      const debugT0 = debugMode ? Date.now() : 0;
-      const debugTokensBefore = debugMode
-        ? { in: sessionStats.inputTokens, out: sessionStats.outputTokens }
-        : null;
+      const roundT0 = Date.now();
+      const tokensBefore = { in: sessionStats.inputTokens, out: sessionStats.outputTokens };
 
       const reply = await chat(history, currentCfg, systemPrompt, sessionStats, currentAbortController.signal);
       currentAbortController = null;
 
+      // ── Per-round stats (always shown) ────────────────────────────────────
+      if (reply) {
+        const elapsedMs = Date.now() - roundT0;
+        const dIn  = sessionStats.inputTokens  - tokensBefore.in;
+        const dOut = sessionStats.outputTokens - tokensBefore.out;
+        const elapsed = (elapsedMs / 1000).toFixed(2);
+        console.log(
+          chalk.dim(`\n  ⏱ ${elapsed}s`) +
+          chalk.dim('  ·  ') +
+          chalk.dim(`↑ ${dIn}`) +
+          chalk.dim('  ') +
+          chalk.dim(`↓ ${dOut} tokens`),
+        );
+      }
+
       // ── Debug: append round to MD file and print path ─────────────────────
-      if (debugMode && debugTokensBefore && reply) {
-        const elapsedMs = Date.now() - debugT0;
-        const dIn  = sessionStats.inputTokens  - debugTokensBefore.in;
-        const dOut = sessionStats.outputTokens - debugTokensBefore.out;
+      if (debugMode && reply) {
+        const elapsedMs = Date.now() - roundT0;
+        const dIn  = sessionStats.inputTokens  - tokensBefore.in;
+        const dOut = sessionStats.outputTokens - tokensBefore.out;
         try {
           appendDebugRound(systemPrompt, history, reply, elapsedMs, dIn, dOut);
         } catch { /* non-fatal */ }
-        console.log(chalk.bold.yellow(`\n  [DEBUG] 已记录 → ${debugFilePath}`));
+        console.log(chalk.bold.yellow(`  [DEBUG] 已记录 → ${debugFilePath}`));
       }
 
       if (!reply && history[history.length - 1]?.role === 'user') {
@@ -2557,10 +2570,10 @@ async function main(): Promise<void> {
         lastCheckpointMsgCount = history.length;
       }
 
-      // ── Show active Skills footer ──────────────────────────────────────────
-      if (injectedSkills.size > 0) {
-        const ids = Array.from(injectedSkills.keys()).join(' · ');
-        console.log(chalk.dim(`\n  [激活 Skill: ${ids}]`));
+      // ── Show active Skills footer (non-permanent only) ─────────────────────
+      const activeNonPerm = Array.from(injectedSkills.keys()).filter((id) => !permanentSkillIds.has(id));
+      if (activeNonPerm.length > 0) {
+        console.log(chalk.dim(`  [激活 Skill: ${activeNonPerm.join(' · ')}]`));
       }
     } catch (err: unknown) {
       currentAbortController = null;
