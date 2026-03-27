@@ -29,6 +29,9 @@ import {
 declare const __APP_VERSION__: string;
 const VERSION: string = __APP_VERSION__;
 
+// Brand name — baked in at build time via process.env.BGICLI_BRAND
+const BRAND: string = (process.env.BGICLI_BRAND ?? 'bgi').toLowerCase();
+
 // ── SkillHub API ───────────────────────────────────────────────────────────────
 
 const SKILLHUB_HUBS = {
@@ -248,13 +251,31 @@ function installBundledData(): void {
 // ── Banner ────────────────────────────────────────────────────────────────────
 
 function printBanner(): void {
-  console.log(chalk.cyan.bold(`
+  if (BRAND === 'bio') {
+    console.log(chalk.cyan.bold(`
+  ██████╗ ██╗  ██████╗  ██████╗██╗     ██╗
+  ██╔══██╗██║ ██╔═══██╗██╔════╝██║     ██║
+  ██████╔╝██║ ██║   ██║██║     ██║     ██║
+  ██╔══██╗██║ ██║   ██║██║     ██║     ██║
+  ██████╔╝██║ ╚██████╔╝╚██████╗███████╗██║
+  ╚═════╝ ╚═╝  ╚═════╝  ╚═════╝╚══════╝╚═╝  v${VERSION}`));
+  } else if (BRAND === 'mbp') {
+    console.log(chalk.cyan.bold(`
+  ███╗   ███╗██████╗ ██████╗  ██████╗██╗     ██╗
+  ████╗ ████║██╔══██╗██╔══██╗██╔════╝██║     ██║
+  ██╔████╔██║██████╔╝██████╔╝██║     ██║     ██║
+  ██║╚██╔╝██║██╔══██╗██╔═══╝ ██║     ██║     ██║
+  ██║ ╚═╝ ██║██████╔╝██║     ╚██████╗███████╗██║
+  ╚═╝     ╚═╝╚═════╝ ╚═╝      ╚═════╝╚══════╝╚═╝  v${VERSION}`));
+  } else {
+    console.log(chalk.cyan.bold(`
   ██████╗  ██████╗ ██╗     ██████╗██╗     ██╗
   ██╔══██╗██╔════╝ ██║    ██╔════╝██║     ██║
   ██████╔╝██║  ███╗██║    ██║     ██║     ██║
   ██╔══██╗██║   ██║██║    ██║     ██║     ██║
   ██████╔╝╚██████╔╝██║    ╚██████╗███████╗██║
   ╚═════╝  ╚═════╝ ╚═╝     ╚═════╝╚══════╝╚═╝  v${VERSION}`));
+  }
   console.log(chalk.dim('  生物信息学 AI 终端助手 — Bioinformatics AI Terminal'));
   console.log();
 }

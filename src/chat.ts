@@ -4,6 +4,9 @@ import { TOOL_DEFINITIONS, executeTool, type StreamCallback } from './tools.js';
 import type { BgiConfig } from './config.js';
 import { PROVIDERS } from './providers.js';
 
+// Brand name — baked in at build time via process.env.BGICLI_BRAND
+const BRAND: string = (process.env.BGICLI_BRAND ?? 'bgi').toUpperCase();
+
 export type Message = OpenAI.Chat.ChatCompletionMessageParam;
 
 export interface ChatStats {
@@ -287,7 +290,7 @@ async function streamOnce(
   let inputTokens = 0;
   let outputTokens = 0;
 
-  process.stdout.write(chalk.green('BGI › '));
+  process.stdout.write(chalk.green(`${BRAND} › `));
 
   for await (const chunk of stream) {
     // Usage arrives in the final chunk (choices may be empty)

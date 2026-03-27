@@ -3,10 +3,14 @@
   "version": "2.4.9",
   "description": "BGI CLI — Bioinformatics AI terminal for Chinese researchers (百炼/DeepSeek/Kimi/Qwen)",
   "bin": {
-    "bgi": "dist/bgi.js"
+    "bgi": "dist/bgi.js",
+    "bio": "dist/bio.js",
+    "mbp": "dist/mbp.js"
   },
   "files": [
     "dist/bgi.js",
+    "dist/bio.js",
+    "dist/mbp.js",
     "data/",
     "README.md"
   ],
