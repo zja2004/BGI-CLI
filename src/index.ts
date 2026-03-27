@@ -265,51 +265,70 @@ function installBundledData(): void {
 // ── Banner ────────────────────────────────────────────────────────────────────
 
 function printBanner(): void {
-  const bgiLines = [
-    '  ██████╗  ██████╗ ██╗',
-    '  ██╔══██╗██╔════╝ ██║',
-    '  ██████╔╝██║  ███╗██║',
-    '  ██╔══██╗██║   ██║██║',
-    '  ██████╔╝╚██████╔╝██║',
-    '  ╚═════╝  ╚═════╝ ╚═╝',
-  ];
-  const bioLines = [
-    '  ██████╗ ██╗  ██████╗ ',
-    '  ██╔══██╗██║ ██╔═══██╗',
-    '  ██████╔╝██║ ██║   ██║',
-    '  ██╔══██╗██║ ██║   ██║',
-    '  ██████╔╝██║ ╚██████╔╝',
-    '  ╚═════╝ ╚═╝  ╚═════╝ ',
-  ];
-  const mbpLines = [
-    '  ███╗   ███╗██████╗ ██████╗ ',
-    '  ████╗ ████║██╔══██╗██╔══██╗',
-    '  ██╔████╔██║██████╔╝██████╔╝',
-    '  ██║╚██╔╝██║██╔══██╗██╔═══╝ ',
-    '  ██║ ╚═╝ ██║██████╔╝██║     ',
-    '  ╚═╝     ╚═╝╚═════╝ ╚═╝     ',
+  type ColorStop = [number, number, number];
+  function lerpColor(stops: ColorStop[], t: number): ColorStop {
+    const n = stops.length;
+    if (n === 1) return stops[0];
+    const s = t * (n - 1);
+    const idx = Math.min(Math.floor(s), n - 2);
+    const f = s - idx;
+    const [ar, ag, ab] = stops[idx];
+    const [br, bg, bb] = stops[idx + 1];
+    return [Math.round(ar + (br - ar) * f), Math.round(ag + (bg - ag) * f), Math.round(ab + (bb - ab) * f)];
+  }
+
+  // ">" chevron block art (6 rows, 6 cols each)
+  const chevron = [
+    '██╗   ',
+    '╚██╗  ',
+    ' ╚██╗ ',
+    ' ╔██╔╝',
+    '╔██╔╝ ',
+    '╚═╝   ',
   ];
 
-  const lines = BRAND === 'bio' ? bioLines : BRAND === 'mbp' ? mbpLines : bgiLines;
+  const bgiLetters = [
+    '██████╗  ██████╗ ██╗',
+    '██╔══██╗██╔════╝ ██║',
+    '██████╔╝██║  ███╗██║',
+    '██╔══██╗██║   ██║██║',
+    '██████╔╝╚██████╔╝██║',
+    '╚═════╝  ╚═════╝ ╚═╝',
+  ];
+  const bioLetters = [
+    '██████╗ ██╗  ██████╗ ',
+    '██╔══██╗██║ ██╔═══██╗',
+    '██████╔╝██║ ██║   ██║',
+    '██╔══██╗██║ ██║   ██║',
+    '██████╔╝██║ ╚██████╔╝',
+    '╚═════╝ ╚═╝  ╚═════╝ ',
+  ];
+  const mbpLetters = [
+    '███╗   ███╗██████╗ ██████╗ ',
+    '████╗ ████║██╔══██╗██╔══██╗',
+    '██╔████╔██║██████╔╝██████╔╝',
+    '██║╚██╔╝██║██╔══██╗██╔═══╝ ',
+    '██║ ╚═╝ ██║██████╔╝██║     ',
+    '╚═╝     ╚═╝╚═════╝ ╚═╝     ',
+  ];
 
-  // Per-brand gradient: [r1,g1,b1] top → [r2,g2,b2] bottom
-  type RGB6 = [number, number, number, number, number, number];
-  const colors: RGB6 =
+  const letters = BRAND === 'bio' ? bioLetters : BRAND === 'mbp' ? mbpLetters : bgiLetters;
+  const body = chevron.map((ch, i) => ' ' + ch + letters[i]);
+  const maxW = body.reduce((m, l) => Math.max(m, l.length), 0);
+  const border = ' ' + '─'.repeat(maxW);
+  const allLines = [border, ...body, border]; // 8 lines total → 8 gradient stops
+
+  // 8-stop gradient per brand
+  const stops: ColorStop[] =
     BRAND === 'bio'
-      ? [0, 255, 120,  0, 200, 255]    // lime-green → cyan
+      ? [[60,255,100],[0,255,180],[0,245,255],[0,190,255],[0,120,255],[40,50,255],[110,0,255],[170,0,220]]
       : BRAND === 'mbp'
-      ? [255, 60, 180,  130, 0, 255]   // hot-pink → violet
-      : [0, 220, 255,  30, 80, 255];   // bright-cyan → deep-blue
-
-  const [r1, g1, b1, r2, g2, b2] = colors;
-  const n = lines.length;
+      ? [[255,60,190],[255,130,50],[240,50,220],[190,0,255],[140,0,255],[90,0,255],[55,0,230],[30,0,180]]
+      : [[0,245,255],[0,215,255],[0,175,255],[20,125,255],[60,75,255],[100,30,255],[150,0,255],[185,0,220]];
 
   console.log();
-  lines.forEach((line, i) => {
-    const t = i / Math.max(n - 1, 1);
-    const r = Math.round(r1 + (r2 - r1) * t);
-    const g = Math.round(g1 + (g2 - g1) * t);
-    const b = Math.round(b1 + (b2 - b1) * t);
+  allLines.forEach((line, i) => {
+    const [r, g, b] = lerpColor(stops, i / Math.max(allLines.length - 1, 1));
     console.log(chalk.bold.rgb(r, g, b)(line));
   });
   console.log(chalk.dim(`  v${VERSION}  生物信息学 AI 终端助手 — Bioinformatics AI Terminal`));
