@@ -265,7 +265,54 @@ function installBundledData(): void {
 // ── Banner ────────────────────────────────────────────────────────────────────
 
 function printBanner(): void {
-  console.log(chalk.cyan.bold(`\n  ${BRAND}`) + chalk.dim(`  v${VERSION}  生物信息学 AI 终端助手`));
+  const bgiLines = [
+    '  ██████╗  ██████╗ ██╗',
+    '  ██╔══██╗██╔════╝ ██║',
+    '  ██████╔╝██║  ███╗██║',
+    '  ██╔══██╗██║   ██║██║',
+    '  ██████╔╝╚██████╔╝██║',
+    '  ╚═════╝  ╚═════╝ ╚═╝',
+  ];
+  const bioLines = [
+    '  ██████╗ ██╗  ██████╗ ',
+    '  ██╔══██╗██║ ██╔═══██╗',
+    '  ██████╔╝██║ ██║   ██║',
+    '  ██╔══██╗██║ ██║   ██║',
+    '  ██████╔╝██║ ╚██████╔╝',
+    '  ╚═════╝ ╚═╝  ╚═════╝ ',
+  ];
+  const mbpLines = [
+    '  ███╗   ███╗██████╗ ██████╗ ',
+    '  ████╗ ████║██╔══██╗██╔══██╗',
+    '  ██╔████╔██║██████╔╝██████╔╝',
+    '  ██║╚██╔╝██║██╔══██╗██╔═══╝ ',
+    '  ██║ ╚═╝ ██║██████╔╝██║     ',
+    '  ╚═╝     ╚═╝╚═════╝ ╚═╝     ',
+  ];
+
+  const lines = BRAND === 'bio' ? bioLines : BRAND === 'mbp' ? mbpLines : bgiLines;
+
+  // Per-brand gradient: [r1,g1,b1] top → [r2,g2,b2] bottom
+  type RGB6 = [number, number, number, number, number, number];
+  const colors: RGB6 =
+    BRAND === 'bio'
+      ? [0, 255, 120,  0, 200, 255]    // lime-green → cyan
+      : BRAND === 'mbp'
+      ? [255, 60, 180,  130, 0, 255]   // hot-pink → violet
+      : [0, 220, 255,  30, 80, 255];   // bright-cyan → deep-blue
+
+  const [r1, g1, b1, r2, g2, b2] = colors;
+  const n = lines.length;
+
+  console.log();
+  lines.forEach((line, i) => {
+    const t = i / Math.max(n - 1, 1);
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+    console.log(chalk.bold.rgb(r, g, b)(line));
+  });
+  console.log(chalk.dim(`  v${VERSION}  生物信息学 AI 终端助手 — Bioinformatics AI Terminal`));
   console.log();
 }
 
