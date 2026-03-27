@@ -1,13 +1,13 @@
 import readline from 'readline';
 import { createInterface } from 'readline';
 import chalk from 'chalk';
-import { existsSync, readdirSync, readFileSync, writeFileSync, statSync, cpSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, appendFileSync, statSync, cpSync, mkdirSync, rmSync } from 'fs';
 import { join, resolve } from 'path';
 import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, SKILLS_DIR, USER_SKILLS_DIR, CUSTOM_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
@@ -182,6 +182,11 @@ const SESSION_CTX = {
 // These are initialized in main() before the command loop starts.
 let dbRegistry: DatabaseRegistry = { version: 1, lastScan: null, databases: {} };
 let systemPrompt = '';
+let debugMode = false;
+let debugFilePath = '';
+let debugRound = 0;
+/** IDs of skills that are permanently injected into the system prompt every session. */
+let permanentSkillIds: Set<string> = new Set();
 
 // ── Bundled data installer ─────────────────────────────────────────────────────
 // When installed via npm, the data/ directory is bundled alongside dist/bgi.js.
@@ -453,12 +458,18 @@ async function firstRunIfNeeded(rl: readline.Interface): Promise<void> {
 
 // ── Skill helpers ─────────────────────────────────────────────────────────────
 
-interface SkillEntry { id: string; dir: string; tag: string; }
+/**
+ * Skill source category:
+ *  'bio'        — built-in bioinformatics skills bundled with the package (SKILLS_DIR)
+ *  'downloaded' — user-installed via /install from a remote source (USER_SKILLS_DIR)
+ *  'custom'     — user-created local skills (CUSTOM_SKILLS_DIR)
+ */
+interface SkillEntry { id: string; dir: string; tag: 'bio' | 'downloaded' | 'custom'; }
 
-/** Collect all skills from SKILLS_DIR and USER_SKILLS_DIR */
+/** Collect all skills from all three skill directories. */
 function collectAllSkills(): SkillEntry[] {
   const entries: SkillEntry[] = [];
-  const addFrom = (dir: string, tag: string) => {
+  const addFrom = (dir: string, tag: SkillEntry['tag']) => {
     if (!existsSync(dir)) return;
     readdirSync(dir).forEach((f) => {
       try {
@@ -466,8 +477,9 @@ function collectAllSkills(): SkillEntry[] {
       } catch { /* skip */ }
     });
   };
-  addFrom(SKILLS_DIR, 'skill');
-  addFrom(USER_SKILLS_DIR, 'user');  // user-installed via /install
+  addFrom(SKILLS_DIR,        'bio');        // built-in (bio + research)
+  addFrom(USER_SKILLS_DIR,   'downloaded'); // installed via /install
+  addFrom(CUSTOM_SKILLS_DIR, 'custom');     // user-created locally
   return entries;
 }
 
@@ -592,6 +604,16 @@ async function injectSkill(
   rl: readline.Interface,
   skipConfirm = false,
 ): Promise<boolean> {
+  // Dedup: skip if already loaded
+  if (injectedSkills.has(id)) {
+    if (permanentSkillIds.has(id)) {
+      console.log(chalk.dim(`  [${id}] 是常驻技能，已自动加载到系统提示中，无需手动激活`));
+    } else {
+      console.log(chalk.dim(`  [${id}] 已在当前会话中加载`));
+    }
+    return false;
+  }
+
   const all = collectAllSkills();
   const match =
     all.find((e) => e.id === id) ||
@@ -1590,7 +1612,7 @@ ${paramSummary}
           const label = parts.slice(3).join(' ') || `${type} (${genome})`;
           const entry = addDbEntry(dbRegistry, { label, type, genome, path: dbPath, source: 'manual' });
           saveDbRegistry(dbRegistry);
-          systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+          rebuildSystemPrompt();
           console.log(chalk.green(`✓ 已添加数据库: ${entry.label}`));
           console.log(`  id: ${chalk.cyan(entry.id)}`);
           console.log(`  路径: ${chalk.dim(entry.path)}`);
@@ -1602,7 +1624,7 @@ ${paramSummary}
           const removed = removeDbEntry(dbRegistry, dbArg.trim());
           if (removed) {
             saveDbRegistry(dbRegistry);
-            systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+            rebuildSystemPrompt();
             console.log(chalk.green(`✓ 已移除数据库: ${dbArg}`));
           } else {
             console.log(chalk.red(`未找到数据库 id: ${dbArg}，使用 /db list 查看已注册列表`));
@@ -1636,7 +1658,7 @@ ${paramSummary}
           if (addedCount > 0) {
             dbRegistry.lastScan = new Date().toISOString();
             saveDbRegistry(dbRegistry);
-            systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+            rebuildSystemPrompt();
             console.log(chalk.green(`\n  ✓ 新增 ${addedCount} 个数据库到注册表`));
           } else {
             console.log(chalk.dim('\n  无新增（所有已在注册表中）'));
@@ -1715,11 +1737,18 @@ ${paramSummary}
       } else {
         console.log(chalk.bold(`\n当前已加载的 Skills (${injectedSkills.size} 个):\n`));
         for (const [id, name] of injectedSkills) {
-          console.log(`  ${chalk.green('●')} ${chalk.cyan(id)}  ${chalk.dim('— ' + name)}`);
-          console.log(chalk.dim(`       /unload ${id}  可卸载此 Skill`));
+          const isPerm = permanentSkillIds.has(id);
+          const icon = isPerm ? chalk.yellow('⚡') : chalk.green('●');
+          const tag  = isPerm ? chalk.yellow(' [常驻]') : '';
+          console.log(`  ${icon} ${chalk.cyan(id)}${tag}  ${chalk.dim('— ' + name)}`);
+          if (isPerm) {
+            console.log(chalk.dim(`       /unpin ${id}  可取消常驻`));
+          } else {
+            console.log(chalk.dim(`       /unload ${id}  可卸载此 Skill`));
+          }
         }
         console.log();
-        console.log(chalk.dim('提示: /clear 清空全部对话和 Skills | /unload <id> 卸载单个'));
+        console.log(chalk.dim('提示: /clear 清空全部对话和 Skills | /unload <id> 卸载 | /unpin <id> 取消常驻'));
       }
       break;
     }
@@ -1736,6 +1765,12 @@ ${paramSummary}
       if (!targetId) {
         console.log(chalk.yellow(`未找到已加载的 Skill: "${arg}"`));
         console.log(chalk.dim('使用 /skills 查看当前已加载的 Skills'));
+        break;
+      }
+      // Prevent unloading permanent skills — redirect to /unpin
+      if (permanentSkillIds.has(targetId)) {
+        console.log(chalk.yellow(`"${targetId}" 是常驻技能，无法通过 /unload 卸载`));
+        console.log(chalk.dim(`  使用 /unpin ${targetId}  可将其从常驻列表中移除（下次会话生效）`));
         break;
       }
       // Remove all messages injected by this skill from history
@@ -1834,32 +1869,141 @@ ${paramSummary}
     }
 
     case 'cat': {
-      // Categorized skill browser
+      // Categorized skill browser — 4 categories
       console.log(chalk.bold.cyan('\n─── Skill 分类目录 ────────────────────────────────────────'));
-      console.log(chalk.dim('  使用 /sk <id> 激活技能  ·  使用 /sk <关键词> 搜索\n'));
-      const byCategory: Record<string, SkillEntry[]> = {};
-      // Group SKILL_ROUTES by category (these are the "smart-routable" ones)
-      for (const route of SKILL_ROUTES) {
-        (byCategory[route.category] ??= []).push({ id: route.id, dir: '', tag: route.tag });
-      }
-      for (const [catKey, meta] of Object.entries(SKILL_CATEGORIES)) {
-        const items = byCategory[catKey];
-        if (!items || items.length === 0) continue;
-        console.log(`  ${meta.icon}  ${chalk.bold(meta.label)}`);
-        for (const item of items) {
-          const route = SKILL_ROUTES.find((r) => r.id === item.id)!;
-          console.log(`     ${chalk.cyan(item.id)}  ${chalk.dim('— ' + route.name)}`);
-        }
-        console.log();
-      }
-      const routedIds = new Set(SKILL_ROUTES.map((r) => r.id));
+      console.log(chalk.dim('  使用 /sk <id> 激活  ·  /sk <关键词> 搜索  ·  /pin <id> 设为常驻\n'));
+
       const allInstalled = collectAllSkills();
-      const unrouted = allInstalled.filter((e) => !routedIds.has(e.id));
-      if (unrouted.length > 0) {
-        console.log(`  📦  ${chalk.bold('更多 Skills')}  ${chalk.dim(`(${unrouted.length} 个，使用关键词搜索)`)}`);
-        console.log(chalk.dim('     /sk <关键词>，例: /sk ehr  /sk clinical  /sk imaging'));
-        console.log();
+
+      // ── Category 1: 常驻 (Permanent) ──────────────────────────────────────
+      const permIds = Array.from(permanentSkillIds);
+      console.log(`  ⚡  ${chalk.bold.yellow('常驻 Skills')}  ${chalk.dim('(每轮对话自动加入上下文)')}`);
+      if (permIds.length === 0) {
+        console.log(chalk.dim('     暂无常驻技能，使用 /pin <id> 添加'));
+      } else {
+        for (const id of permIds) {
+          const entry = allInstalled.find((e) => e.id === id);
+          const skillPath = entry ? join(entry.dir, id, 'SKILL.md') : '';
+          const name = (skillPath && existsSync(skillPath))
+            ? (parseSkillMeta(readFileSync(skillPath, 'utf8')).name || id)
+            : id;
+          console.log(`     ${chalk.yellow(id)}  ${chalk.dim('— ' + name)}`);
+        }
+        console.log(chalk.dim('     /unpin <id> 取消常驻'));
       }
+      console.log();
+
+      // ── Category 2: 生物信息 Skills (built-in, activation required) ────────
+      const routedIds = new Set(SKILL_ROUTES.map((r) => r.id));
+      const byCategory: Record<string, typeof SKILL_ROUTES> = {};
+      for (const route of SKILL_ROUTES) {
+        (byCategory[route.category] ??= []).push(route);
+      }
+      console.log(`  🧬  ${chalk.bold.cyan('生物信息 Skills')}  ${chalk.dim('(需激活  /sk <id>)')}`);
+      for (const [catKey, meta] of Object.entries(SKILL_CATEGORIES)) {
+        const routes = byCategory[catKey];
+        if (!routes || routes.length === 0) continue;
+        console.log(`     ${chalk.bold(meta.icon + ' ' + meta.label)}`);
+        for (const route of routes) {
+          console.log(`       ${chalk.cyan(route.id)}  ${chalk.dim('— ' + route.name)}`);
+        }
+      }
+      const bioUnrouted = allInstalled.filter(
+        (e) => e.tag === 'bio' && !routedIds.has(e.id) && !permanentSkillIds.has(e.id),
+      );
+      if (bioUnrouted.length > 0) {
+        console.log(chalk.dim(`     … 还有 ${bioUnrouted.length} 个，使用 /sk <关键词> 搜索`));
+      }
+      console.log();
+
+      // ── Category 3: 自定义下载 Skills (user-installed via /install) ─────────
+      const downloaded = allInstalled.filter((e) => e.tag === 'downloaded');
+      console.log(`  📦  ${chalk.bold.green('已安装 Skills')}  ${chalk.dim(`(${downloaded.length} 个，/install 下载  需激活)`)}`);
+      if (downloaded.length === 0) {
+        console.log(chalk.dim('     暂无，使用 /install <slug> 从 clawhub 安装'));
+      } else {
+        for (const e of downloaded.slice(0, 10)) {
+          const skillPath = join(e.dir, e.id, 'SKILL.md');
+          const name = existsSync(skillPath)
+            ? (parseSkillMeta(readFileSync(skillPath, 'utf8')).name || e.id)
+            : e.id;
+          console.log(`     ${chalk.green(e.id)}  ${chalk.dim('— ' + name)}`);
+        }
+        if (downloaded.length > 10)
+          console.log(chalk.dim(`     … 还有 ${downloaded.length - 10} 个，使用 /sk <关键词> 搜索`));
+      }
+      console.log();
+
+      // ── Category 4: 自定义 Skills (user-created locally) ─────────────────
+      const custom = allInstalled.filter((e) => e.tag === 'custom');
+      console.log(`  ✏️   ${chalk.bold('自定义 Skills')}  ${chalk.dim(`(${custom.length} 个，放入 ${CUSTOM_SKILLS_DIR}  需激活)`)}`);
+      if (custom.length === 0) {
+        console.log(chalk.dim(`     暂无，在 ${CUSTOM_SKILLS_DIR}/<skill-id>/SKILL.md 创建`));
+      } else {
+        for (const e of custom) {
+          const skillPath = join(e.dir, e.id, 'SKILL.md');
+          const name = existsSync(skillPath)
+            ? (parseSkillMeta(readFileSync(skillPath, 'utf8')).name || e.id)
+            : e.id;
+          console.log(`     ${chalk.white(e.id)}  ${chalk.dim('— ' + name)}`);
+        }
+      }
+      console.log();
+      break;
+    }
+
+    case 'pin': {
+      if (!arg) {
+        console.log('用法: /pin <skill-id>');
+        console.log(chalk.dim('将指定 Skill 设为常驻，每次对话自动加入上下文'));
+        break;
+      }
+      const allForPin = collectAllSkills();
+      const pinEntry =
+        allForPin.find((e) => e.id === arg) ||
+        allForPin.find((e) => e.id.startsWith(arg)) ||
+        allForPin.find((e) => e.id.includes(arg));
+      if (!pinEntry) {
+        console.log(chalk.red(`找不到 Skill: ${arg}。使用 /sk <关键词> 搜索`));
+        break;
+      }
+      const pinCfg = loadConfig();
+      const perms = pinCfg.permanentSkills ?? [];
+      if (perms.includes(pinEntry.id)) {
+        console.log(chalk.yellow(`"${pinEntry.id}" 已是常驻技能`));
+        break;
+      }
+      pinCfg.permanentSkills = [...perms, pinEntry.id];
+      saveConfig(pinCfg);
+      rebuildSystemPrompt();
+      // Seed into injectedSkills for this session
+      const pinPath = join(pinEntry.dir, pinEntry.id, 'SKILL.md');
+      if (existsSync(pinPath)) {
+        const { name } = parseSkillMeta(readFileSync(pinPath, 'utf8'));
+        injectedSkills.set(pinEntry.id, name || pinEntry.id);
+      } else {
+        injectedSkills.set(pinEntry.id, pinEntry.id);
+      }
+      console.log(chalk.green(`✓ "${pinEntry.id}" 已设为常驻技能，系统提示已更新`));
+      break;
+    }
+
+    case 'unpin': {
+      if (!arg) {
+        console.log('用法: /unpin <skill-id>');
+        console.log(chalk.dim('将指定 Skill 从常驻列表移除（当前会话仍有效，下次会话起生效）'));
+        break;
+      }
+      const unpinCfg = loadConfig();
+      const unpinPerms = unpinCfg.permanentSkills ?? [];
+      if (!unpinPerms.includes(arg)) {
+        console.log(chalk.yellow(`"${arg}" 不在常驻列表中`));
+        break;
+      }
+      unpinCfg.permanentSkills = unpinPerms.filter((id) => id !== arg);
+      saveConfig(unpinCfg);
+      rebuildSystemPrompt();
+      console.log(chalk.green(`✓ "${arg}" 已从常驻列表移除（当前会话仍有效，下次会话起生效）`));
       break;
     }
 
@@ -1906,9 +2050,108 @@ ${paramSummary}
   return {};
 }
 
+// ── Permanent skill helpers ───────────────────────────────────────────────────
+
+/**
+ * Rebuild the global `systemPrompt` from scratch, then append all permanent
+ * skill content so they are always in context without touching history.
+ * Also refreshes `permanentSkillIds` from the current config.
+ */
+function rebuildSystemPrompt(): void {
+  systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+
+  const cfg = loadConfig();
+  const ids = cfg.permanentSkills ?? [];
+  permanentSkillIds = new Set(ids);
+  if (ids.length === 0) return;
+
+  const all = collectAllSkills();
+  const parts: string[] = [];
+  for (const id of ids) {
+    const entry = all.find((e) => e.id === id);
+    if (!entry) continue;
+    const skillPath = join(entry.dir, entry.id, 'SKILL.md');
+    if (!existsSync(skillPath)) continue;
+    const content = readFileSync(skillPath, 'utf8');
+    parts.push(`\n### 常驻技能: ${id}\n\n${content}`);
+  }
+  if (parts.length > 0) {
+    systemPrompt +=
+      '\n\n---\n\n# 常驻技能 (Permanent Skills — 已自动激活，每轮对话均有效)\n' +
+      parts.join('\n');
+  }
+}
+
+// ── Debug helpers ─────────────────────────────────────────────────────────────
+
+/** Append one round of debug info (prompt + messages + response + stats) to the debug MD file. */
+function appendDebugRound(
+  sysPrompt: string,
+  msgs: Message[],
+  response: string,
+  elapsedMs: number,
+  tokensIn: number,
+  tokensOut: number,
+): void {
+  if (!debugFilePath) return;
+  debugRound++;
+  const ts = new Date().toLocaleString('zh-CN');
+  const lines: string[] = [];
+
+  lines.push(`## 第 ${debugRound} 轮  (${ts})`);
+  lines.push('');
+
+  // ── System prompt ──────────────────────────────────────────────────────────
+  lines.push('### 系统提示 (System Prompt)');
+  lines.push('');
+  lines.push('```text');
+  lines.push(sysPrompt);
+  lines.push('```');
+  lines.push('');
+
+  // ── Input messages ─────────────────────────────────────────────────────────
+  lines.push(`### 对话输入 (${msgs.length} 条消息)`);
+  lines.push('');
+  msgs.forEach((m, i) => {
+    const isLast = i === msgs.length - 1;
+    const label = isLast ? `[${i + 1}] ${m.role}（当前输入）` : `[${i + 1}] ${m.role}`;
+    lines.push(`#### ${label}`);
+    lines.push('');
+    const content = typeof m.content === 'string'
+      ? m.content
+      : JSON.stringify(m.content, null, 2);
+    lines.push('```');
+    lines.push(content);
+    lines.push('```');
+    lines.push('');
+  });
+
+  // ── Model response ─────────────────────────────────────────────────────────
+  lines.push('### 模型输出');
+  lines.push('');
+  lines.push(response);
+  lines.push('');
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
+  lines.push('### 统计');
+  lines.push('');
+  lines.push(`| 指标 | 值 |`);
+  lines.push(`|------|-----|`);
+  lines.push(`| 耗时 | ${(elapsedMs / 1000).toFixed(2)}s |`);
+  lines.push(`| 输入 tokens | ${tokensIn} |`);
+  lines.push(`| 输出 tokens | ${tokensOut} |`);
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  appendFileSync(debugFilePath, lines.join('\n'), 'utf8');
+}
+
 // ── Main loop ─────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
+  debugMode = process.argv.includes('--debug');
+
   installBundledData(); // copy bundled workflows/tools/skills to ~/.bgicli/ if needed
   printBanner();
   await checkAndAutoUpdate().catch(() => {}); // check npm for newer version and auto-install
@@ -1944,8 +2187,15 @@ async function main(): Promise<void> {
   console.log(`  ${chalk.bold('服务商:')}  ${prov?.name ?? cfg.provider}`);
   console.log(`  ${chalk.bold('模型:')}    ${chalk.green(cfg.model)}`);
   console.log(`  ${chalk.bold('Skills:')}  ${skillsLabel}  ${chalk.dim('(/sk 搜索  /cat 分类目录)')}`);
+  if (permanentSkillIds.size > 0) {
+    const permList = Array.from(permanentSkillIds).join(', ');
+    console.log(`  ${chalk.bold('常驻:')}    ${chalk.yellow('⚡ ' + permList)}  ${chalk.dim('(/pin 添加  /unpin 移除)')}`);
+  }
   console.log(`  ${chalk.bold('工具:')}    bash · read_file · write_file · list_dir · search_files`);
   console.log(`  ${chalk.bold('新功能:')}  /sessions /resume /checkpoint /run /check-env /install /diff`);
+  if (debugMode) {
+    console.log(chalk.bold.yellow('  [DEBUG 模式]  每轮将打印完整 Prompt 及 Token 统计'));
+  }
   console.log(chalk.bold.cyan('─────────────────────────────────────────────────────────'));
   // Show last session hint
   const lastSess = getLastSession();
@@ -1976,10 +2226,49 @@ async function main(): Promise<void> {
     }
     console.log();
   }
-  systemPrompt = buildSystemPrompt(buildDbPromptSection(dbRegistry));
+  rebuildSystemPrompt();
+
+  // ── Debug file init ────────────────────────────────────────────────────────
+  if (debugMode) {
+    const debugDir = join(BGI_DIR, 'debug');
+    mkdirSync(debugDir, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    debugFilePath = join(debugDir, `debug-${ts}.md`);
+    writeFileSync(
+      debugFilePath,
+      [
+        '# BGI CLI Debug Log',
+        '',
+        `- 会话开始: ${new Date().toLocaleString('zh-CN')}`,
+        `- 模型: ${cfg.model}`,
+        `- 服务商: ${prov?.name ?? cfg.provider}`,
+        '',
+        '---',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    console.log(chalk.bold.yellow(`  [DEBUG] 记录文件: ${debugFilePath}`));
+    console.log();
+  }
+
   let history: Message[] = [];
   let thinkMode = false;
   const injectedSkills = new Map<string, string>(); // id → display name
+
+  // Seed permanent skills into injectedSkills so they appear in /skills and
+  // auto-routing dedup works correctly (they're already in system prompt).
+  {
+    const allForSeed = collectAllSkills();
+    for (const id of Array.from(permanentSkillIds)) {
+      const entry = allForSeed.find((e) => e.id === id);
+      if (entry) {
+        const sp = join(entry.dir, entry.id, 'SKILL.md');
+        const { name } = existsSync(sp) ? parseSkillMeta(readFileSync(sp, 'utf8')) : { name: '' };
+        injectedSkills.set(id, name || id);
+      }
+    }
+  }
 
   // ── Session init ────────────────────────────────────────────────────────────
   const sessionId = newSessionId();
@@ -2075,24 +2364,35 @@ async function main(): Promise<void> {
     // The auto-exit close handler checks !exiting so it won't process.exit here.
     rl.close();
 
-    let ans = 'n';
-    try {
-      const exitRl = createInterface({ input: process.stdin, output: process.stdout });
-      // Allow Ctrl+C during the exit question to force-quit immediately
-      exitRl.on('SIGINT', () => { exitRl.close(); process.exit(0); });
-      process.once('SIGINT', () => { exitRl.close(); process.exit(0); });
-      ans = await Promise.race([
-        new Promise<string>((res) => {
-          exitRl.question(chalk.cyan('\n  是否保存本次会话记忆？[y/N] '), (a) => {
-            exitRl.close();
-            res(a.trim().toLowerCase());
-          });
-        }),
-        new Promise<string>((res) => setTimeout(() => { exitRl.close(); res('n'); }, 15_000)),
-      ]);
-    } catch { /* ignore */ }
+    // Helper: ask one question on a fresh readline with 15s timeout
+    async function askExitQuestion(prompt: string): Promise<string> {
+      let answer = 'n';
+      try {
+        const eRl = createInterface({ input: process.stdin, output: process.stdout });
+        eRl.on('SIGINT', () => { eRl.close(); process.exit(0); });
+        process.once('SIGINT', () => { eRl.close(); process.exit(0); });
+        answer = await Promise.race([
+          new Promise<string>((res) => {
+            eRl.question(prompt, (a) => { eRl.close(); res(a.trim().toLowerCase()); });
+          }),
+          new Promise<string>((res) => setTimeout(() => { eRl.close(); res('n'); }, 15_000)),
+        ]);
+      } catch { /* ignore */ }
+      return answer;
+    }
 
-    if (ans === 'y') saveSessionMemory();
+    const memAns = await askExitQuestion(chalk.cyan('\n  是否保存本次会话记忆？[y/N] '));
+    if (memAns === 'y') saveSessionMemory();
+
+    // If debug mode: ask whether to delete the debug log file
+    if (debugMode && debugFilePath && existsSync(debugFilePath)) {
+      console.log(chalk.dim(`\n  Debug 文件: ${debugFilePath}`));
+      const delAns = await askExitQuestion(chalk.yellow('  是否删除 debug 记录文件？[y/N] '));
+      if (delAns === 'y') {
+        try { rmSync(debugFilePath); console.log(chalk.dim('  已删除')); } catch { /* ignore */ }
+      }
+    }
+
     console.log(chalk.dim('\n再见！'));
     process.exit(0);
   }
@@ -2227,8 +2527,25 @@ async function main(): Promise<void> {
     try {
       const currentCfg = loadConfig();
       currentAbortController = new AbortController();
+
+      const debugT0 = debugMode ? Date.now() : 0;
+      const debugTokensBefore = debugMode
+        ? { in: sessionStats.inputTokens, out: sessionStats.outputTokens }
+        : null;
+
       const reply = await chat(history, currentCfg, systemPrompt, sessionStats, currentAbortController.signal);
       currentAbortController = null;
+
+      // ── Debug: append round to MD file and print path ─────────────────────
+      if (debugMode && debugTokensBefore && reply) {
+        const elapsedMs = Date.now() - debugT0;
+        const dIn  = sessionStats.inputTokens  - debugTokensBefore.in;
+        const dOut = sessionStats.outputTokens - debugTokensBefore.out;
+        try {
+          appendDebugRound(systemPrompt, history, reply, elapsedMs, dIn, dOut);
+        } catch { /* non-fatal */ }
+        console.log(chalk.bold.yellow(`\n  [DEBUG] 已记录 → ${debugFilePath}`));
+      }
 
       if (!reply && history[history.length - 1]?.role === 'user') {
         // Interrupted mid-stream — remove the unanswered user message

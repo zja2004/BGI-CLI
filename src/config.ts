@@ -10,6 +10,8 @@ export interface BgiConfig {
   // Custom provider settings (company intranet / self-hosted)
   customUrl?: string;
   customModel?: string;
+  /** Skill IDs that are automatically injected into every conversation. */
+  permanentSkills?: string[];
 }
 
 export const BGI_DIR = join(homedir(), '.bgicli');
@@ -17,13 +19,15 @@ export const TOOLS_DIR = join(BGI_DIR, 'tools');
 export const SKILLS_DIR = join(BGI_DIR, 'skills');
 /** User-installed skills (/install command). Never overwritten by package updates. */
 export const USER_SKILLS_DIR = join(BGI_DIR, 'user-skills');
+/** User-created custom skills (written locally by the user). */
+export const CUSTOM_SKILLS_DIR = join(BGI_DIR, 'custom-skills');
 export const DATABASES_FILE = join(BGI_DIR, 'databases.json');
 /** Tracks which package version last installed bundled data, to trigger re-sync on update. */
 export const DATA_VERSION_FILE = join(BGI_DIR, '.data-version');
 const CONFIG_FILE = join(BGI_DIR, 'config.json');
 
 export function ensureDirs(): void {
-  for (const dir of [BGI_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR]) {
+  for (const dir of [BGI_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR, CUSTOM_SKILLS_DIR]) {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   }
 }
@@ -35,11 +39,18 @@ export function loadConfig(): BgiConfig {
       provider: DEFAULT_PROVIDER,
       model: PROVIDERS[DEFAULT_PROVIDER].defaultModel,
       apiKeys: {},
+      permanentSkills: ['web-search'],
     };
     saveConfig(def);
     return def;
   }
-  return JSON.parse(readFileSync(CONFIG_FILE, 'utf8')) as BgiConfig;
+  const cfg = JSON.parse(readFileSync(CONFIG_FILE, 'utf8')) as BgiConfig;
+  // Backward compat: add permanentSkills if old config lacks it
+  if (!cfg.permanentSkills) {
+    cfg.permanentSkills = ['web-search'];
+    saveConfig(cfg);
+  }
+  return cfg;
 }
 
 export function saveConfig(cfg: BgiConfig): void {
