@@ -7,7 +7,7 @@ import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, SKILLS_DIR, USER_SKILLS_DIR, CUSTOM_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, BIO_SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
 import { PROVIDERS } from './providers.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
@@ -199,18 +199,27 @@ function installBundledData(): void {
 
   ensureDirs();
 
-  // Migration: move legacy ~/.bgicli/workflows/ contents into ~/.bgicli/skills/
+  // Migration 1: move legacy ~/.bgicli/workflows/ → ~/.bgicli/bio-skills/
   const legacyWorkflowsDir = join(BGI_DIR, 'workflows');
   if (existsSync(legacyWorkflowsDir)) {
     try {
       for (const entry of readdirSync(legacyWorkflowsDir)) {
         const src = join(legacyWorkflowsDir, entry);
-        const dest = join(SKILLS_DIR, entry);
+        const dest = join(BIO_SKILLS_DIR, entry);
         if (statSync(src).isDirectory() && !existsSync(dest)) {
           cpSync(src, dest, { recursive: true });
         }
       }
       rmSync(legacyWorkflowsDir, { recursive: true, force: true });
+    } catch { /* best-effort migration */ }
+  }
+
+  // Migration 2: rename ~/.bgicli/skills/ → ~/.bgicli/bio-skills/ (v2.6 → v2.7)
+  const legacySkillsDir = join(BGI_DIR, 'skills');
+  if (existsSync(legacySkillsDir) && !existsSync(BIO_SKILLS_DIR)) {
+    try {
+      cpSync(legacySkillsDir, BIO_SKILLS_DIR, { recursive: true });
+      rmSync(legacySkillsDir, { recursive: true, force: true });
     } catch { /* best-effort migration */ }
   }
 
@@ -223,8 +232,8 @@ function installBundledData(): void {
   const needsUpdate = installedDataVersion !== VERSION;
 
   const targets: Array<{ src: string; dest: string; name: string }> = [
-    { src: join(bundledData, 'skills'), dest: SKILLS_DIR, name: 'Skills' },
-    { src: join(bundledData, 'tools'),  dest: TOOLS_DIR,  name: '工具' },
+    { src: join(bundledData, 'skills'), dest: BIO_SKILLS_DIR, name: '生物信息 Skills' },
+    { src: join(bundledData, 'tools'),  dest: TOOLS_DIR,      name: '工具' },
   ];
 
   let installed = false;
@@ -460,13 +469,12 @@ async function firstRunIfNeeded(rl: readline.Interface): Promise<void> {
 
 /**
  * Skill source category:
- *  'bio'        — built-in bioinformatics skills bundled with the package (SKILLS_DIR)
+ *  'bio'        — built-in bioinformatics/research skills bundled with the package (BIO_SKILLS_DIR)
  *  'downloaded' — user-installed via /install from a remote source (USER_SKILLS_DIR)
- *  'custom'     — user-created local skills (CUSTOM_SKILLS_DIR)
  */
-interface SkillEntry { id: string; dir: string; tag: 'bio' | 'downloaded' | 'custom'; }
+interface SkillEntry { id: string; dir: string; tag: 'bio' | 'downloaded'; }
 
-/** Collect all skills from all three skill directories. */
+/** Collect all skills from both skill directories. */
 function collectAllSkills(): SkillEntry[] {
   const entries: SkillEntry[] = [];
   const addFrom = (dir: string, tag: SkillEntry['tag']) => {
@@ -477,9 +485,8 @@ function collectAllSkills(): SkillEntry[] {
       } catch { /* skip */ }
     });
   };
-  addFrom(SKILLS_DIR,        'bio');        // built-in (bio + research)
-  addFrom(USER_SKILLS_DIR,   'downloaded'); // installed via /install
-  addFrom(CUSTOM_SKILLS_DIR, 'custom');     // user-created locally
+  addFrom(BIO_SKILLS_DIR,  'bio');        // built-in (bio + research)
+  addFrom(USER_SKILLS_DIR, 'downloaded'); // installed via /install
   return entries;
 }
 
@@ -1510,10 +1517,8 @@ ${paramSummary}
         console.log('用法: /uninstall <skill-id>');
         break;
       }
-      // Look in user-skills dir first, then fall back to skills dir (legacy)
-      const uninstallPath = existsSync(join(USER_SKILLS_DIR, arg))
-        ? join(USER_SKILLS_DIR, arg)
-        : join(SKILLS_DIR, arg);
+      // Only user-installed skills can be uninstalled
+      const uninstallPath = join(USER_SKILLS_DIR, arg);
       if (!existsSync(uninstallPath)) {
         console.log(chalk.red(`未找到已安装的 Skill: ${arg}`));
         console.log(chalk.dim('注意: 只能卸载通过 /install 安装的第三方 Skill'));
@@ -1934,21 +1939,6 @@ ${paramSummary}
       }
       console.log();
 
-      // ── Category 4: 自定义 Skills (user-created locally) ─────────────────
-      const custom = allInstalled.filter((e) => e.tag === 'custom');
-      console.log(`  ✏️   ${chalk.bold('自定义 Skills')}  ${chalk.dim(`(${custom.length} 个，放入 ${CUSTOM_SKILLS_DIR}  需激活)`)}`);
-      if (custom.length === 0) {
-        console.log(chalk.dim(`     暂无，在 ${CUSTOM_SKILLS_DIR}/<skill-id>/SKILL.md 创建`));
-      } else {
-        for (const e of custom) {
-          const skillPath = join(e.dir, e.id, 'SKILL.md');
-          const name = existsSync(skillPath)
-            ? (parseSkillMeta(readFileSync(skillPath, 'utf8')).name || e.id)
-            : e.id;
-          console.log(`     ${chalk.white(e.id)}  ${chalk.dim('— ' + name)}`);
-        }
-      }
-      console.log();
       break;
     }
 

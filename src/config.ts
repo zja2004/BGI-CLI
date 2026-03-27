@@ -16,18 +16,19 @@ export interface BgiConfig {
 
 export const BGI_DIR = join(homedir(), '.bgicli');
 export const TOOLS_DIR = join(BGI_DIR, 'tools');
-export const SKILLS_DIR = join(BGI_DIR, 'skills');
+/** Built-in bioinformatics/research skills bundled with the package. */
+export const BIO_SKILLS_DIR = join(BGI_DIR, 'bio-skills');
+/** @deprecated Use BIO_SKILLS_DIR. Kept for migration reference only. */
+export const SKILLS_DIR = BIO_SKILLS_DIR; // backward-compat alias used by prompt.ts
 /** User-installed skills (/install command). Never overwritten by package updates. */
 export const USER_SKILLS_DIR = join(BGI_DIR, 'user-skills');
-/** User-created custom skills (written locally by the user). */
-export const CUSTOM_SKILLS_DIR = join(BGI_DIR, 'custom-skills');
 export const DATABASES_FILE = join(BGI_DIR, 'databases.json');
 /** Tracks which package version last installed bundled data, to trigger re-sync on update. */
 export const DATA_VERSION_FILE = join(BGI_DIR, '.data-version');
 const CONFIG_FILE = join(BGI_DIR, 'config.json');
 
 export function ensureDirs(): void {
-  for (const dir of [BGI_DIR, TOOLS_DIR, SKILLS_DIR, USER_SKILLS_DIR, CUSTOM_SKILLS_DIR]) {
+  for (const dir of [BGI_DIR, TOOLS_DIR, BIO_SKILLS_DIR, USER_SKILLS_DIR]) {
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   }
 }
