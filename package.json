@@ -19,6 +19,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "prepublishOnly": "node build.mjs",
     "dev": "tsx src/index.ts",
     "start": "node dist/bgi.js"
   },
