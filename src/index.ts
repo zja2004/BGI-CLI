@@ -126,12 +126,17 @@ function isNewer(latest: string, current: string): boolean {
 }
 
 async function checkAndAutoUpdate(): Promise<void> {
-  // 1. Fetch latest version from npm registry (5s timeout)
+  // Skip if we already notified the user about this latest version this session
+  const UPDATE_NOTIFIED_FILE = join(BGI_DIR, '.update-notified');
+  let alreadyNotified = '';
+  try { alreadyNotified = readFileSync(UPDATE_NOTIFIED_FILE, 'utf8').trim(); } catch { /* ok */ }
+
+  // 1. Fetch latest version from npmmirror (faster in mainland China, 5s timeout)
   let latest: string;
   try {
     latest = await new Promise<string>((resolve, reject) => {
       const req = httpsGet(
-        'https://registry.npmjs.org/@bgicli/bgicli/latest',
+        'https://registry.npmmirror.com/@bgicli/bgicli/latest',
         { headers: { 'User-Agent': `bgicli/${VERSION}` } },
         (res) => {
           const chunks: Buffer[] = [];
@@ -150,6 +155,10 @@ async function checkAndAutoUpdate(): Promise<void> {
   }
 
   if (!isNewer(latest, VERSION)) return; // already up-to-date
+  if (alreadyNotified === latest) return; // already notified this version — avoid loop
+
+  // Mark notified so we don't repeat on next launch until version actually changes
+  try { writeFileSync(UPDATE_NOTIFIED_FILE, latest, 'utf8'); } catch { /* non-fatal */ }
 
   // 2. Newer version found — run npm install
   process.stdout.write(
@@ -158,13 +167,13 @@ async function checkAndAutoUpdate(): Promise<void> {
 
   const ok = await new Promise<boolean>((resolve) => {
     exec(
-      `npm install -g @bgicli/bgicli@${latest} --registry https://registry.npmjs.org`,
+      `npm install -g @bgicli/bgicli@${latest} --registry https://registry.npmmirror.com`,
       (error) => resolve(!error),
     );
   });
 
   if (ok) {
-    process.stdout.write(chalk.green(`  ✓ 已更新至 v${latest}，重启 bgi 后生效\n\n`));
+    process.stdout.write(chalk.green(`  ✓ 已更新至 v${latest}，重启终端后生效\n\n`));
   } else {
     process.stdout.write(chalk.yellow(`  ⚠ 自动更新失败，请手动运行: npm install -g @bgicli/bgicli\n\n`));
   }
@@ -2571,12 +2580,17 @@ async function main(): Promise<void> {
         const dIn  = sessionStats.inputTokens  - tokensBefore.in;
         const dOut = sessionStats.outputTokens - tokensBefore.out;
         const elapsed = (elapsedMs / 1000).toFixed(2);
+        const modelLabel = currentCfg.provider === 'custom'
+          ? (currentCfg.customModel ?? currentCfg.model)
+          : currentCfg.model;
         console.log(
           chalk.dim(`\n  ⏱ ${elapsed}s`) +
           chalk.dim('  ·  ') +
           chalk.dim(`↑ ${dIn}`) +
           chalk.dim('  ') +
-          chalk.dim(`↓ ${dOut} tokens`),
+          chalk.dim(`↓ ${dOut} tokens`) +
+          chalk.dim('  ·  ') +
+          chalk.dim(modelLabel),
         );
       }
 
