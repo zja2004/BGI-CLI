@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import chalk from 'chalk';
 import { TOOL_DEFINITIONS, executeTool, type StreamCallback } from './tools.js';
 import type { BgiConfig } from './config.js';
-import { PROVIDERS } from './providers.js';
+import { getActiveEndpoint, getCurrentModel } from './config.js';
 
 // Brand name — baked in at build time via process.env.BGICLI_BRAND
 const BRAND: string = (process.env.BGICLI_BRAND ?? 'bgi').toUpperCase();
@@ -25,32 +25,19 @@ export async function chat(
   stats?: ChatStats,
   signal?: AbortSignal,
 ): Promise<string> {
-  const prov = PROVIDERS[config.provider];
-  if (!prov) throw new Error(`Unknown provider: ${config.provider}`);
+  const ep = getActiveEndpoint(config);
+  if (!ep.url) throw new Error('未配置端点 URL。运行: /endpoint add');
+  const model = getCurrentModel(config);
+  if (!model) throw new Error('未设置模型。运行: /model <name>');
 
-  // For custom provider, resolve URL and model from config
-  if (config.provider === 'custom') {
-    if (!config.customUrl) throw new Error('自定义服务商未配置 URL。运行: /connect custom');
-    if (!config.customModel) throw new Error('自定义服务商未配置模型名称。运行: /connect custom');
-    config = { ...config, model: config.customModel };
-  }
+  const client = new OpenAI({ apiKey: ep.apiKey || 'none', baseURL: ep.url });
 
-  const baseURL = config.provider === 'custom' ? config.customUrl! : prov.baseURL;
-
-  const apiKey = getApiKey(config);
-  // Providers with empty envKey don't require auth (e.g. intranet deployments)
-  const requiresKey = prov.envKey !== '';
-  if (requiresKey && !apiKey) throw new Error(`未配置 API Key (${config.provider})。运行: /connect`);
-
-  const client = new OpenAI({ apiKey: apiKey || 'none', baseURL });
-
-  // Build full messages array with system prompt
   const fullMessages: Message[] = [
     { role: 'system', content: systemPrompt },
     ...messages,
   ];
 
-  return await streamLoop(client, fullMessages, config.model, stats, signal);
+  return await streamLoop(client, fullMessages, model, stats, signal);
 }
 
 async function streamLoop(
@@ -416,12 +403,8 @@ export async function compactMessages(
   messages: Message[],
   config: BgiConfig,
 ): Promise<string> {
-  const prov = PROVIDERS[config.provider];
-  if (!prov) throw new Error(`Unknown provider: ${config.provider}`);
-
-  const baseURL = config.provider === 'custom' ? config.customUrl! : prov.baseURL;
-  const apiKey = getApiKey(config);
-  const client = new OpenAI({ apiKey: apiKey || 'none', baseURL });
+  const ep = getActiveEndpoint(config);
+  const client = new OpenAI({ apiKey: ep.apiKey || 'none', baseURL: ep.url });
 
   const transcript = messages
     .filter((m) => m.role === 'user' || m.role === 'assistant')
@@ -429,7 +412,7 @@ export async function compactMessages(
     .join('\n\n');
 
   const resp = await client.chat.completions.create({
-    model: config.model,
+    model: getCurrentModel(config),
     messages: [
       {
         role: 'system',
@@ -448,12 +431,6 @@ export async function compactMessages(
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function getApiKey(cfg: BgiConfig): string | undefined {
-  const prov = PROVIDERS[cfg.provider];
-  if (prov?.envKey && process.env[prov.envKey]) return process.env[prov.envKey];
-  return cfg.apiKeys[cfg.provider];
-}
 
 function parseArgs(raw: string): Record<string, unknown> {
   try {

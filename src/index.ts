@@ -7,8 +7,7 @@ import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, BIO_SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE } from './config.js';
-import { PROVIDERS } from './providers.js';
+import { loadConfig, saveConfig, ensureDirs, BIO_SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE, getActiveEndpoint, getCurrentModel, scanModels, PRESET_ENDPOINTS, type Endpoint, type BgiConfig } from './config.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
 import { buildSystemPrompt } from './prompt.js';
@@ -345,13 +344,14 @@ function printBanner(): void {
 }
 
 function printHelp(): void {
-  console.log(chalk.bold.cyan('─── 服务商 / 模型 ─────────────────────────────────────────'));
-  console.log(`  ${chalk.cyan('/provider')} <name>   切换服务商 (bailian|intranet|custom)`);
-  console.log(`  ${chalk.cyan('/model')} <name>      切换模型`);
-  console.log(`  ${chalk.cyan('/models')}             列出当前服务商所有可用模型`);
-  console.log(`  ${chalk.cyan('/providers')}          列出所有服务商`);
-  console.log(`  ${chalk.cyan('/connect')} [prov]     配置 API Key`);
-  console.log(`  ${chalk.cyan('/status')}             显示当前配置`);
+  console.log(chalk.bold.cyan('─── 端点 / 模型 ───────────────────────────────────────────'));
+  console.log(`  ${chalk.cyan('/endpoint')} [n]       列出/切换端点`);
+  console.log(`  ${chalk.cyan('/endpoint add')}       添加新端点 (URL + API Key)`);
+  console.log(`  ${chalk.cyan('/endpoint rm')} <n>    删除端点`);
+  console.log(`  ${chalk.cyan('/model')} <name>       切换模型`);
+  console.log(`  ${chalk.cyan('/models')}              列出当前端点可用模型`);
+  console.log(`  ${chalk.cyan('/models scan')}         扫描端点的模型列表`);
+  console.log(`  ${chalk.cyan('/status')}              显示当前配置`);
   console.log();
   console.log(chalk.bold.cyan('─── 对话管理 ─────────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/clear')}              清空对话历史`);
@@ -420,97 +420,78 @@ function printHelp(): void {
 
 // ── First-run setup ───────────────────────────────────────────────────────────
 
-async function setupApiKey(
-  rl: readline.Interface,
-  providerName: string,
-): Promise<string> {
-  const prov = PROVIDERS[providerName];
-  console.log(chalk.yellow(`\n需要为 ${prov.name} 配置 API Key`));
-  if (providerName !== 'custom') {
-    console.log(chalk.dim('获取 Key: 在对应服务商官网注册账号并申请 API Key'));
-  }
-  const key = await question(rl, chalk.cyan('  API Key (无需鉴权可直接回车) › '));
-  return key.trim();
-}
+/** Interactive wizard to add a new endpoint (URL + optional API key). */
+async function addEndpointWizard(rl: readline.Interface): Promise<Endpoint | null> {
+  console.log(chalk.yellow('\n添加端点'));
+  console.log(chalk.dim('支持任何兼容 OpenAI Chat Completions API 的服务（百炼/DeepSeek/Kimi/vLLM/Ollama 等）\n'));
 
-async function setupCustomProvider(rl: readline.Interface): Promise<void> {
-  const cfg = loadConfig();
-  console.log(chalk.yellow('\n配置自定义 / 内网大模型服务'));
-  console.log(chalk.dim('支持任何兼容 OpenAI Chat Completions API 的服务（vLLM、Ollama、LMStudio、FastChat 等）\n'));
-
-  const currentUrl = cfg.customUrl ? chalk.dim(` (当前: ${cfg.customUrl})`) : '';
-  const url = await question(rl, chalk.cyan(`  API Base URL (如 http://192.168.1.100:8080/v1)${currentUrl} › `));
-  const trimmedUrl = url.trim() || cfg.customUrl || '';
-  if (!trimmedUrl) {
-    console.log(chalk.red('  URL 不能为空'));
-    return;
-  }
-
-  const currentModel = cfg.customModel ? chalk.dim(` (当前: ${cfg.customModel})`) : '';
-  const model = await question(rl, chalk.cyan(`  模型名称 (如 qwen2.5-72b-instruct, llama3.1-70b)${currentModel} › `));
-  const trimmedModel = model.trim() || cfg.customModel || '';
-  if (!trimmedModel) {
-    console.log(chalk.red('  模型名称不能为空'));
-    return;
-  }
-
-  const apiKey = await setupApiKey(rl, 'custom');
-
-  cfg.customUrl = trimmedUrl;
-  cfg.customModel = trimmedModel;
-  cfg.provider = 'custom';
-  cfg.model = trimmedModel;
-  if (apiKey) cfg.apiKeys['custom'] = apiKey;
-  saveConfig(cfg);
-
-  console.log(chalk.green(`\n✓ 自定义服务商已配置`));
-  console.log(`  URL:   ${chalk.cyan(trimmedUrl)}`);
-  console.log(`  模型:  ${chalk.cyan(trimmedModel)}`);
-  console.log(`  认证:  ${apiKey ? chalk.green('API Key 已设置') : chalk.dim('无需鉴权')}`);
+  // Show presets
+  PRESET_ENDPOINTS.forEach((p, i) => {
+    const noKey = p.url.includes('172.16') ? chalk.dim(' (内网，无需 Key)') : '';
+    console.log(`  ${chalk.cyan(i + 1)}) ${p.name}${noKey}`);
+  });
+  console.log(`  ${chalk.cyan(PRESET_ENDPOINTS.length + 1)}) 自定义 URL`);
   console.log();
+
+  const choice = await question(rl, chalk.cyan(`选择预设或自定义 (1-${PRESET_ENDPOINTS.length + 1}, 默认 1) › `));
+  const idx = parseInt(choice.trim()) - 1;
+  const safeIdx = isNaN(idx) || idx < 0 ? 0 : idx;
+
+  let url = '';
+  let name = '';
+  let defaultModels: string[] = [];
+  let defaultModel = '';
+
+  if (safeIdx < PRESET_ENDPOINTS.length) {
+    const preset = PRESET_ENDPOINTS[safeIdx]!;
+    url          = preset.url;
+    name         = preset.name;
+    defaultModels = preset.models ?? [];
+    defaultModel  = preset.activeModel ?? '';
+  } else {
+    // Custom URL
+    const inputUrl = await question(rl, chalk.cyan('  API Base URL (如 http://192.168.1.100:8080/v1) › '));
+    url = inputUrl.trim();
+    if (!url) { console.log(chalk.red('  URL 不能为空')); return null; }
+    const inputName = await question(rl, chalk.cyan('  端点名称 (可选) › '));
+    name = inputName.trim() || url;
+  }
+
+  const apiKey = (await question(rl, chalk.cyan('  API Key (无需鉴权可直接回车) › '))).trim();
+
+  // Try to scan models from /v1/models
+  const ep: Endpoint = { name, url, apiKey: apiKey || undefined, models: defaultModels, activeModel: defaultModel };
+  process.stdout.write(chalk.dim('  扫描可用模型...'));
+  const scanned = await scanModels(ep);
+  if (scanned.length > 0) {
+    ep.models = scanned;
+    if (!ep.activeModel || !scanned.includes(ep.activeModel)) ep.activeModel = scanned[0];
+    console.log(chalk.green(` 发现 ${scanned.length} 个模型`));
+  } else {
+    console.log(chalk.dim(' 无法自动扫描，使用预设列表'));
+    // If still no active model, ask
+    if (!ep.activeModel) {
+      const m = await question(rl, chalk.cyan('  默认模型名 › '));
+      ep.activeModel = m.trim();
+      if (ep.activeModel) ep.models = [ep.activeModel];
+    }
+  }
+
+  return ep;
 }
 
 async function firstRunIfNeeded(rl: readline.Interface): Promise<void> {
   const cfg = loadConfig();
-  const prov = PROVIDERS[cfg.provider];
-  // Skip if provider needs no auth (e.g. intranet)
-  if (prov?.envKey === '') return;
-  const hasKey =
-    (cfg.apiKeys[cfg.provider] && cfg.apiKeys[cfg.provider].length > 0) ||
-    (prov?.envKey && process.env[prov.envKey]);
+  if (cfg.endpoints.length > 0 && getActiveEndpoint(cfg).url) return; // already configured
 
-  if (!hasKey) {
-    console.log(chalk.yellow('\n欢迎使用 BGI CLI！首次使用需要配置 AI 服务商。\n'));
-    console.log('请选择服务商:');
-    const provList = Object.entries(PROVIDERS);
-    provList.forEach(([key, p], i) => {
-      const note = key === 'intranet' ? chalk.dim(' (内网，无需 Key)') : '';
-      console.log(`  ${chalk.cyan(i + 1)}) ${p.name}${note}  ${chalk.dim(`(${key})`)}`);
-    });
-    console.log();
+  console.log(chalk.yellow('\n欢迎使用 BGI CLI！首次使用需要配置 AI 端点。\n'));
+  const ep = await addEndpointWizard(rl);
+  if (!ep) return;
 
-    const choice = await question(rl, chalk.cyan(`选择 (1-${provList.length}, 默认 1 百炼) › `));
-    const idx = parseInt(choice.trim()) - 1;
-    const [provKey] = provList[isNaN(idx) || idx < 0 || idx >= provList.length ? 0 : idx];
-
-    if (provKey === 'custom') {
-      await setupCustomProvider(rl);
-    } else if (provKey === 'intranet') {
-      cfg.provider = 'intranet';
-      cfg.model = PROVIDERS['intranet'].defaultModel;
-      saveConfig(cfg);
-      console.log(chalk.green(`\n✓ 已切换到内网服务商，无需配置 Key\n`));
-    } else {
-      const apiKey = await setupApiKey(rl, provKey);
-      if (apiKey) {
-        cfg.provider = provKey;
-        cfg.model = PROVIDERS[provKey].defaultModel;
-        cfg.apiKeys[provKey] = apiKey;
-        saveConfig(cfg);
-        console.log(chalk.green(`\n✓ 已配置 ${PROVIDERS[provKey].name}\n`));
-      }
-    }
-  }
+  cfg.endpoints = [ep];
+  cfg.activeIndex = 0;
+  saveConfig(cfg);
+  console.log(chalk.green(`\n✓ 端点已添加: ${ep.name}  模型: ${ep.activeModel ?? '(未设置)'}\n`));
 }
 
 // /wf is now an alias for /sk — both use the unified skill system
@@ -577,15 +558,13 @@ interface LlmSkillRec { id: string; name: string; reason: string; }
  */
 async function llmRecommendSkills(userQuery: string): Promise<LlmSkillRec[]> {
   const cfg = loadConfig();
-  const prov = PROVIDERS[cfg.provider];
-  if (!prov) return [];
+  const ep = getActiveEndpoint(cfg);
+  if (!ep.url) return [];
+  if (!ep.apiKey) return [];
 
-  const apiKey = cfg.apiKeys[cfg.provider] ?? (prov.envKey ? process.env[prov.envKey] : undefined);
-  const requiresKey = prov.envKey !== '';
-  if (requiresKey && !apiKey) return [];
-
-  const baseURL = cfg.provider === 'custom' ? (cfg.customUrl ?? prov.baseURL) : prov.baseURL;
-  const model   = cfg.provider === 'custom' ? (cfg.customModel ?? cfg.model) : cfg.model;
+  const baseURL = ep.url;
+  const model   = getCurrentModel(cfg);
+  const apiKey  = ep.apiKey;
 
   // Build a compact catalog: id | name | short-description
   const all = collectAllSkills();
@@ -990,88 +969,132 @@ async function handleCommand(
   const cfg = loadConfig();
 
   switch (cmd?.toLowerCase()) {
-    case 'provider': {
-      if (!arg) {
-        console.log('用法: /provider <deepseek|kimi|qwen|minimax|intranet|custom>');
+    // ── 端点管理 (/endpoint) ──────────────────────────────────────────────────
+    case 'endpoint':
+    case 'endpoints': {
+      const argParts = arg.trim().split(/\s+/);
+      const sub  = argParts[0]?.toLowerCase() ?? '';
+      const sub2 = argParts.slice(1).join(' ');   // rest after subcommand
+
+      // /endpoint add — interactive wizard
+      if (sub === 'add') {
+        const ep = await addEndpointWizard(rl);
+        if (ep) {
+          cfg.endpoints.push(ep);
+          cfg.activeIndex = cfg.endpoints.length - 1;
+          saveConfig(cfg);
+          console.log(chalk.green(`✓ 端点已添加并激活: ${ep.name}  模型: ${ep.activeModel ?? ''}`));
+        }
         break;
       }
-      if (!PROVIDERS[arg]) {
-        console.log(chalk.red(`未知服务商: ${arg}`));
-        console.log('可用:', Object.keys(PROVIDERS).join(', '));
+
+      // /endpoint rm <n> — remove
+      if (sub === 'rm' || sub === 'remove') {
+        const n = parseInt(sub2) - 1;
+        if (isNaN(n) || n < 0 || n >= cfg.endpoints.length) {
+          console.log(chalk.red('用法: /endpoint rm <序号>'));
+          break;
+        }
+        const removed = cfg.endpoints.splice(n, 1)[0]!;
+        if (cfg.activeIndex >= cfg.endpoints.length) cfg.activeIndex = Math.max(0, cfg.endpoints.length - 1);
+        saveConfig(cfg);
+        console.log(chalk.green(`✓ 已删除端点: ${removed.name}`));
         break;
       }
-      if (arg === 'custom') {
-        await setupCustomProvider(rl);
+
+      // /endpoint <n> — switch to endpoint n
+      if (/^\d+$/.test(sub)) {
+        const n = parseInt(sub) - 1;
+        if (n < 0 || n >= cfg.endpoints.length) {
+          console.log(chalk.red(`序号超出范围 (1-${cfg.endpoints.length})`));
+          break;
+        }
+        cfg.activeIndex = n;
+        saveConfig(cfg);
+        const ep = getActiveEndpoint(cfg);
+        console.log(chalk.green(`✓ 已切换到: ${ep.name}  模型: ${getCurrentModel(cfg)}`));
         break;
       }
-      cfg.provider = arg as string;
-      cfg.model = PROVIDERS[arg].defaultModel;
-      saveConfig(cfg);
-      console.log(chalk.green(`✓ 切换到 ${PROVIDERS[arg].name}，模型: ${cfg.model}`));
+
+      // /endpoint — list all
+      console.log(chalk.bold('已配置端点:'));
+      if (cfg.endpoints.length === 0) {
+        console.log(chalk.dim('  (无)  使用 /endpoint add 添加'));
+      } else {
+        cfg.endpoints.forEach((ep, i) => {
+          const cur = i === cfg.activeIndex ? chalk.green(' ← 当前') : '';
+          const key = ep.apiKey ? chalk.green(' [有Key]') : chalk.dim(' [无Key]');
+          const model = ep.activeModel ? chalk.dim(` · ${ep.activeModel}`) : '';
+          console.log(`  ${chalk.cyan(i + 1)}) ${ep.name}${model}  ${chalk.dim(ep.url)}${key}${cur}`);
+        });
+      }
+      console.log(chalk.dim('\n  /endpoint add   添加新端点'));
+      console.log(chalk.dim('  /endpoint <n>   切换端点'));
+      console.log(chalk.dim('  /endpoint rm <n> 删除端点'));
       break;
     }
 
     case 'model': {
       if (!arg) {
-        console.log('用法: /model <model-name>');
+        const ep = getActiveEndpoint(cfg);
+        console.log(`当前模型: ${chalk.green(getCurrentModel(cfg))}`);
+        if (ep.models && ep.models.length > 0) {
+          console.log(chalk.dim('用法: /model <model-name>  或  /models 查看完整列表'));
+        }
         break;
       }
-      cfg.model = arg;
+      const ep = getActiveEndpoint(cfg);
+      ep.activeModel = arg;
       saveConfig(cfg);
       console.log(chalk.green(`✓ 切换到模型: ${arg}`));
       break;
     }
 
     case 'models': {
-      const prov = PROVIDERS[cfg.provider];
-      console.log(chalk.bold(`${prov.name} 可用模型:`));
-      prov.models.forEach((m) => {
-        const current = m === cfg.model ? chalk.green(' ← 当前') : '';
-        console.log(`  ${m}${current}`);
-      });
-      break;
-    }
-
-    case 'providers': {
-      console.log(chalk.bold('可用服务商:'));
-      Object.entries(PROVIDERS).forEach(([key, p]) => {
-        const current = key === cfg.provider ? chalk.green(' ← 当前') : '';
-        const noKey = p.envKey === '' ? chalk.dim(' (无需 Key)') : '';
-        console.log(`  ${chalk.cyan(key)}: ${p.name}${noKey}${current}`);
-      });
-      break;
-    }
-
-    case 'connect': {
-      const provKey = arg || cfg.provider;
-      if (!PROVIDERS[provKey]) {
-        console.log(chalk.red(`未知服务商: ${provKey}`));
-        break;
-      }
-      if (provKey === 'custom') {
-        await setupCustomProvider(rl);
-        break;
-      }
-      const apiKey = await setupApiKey(rl, provKey);
-      if (apiKey) {
-        cfg.apiKeys[provKey] = apiKey;
-        if (!arg) {
-          cfg.provider = provKey;
-          cfg.model = PROVIDERS[provKey].defaultModel;
+      const ep = getActiveEndpoint(cfg);
+      const doScan = arg === 'scan' || arg === 'refresh';
+      if (doScan) {
+        process.stdout.write(chalk.dim('  扫描模型列表...'));
+        const scanned = await scanModels(ep);
+        if (scanned.length > 0) {
+          ep.models = scanned;
+          if (!ep.activeModel || !scanned.includes(ep.activeModel)) ep.activeModel = scanned[0];
+          saveConfig(cfg);
+          console.log(chalk.green(` 发现 ${scanned.length} 个`));
+        } else {
+          console.log(chalk.yellow(' 扫描失败（端点可能不支持 /models 接口）'));
         }
-        saveConfig(cfg);
-        console.log(chalk.green(`✓ API Key 已保存`));
       }
+      const models = ep.models ?? [];
+      if (models.length === 0) {
+        console.log(chalk.dim(`  (无缓存模型列表)  使用 /models scan 扫描`));
+      } else {
+        console.log(chalk.bold(`${ep.name} 可用模型 (${models.length} 个):`));
+        models.forEach((m) => {
+          const cur = m === getCurrentModel(cfg) ? chalk.green(' ← 当前') : '';
+          console.log(`  ${m}${cur}`);
+        });
+      }
+      console.log(chalk.dim('\n  /model <name>   切换模型'));
+      console.log(chalk.dim('  /models scan    重新扫描'));
+      break;
+    }
+
+    // keep /providers as alias for /endpoint for backward compat
+    case 'providers':
+    case 'provider':
+    case 'connect': {
+      console.log(chalk.dim('服务商命令已更名：请使用 /endpoint 和 /endpoint add'));
       break;
     }
 
     case 'status': {
-      const prov = PROVIDERS[cfg.provider];
-      const hasKey = prov?.envKey === '' || !!(cfg.apiKeys[cfg.provider] || (prov?.envKey && process.env[prov.envKey]));
+      const ep = getActiveEndpoint(cfg);
       console.log(chalk.bold('当前配置:'));
-      console.log(`  服务商:   ${prov?.name ?? cfg.provider}`);
-      console.log(`  模型:     ${cfg.model}`);
-      console.log(`  API Key:  ${hasKey ? chalk.green('已配置') : chalk.red('未配置')}`);
+      console.log(`  端点:     ${chalk.cyan(ep.name)}  ${chalk.dim(ep.url)}`);
+      console.log(`  模型:     ${chalk.green(getCurrentModel(cfg))}`);
+      console.log(`  API Key:  ${ep.apiKey ? chalk.green('已配置') : chalk.dim('未配置（无需鉴权）')}`);
+      console.log(`  端点总数: ${cfg.endpoints.length}  ${chalk.dim('(/endpoint 管理)')}`);
       console.log(`  工作目录: ${process.cwd()}`);
       console.log(`  思考模式: ${thinkMode ? chalk.yellow('开启 (/think)') : chalk.dim('关闭')}`);
       break;
@@ -2215,7 +2238,7 @@ async function main(): Promise<void> {
 
   // Startup status panel
   const cfg = loadConfig();
-  const prov = PROVIDERS[cfg.provider];
+  const ep = getActiveEndpoint(cfg);
   const allSkillsList = collectAllSkills();
   const totalSkills = allSkillsList.length;
   const userSkillCount = allSkillsList.filter(e => e.tag === 'user').length;
@@ -2224,8 +2247,8 @@ async function main(): Promise<void> {
     : chalk.yellow('未安装');
 
   console.log(chalk.bold.cyan('─────────────────────────────────────────────────────────'));
-  console.log(`  ${chalk.bold('服务商:')}  ${prov?.name ?? cfg.provider}`);
-  console.log(`  ${chalk.bold('模型:')}    ${chalk.green(cfg.model)}`);
+  console.log(`  ${chalk.bold('端点:')}    ${chalk.cyan(ep.name)}  ${chalk.dim(ep.url)}`);
+  console.log(`  ${chalk.bold('模型:')}    ${chalk.green(getCurrentModel(cfg))}`);
   console.log(`  ${chalk.bold('Skills:')}  ${skillsLabel}  ${chalk.dim('(/sk 搜索  /cat 分类目录)')}`);
   if (permanentSkillIds.size > 0) {
     const permList = Array.from(permanentSkillIds).join(', ');
@@ -2280,8 +2303,8 @@ async function main(): Promise<void> {
         '# BGI CLI Debug Log',
         '',
         `- 会话开始: ${new Date().toLocaleString('zh-CN')}`,
-        `- 模型: ${cfg.model}`,
-        `- 服务商: ${prov?.name ?? cfg.provider}`,
+        `- 模型: ${getCurrentModel(cfg)}`,
+        `- 端点: ${getActiveEndpoint(cfg).name}`,
         '',
         '---',
         '',
@@ -2580,9 +2603,7 @@ async function main(): Promise<void> {
         const dIn  = sessionStats.inputTokens  - tokensBefore.in;
         const dOut = sessionStats.outputTokens - tokensBefore.out;
         const elapsed = (elapsedMs / 1000).toFixed(2);
-        const modelLabel = currentCfg.provider === 'custom'
-          ? (currentCfg.customModel ?? currentCfg.model)
-          : currentCfg.model;
+        const modelLabel = getCurrentModel(currentCfg);
         console.log(
           chalk.dim(`\n  ⏱ ${elapsed}s`) +
           chalk.dim('  ·  ') +
