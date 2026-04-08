@@ -38,45 +38,6 @@ export function ensureDirs(): void {
   }
 }
 
-// ── Preset endpoints (shown during first-run setup) ───────────────────────────
-
-export const PRESET_ENDPOINTS: Omit<Endpoint, 'apiKey'>[] = [
-  {
-    name: '百炼 · 阿里云 (DashScope)',
-    url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    models: [
-      'qwen3.5-plus', 'qwen3.5-flash', 'qwen3-235b-a22b', 'qwen3-max', 'qwen3-32b',
-      'qwen-max', 'qwen-plus', 'qwen-turbo', 'qwen-long',
-      'deepseek-v3', 'deepseek-r1', 'qwq-plus', 'MiniMax-M2.5',
-    ],
-    activeModel: 'qwen3.5-plus',
-  },
-  {
-    name: 'DeepSeek',
-    url: 'https://api.deepseek.com/v1',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
-    activeModel: 'deepseek-chat',
-  },
-  {
-    name: 'Moonshot (Kimi)',
-    url: 'https://api.moonshot.cn/v1',
-    models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k', 'kimi-k2.5'],
-    activeModel: 'moonshot-v1-8k',
-  },
-  {
-    name: 'MiniMax',
-    url: 'https://api.minimax.chat/v1',
-    models: ['MiniMax-M2.5', 'MiniMax-Text-01'],
-    activeModel: 'MiniMax-M2.5',
-  },
-  {
-    name: '内网 Qwen3-235B',
-    url: 'http://172.16.224.137:1024/v1',
-    models: ['Qwen3-235B-A22B'],
-    activeModel: 'Qwen3-235B-A22B',
-  },
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 export function getActiveEndpoint(cfg: BgiConfig): Endpoint {
@@ -110,29 +71,34 @@ function isOldFormat(raw: Record<string, unknown>): boolean {
 }
 
 function migrateOldConfig(old: Record<string, unknown>): BgiConfig {
-  const provider = (old['provider'] as string) ?? 'bailian';
+  const provider = (old['provider'] as string) ?? 'custom';
   const apiKeys  = (old['apiKeys']  as Record<string, string>) ?? {};
   const model    = (old['model']    as string) ?? '';
 
-  let ep: Endpoint;
-  if (provider === 'custom') {
-    ep = {
-      name:        '自定义',
-      url:         (old['customUrl']   as string) ?? '',
-      apiKey:      apiKeys['custom'],
-      models:      (old['customModel'] as string) ? [(old['customModel'] as string)] : [],
-      activeModel: (old['customModel'] as string) ?? model,
-    };
-  } else if (provider === 'intranet') {
-    ep = { ...PRESET_ENDPOINTS[4]!, apiKey: undefined };
-  } else {
-    // bailian / deepseek / kimi / minimax → find matching preset by URL
-    const presetMap: Record<string, number> = {
-      bailian: 0, deepseek: 1, kimi: 2, minimax: 3,
-    };
-    const preset = PRESET_ENDPOINTS[presetMap[provider] ?? 0]!;
-    ep = { ...preset, apiKey: apiKeys[provider], activeModel: model || preset.activeModel };
-  }
+  const legacyUrls: Record<string, string> = {
+    bailian:  'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    deepseek: 'https://api.deepseek.com/v1',
+    kimi:     'https://api.moonshot.cn/v1',
+    minimax:  'https://api.minimax.chat/v1',
+    intranet: 'http://172.16.0.1:8080/v1',
+  };
+
+  const url    = provider === 'custom'
+    ? ((old['customUrl'] as string) ?? '')
+    : (legacyUrls[provider] ?? '');
+  const name   = provider === 'custom'
+    ? ((old['customUrl'] as string) ?? '自定义')
+    : provider;
+  const mdl    = provider === 'custom'
+    ? ((old['customModel'] as string) ?? model)
+    : model;
+  const apiKey = provider === 'intranet' ? undefined : (apiKeys[provider] ?? apiKeys['custom']);
+
+  const ep: Endpoint = {
+    name, url, apiKey,
+    models: mdl ? [mdl] : [],
+    activeModel: mdl || undefined,
+  };
 
   return {
     endpoints: [ep],

@@ -277,6 +277,98 @@ async function streamOnce(
   let inputTokens = 0;
   let outputTokens = 0;
 
+  // ── <think> tag renderer ──────────────────────────────────────────────────
+  const THINK_OPEN  = '<think>';
+  const THINK_CLOSE = '</think>';
+  const SPIN_FRAMES = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+  let pendingBuf     = '';
+  let inThink        = false;
+  let thinkBuf       = '';
+  let thinkStartMs   = 0;
+  let spinInterval: ReturnType<typeof setInterval> | null = null;
+  let spinIdx        = 0;
+  let normalWritten  = false; // any non-think text written?
+
+  const writeNormal = (s: string) => {
+    if (!s) return;
+    process.stdout.write(s);
+    text += s;
+    normalWritten = true;
+  };
+
+  const startThinkBlock = () => {
+    inThink      = true;
+    thinkBuf     = '';
+    thinkStartMs = Date.now();
+    if (!normalWritten) process.stdout.write('\n');
+    process.stdout.write(chalk.dim('  ⠋ 思考中...'));
+    spinIdx = 0;
+    spinInterval = setInterval(() => {
+      spinIdx = (spinIdx + 1) % SPIN_FRAMES.length;
+      process.stdout.write(`\r${chalk.dim(`  ${SPIN_FRAMES[spinIdx]} 思考中...`)}`);
+    }, 80);
+  };
+
+  const endThinkBlock = () => {
+    if (spinInterval) { clearInterval(spinInterval); spinInterval = null; }
+    process.stdout.write('\r\x1b[K'); // clear spinner line
+    const elapsed = ((Date.now() - thinkStartMs) / 1000).toFixed(1);
+    const trimmed = thinkBuf.trim();
+    if (trimmed) {
+      const W = 44;
+      const suffix = ` ✓ ${elapsed}s`;
+      process.stdout.write(chalk.dim(`  ╭${'─'.repeat(W)}\n`));
+      for (const line of trimmed.split('\n')) {
+        const chunks = line.match(/.{1,78}/g) ?? [''];
+        for (const c of chunks) process.stdout.write(chalk.dim(`  │ ${c}\n`));
+      }
+      process.stdout.write(chalk.dim(`  ╰${'─'.repeat(Math.max(0, W - suffix.length))}${suffix}\n\n`));
+    }
+    inThink  = false;
+    thinkBuf = '';
+  };
+
+  /** Check if tail of `s` could be the start of `tag` (partial match). */
+  const partialTagLen = (s: string, tag: string): number => {
+    const max = Math.min(s.length, tag.length - 1);
+    for (let i = max; i > 0; i--) {
+      if (tag.startsWith(s.slice(-i))) return i;
+    }
+    return 0;
+  };
+
+  const processChunk = (chunk: string) => {
+    pendingBuf += chunk;
+    let guard = 0;
+    while (pendingBuf.length > 0 && guard++ < 20000) {
+      if (!inThink) {
+        const openIdx = pendingBuf.indexOf(THINK_OPEN);
+        if (openIdx === -1) {
+          const hold = partialTagLen(pendingBuf, THINK_OPEN);
+          writeNormal(pendingBuf.slice(0, pendingBuf.length - hold));
+          pendingBuf = hold > 0 ? pendingBuf.slice(-hold) : '';
+          break;
+        }
+        writeNormal(pendingBuf.slice(0, openIdx));
+        pendingBuf = pendingBuf.slice(openIdx + THINK_OPEN.length);
+        startThinkBlock();
+      } else {
+        const closeIdx = pendingBuf.indexOf(THINK_CLOSE);
+        if (closeIdx === -1) {
+          const hold = partialTagLen(pendingBuf, THINK_CLOSE);
+          thinkBuf  += pendingBuf.slice(0, pendingBuf.length - hold);
+          pendingBuf = hold > 0 ? pendingBuf.slice(-hold) : '';
+          break;
+        }
+        thinkBuf  += pendingBuf.slice(0, closeIdx);
+        pendingBuf = pendingBuf.slice(closeIdx + THINK_CLOSE.length);
+        endThinkBlock();
+        if (!normalWritten) process.stdout.write(chalk.green(`${BRAND} › `));
+      }
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   process.stdout.write(chalk.green(`${BRAND} › `));
 
   for await (const chunk of stream) {
@@ -294,8 +386,7 @@ async function streamOnce(
 
     // Text content
     if (delta.content) {
-      process.stdout.write(delta.content);
-      text += delta.content;
+      processChunk(delta.content);
     }
 
     // Tool calls (accumulate partial JSON)
@@ -317,6 +408,11 @@ async function streamOnce(
       }
     }
   }
+
+  // Flush any remaining buffer (e.g. partial tag at end of stream)
+  if (pendingBuf) writeNormal(pendingBuf);
+  if (inThink) endThinkBlock();           // unclosed <think> — render what we have
+  if (spinInterval) { clearInterval(spinInterval); spinInterval = null; }
 
   if (text) process.stdout.write('\n');
 

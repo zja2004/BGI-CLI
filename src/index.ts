@@ -7,7 +7,7 @@ import { homedir } from 'os';
 import { get as httpsGet } from 'https';
 import { exec } from 'child_process';
 import OpenAI from 'openai';
-import { loadConfig, saveConfig, ensureDirs, BIO_SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE, getActiveEndpoint, getCurrentModel, scanModels, PRESET_ENDPOINTS, type Endpoint, type BgiConfig } from './config.js';
+import { loadConfig, saveConfig, ensureDirs, BIO_SKILLS_DIR, USER_SKILLS_DIR, TOOLS_DIR, BGI_DIR, DATA_VERSION_FILE, getActiveEndpoint, getCurrentModel, scanModels, type Endpoint, type BgiConfig } from './config.js';
 import { chat, compactMessages, estimateTokens as chatEstimateTokens, trimToolOutputs, deduplicateSkillInjections, type Message, type ChatStats } from './chat.js';
 import { executeTool } from './tools.js';
 import { buildSystemPrompt } from './prompt.js';
@@ -34,9 +34,9 @@ const BRAND: string = (process.env.BGICLI_BRAND ?? 'bgi').toLowerCase();
 // ── SkillHub API ───────────────────────────────────────────────────────────────
 
 const SKILLHUB_HUBS = {
-  bgi:     { label: 'BGI内网',    apiBase: 'https://clawhub.ai', backend: 'clawhub' },
-  clawhub: { label: 'clawhub.ai', apiBase: 'https://clawhub.ai', backend: 'clawhub' },
-  tencent: { label: 'Tencent',    apiBase: 'https://lightmake.site', backend: 'tencent' },
+  bgi:     { label: 'BGI 本地',      apiBase: '',                              backend: 'local'   },
+  clawhub: { label: 'clawhub.ai',    apiBase: 'https://clawhub.ai',            backend: 'clawhub' },
+  tencent: { label: '腾讯 SkillHub', apiBase: 'https://skillhub.tencent.com',  backend: 'tencent' },
 } as const;
 
 type HubKey = keyof typeof SKILLHUB_HUBS;
@@ -65,9 +65,56 @@ function httpGetJson(url: string): Promise<unknown> {
   });
 }
 
+function searchLocalSkills(query: string, limit: number): SkillResult[] {
+  const kw = query.toLowerCase();
+  const results: SkillResult[] = [];
+  const seen = new Set<string>();
+
+  const scanDir = (dir: string) => {
+    if (!existsSync(dir)) return;
+    let entries: string[];
+    try { entries = readdirSync(dir); } catch { return; }
+    for (const entry of entries) {
+      if (seen.has(entry)) continue;
+      const skillDir = join(dir, entry);
+      try { if (!statSync(skillDir).isDirectory()) continue; } catch { continue; }
+      let name = entry;
+      let summary = '';
+      const mdPath = join(skillDir, 'SKILL.md');
+      if (existsSync(mdPath)) {
+        try {
+          const lines = readFileSync(mdPath, 'utf8').split('\n').slice(0, 30);
+          for (const line of lines) {
+            const nm  = line.match(/^name:\s*["']?(.+?)["']?\s*$/);
+            const sd  = line.match(/^short-description:\s*["']?(.+?)["']?\s*$/);
+            const dsc = line.match(/^description:\s*["']?(.+?)["']?\s*$/);
+            if (nm)  name    = nm[1].trim();
+            if (sd)  summary = sd[1].trim();
+            else if (dsc && !summary) summary = dsc[1].trim();
+          }
+        } catch { /* skip */ }
+      }
+      if (
+        entry.toLowerCase().includes(kw) ||
+        name.toLowerCase().includes(kw) ||
+        summary.toLowerCase().includes(kw)
+      ) {
+        seen.add(entry);
+        results.push({ slug: entry, name, summary });
+      }
+    }
+  };
+
+  scanDir(BIO_SKILLS_DIR);
+  scanDir(USER_SKILLS_DIR);
+  return results.slice(0, limit);
+}
+
 async function searchSkillHub(query: string, hub: HubKey, limit = 10): Promise<SkillResult[]> {
   const cfg = SKILLHUB_HUBS[hub];
-  if (cfg.backend === 'tencent') {
+  if (cfg.backend === 'local') {
+    return searchLocalSkills(query, limit);
+  } else if (cfg.backend === 'tencent') {
     const data = await httpGetJson(
       `${cfg.apiBase}/api/skills?page=1&pageSize=${limit}&keyword=${encodeURIComponent(query)}`
     ) as { code: number; data?: { skills?: Array<{ slug: string; name: string; description?: string; version?: string; ownerName?: string; homepage?: string }> } };
@@ -77,7 +124,7 @@ async function searchSkillHub(query: string, hub: HubKey, limit = 10): Promise<S
       name: s.name,
       summary: s.description ?? '',
       version: s.version,
-      owner: s.ownerName ?? (s.homepage ? s.homepage.replace(/.*clawhub\.ai\/([^/]+)\/.*/, '$1') : undefined),
+      owner: s.ownerName ?? (s.homepage ? s.homepage.replace(/.*skillhub\.tencent\.com\/([^/]+)\/.*/, '$1') : undefined),
     }));
   } else {
     const data = await httpGetJson(
@@ -389,7 +436,7 @@ function printHelp(): void {
   console.log(chalk.bold.cyan('─── Skill 向导 ───────────────────────────────────────────'));
   console.log(`  ${chalk.cyan('/run')} <skill-id>     交互式参数向导，自动生成并执行分析脚本`);
   console.log(`  ${chalk.cyan('/check-env')} [id]     检测 Skill 所需 R/Python 包是否已安装`);
-  console.log(`  ${chalk.cyan('/search')} <关键词>    在 SkillHub 搜索并下载技能 ${chalk.dim('[--hub=bgi|clawhub|tencent]')}`);
+  console.log(`  ${chalk.cyan('/search')} <关键词>    搜索 Skills ${chalk.dim('[--hub=bgi|clawhub|tencent|all]')}`);
   console.log(`  ${chalk.cyan('/install')} <url|slug> 从 GitHub 或 SkillHub 安装 Skill（含安全扫描）`);
   console.log(`  ${chalk.cyan('/uninstall')} <id>     卸载已安装的第三方 Skill`);
   console.log();
@@ -425,56 +472,28 @@ async function addEndpointWizard(rl: readline.Interface): Promise<Endpoint | nul
   console.log(chalk.yellow('\n添加端点'));
   console.log(chalk.dim('支持任何兼容 OpenAI Chat Completions API 的服务（百炼/DeepSeek/Kimi/vLLM/Ollama 等）\n'));
 
-  // Show presets
-  PRESET_ENDPOINTS.forEach((p, i) => {
-    const noKey = p.url.includes('172.16') ? chalk.dim(' (内网，无需 Key)') : '';
-    console.log(`  ${chalk.cyan(i + 1)}) ${p.name}${noKey}`);
-  });
-  console.log(`  ${chalk.cyan(PRESET_ENDPOINTS.length + 1)}) 自定义 URL`);
-  console.log();
+  const inputUrl = await question(rl, chalk.cyan('  API Base URL (如 https://api.deepseek.com/v1) › '));
+  const url = inputUrl.trim();
+  if (!url) { console.log(chalk.red('  URL 不能为空')); return null; }
 
-  const choice = await question(rl, chalk.cyan(`选择预设或自定义 (1-${PRESET_ENDPOINTS.length + 1}, 默认 1) › `));
-  const idx = parseInt(choice.trim()) - 1;
-  const safeIdx = isNaN(idx) || idx < 0 ? 0 : idx;
-
-  let url = '';
-  let name = '';
-  let defaultModels: string[] = [];
-  let defaultModel = '';
-
-  if (safeIdx < PRESET_ENDPOINTS.length) {
-    const preset = PRESET_ENDPOINTS[safeIdx]!;
-    url          = preset.url;
-    name         = preset.name;
-    defaultModels = preset.models ?? [];
-    defaultModel  = preset.activeModel ?? '';
-  } else {
-    // Custom URL
-    const inputUrl = await question(rl, chalk.cyan('  API Base URL (如 http://192.168.1.100:8080/v1) › '));
-    url = inputUrl.trim();
-    if (!url) { console.log(chalk.red('  URL 不能为空')); return null; }
-    const inputName = await question(rl, chalk.cyan('  端点名称 (可选) › '));
-    name = inputName.trim() || url;
-  }
+  const inputName = await question(rl, chalk.cyan('  端点名称 (可选) › '));
+  const name = inputName.trim() || url;
 
   const apiKey = (await question(rl, chalk.cyan('  API Key (无需鉴权可直接回车) › '))).trim();
 
   // Try to scan models from /v1/models
-  const ep: Endpoint = { name, url, apiKey: apiKey || undefined, models: defaultModels, activeModel: defaultModel };
+  const ep: Endpoint = { name, url, apiKey: apiKey || undefined, models: [], activeModel: undefined };
   process.stdout.write(chalk.dim('  扫描可用模型...'));
   const scanned = await scanModels(ep);
   if (scanned.length > 0) {
     ep.models = scanned;
-    if (!ep.activeModel || !scanned.includes(ep.activeModel)) ep.activeModel = scanned[0];
+    ep.activeModel = scanned[0];
     console.log(chalk.green(` 发现 ${scanned.length} 个模型`));
   } else {
-    console.log(chalk.dim(' 无法自动扫描，使用预设列表'));
-    // If still no active model, ask
-    if (!ep.activeModel) {
-      const m = await question(rl, chalk.cyan('  默认模型名 › '));
-      ep.activeModel = m.trim();
-      if (ep.activeModel) ep.models = [ep.activeModel];
-    }
+    console.log(chalk.dim(' 无法自动扫描'));
+    const m = await question(rl, chalk.cyan('  默认模型名 › '));
+    ep.activeModel = m.trim() || undefined;
+    if (ep.activeModel) ep.models = [ep.activeModel];
   }
 
   return ep;
@@ -941,6 +960,7 @@ interface CommandResult {
   clearHistory?: boolean;
   thinkMode?: boolean;
   injectHistory?: Message[];
+  sendToAI?: boolean; // unrecognized command — pass original input to model
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1433,26 +1453,76 @@ ${paramSummary}
     // ── /search SkillHub ─────────────────────────────────────────────────────
     case 'search': {
       if (!arg) {
-        console.log('用法: /search <关键词> [--hub=bgi|clawhub|tencent]');
-        console.log(chalk.dim('示例: /search rnaseq'));
-        console.log(chalk.dim('      /search 蛋白质结构预测 --hub=tencent'));
-        console.log(chalk.dim('      /search genomics --hub=clawhub'));
-        console.log(chalk.dim('\n默认搜索 BGI 内网 SkillHub (http://172.16.218.40:8080)'));
+        console.log('用法: /search <关键词> [--hub=bgi|clawhub|tencent|all]');
+        console.log(chalk.dim('  bgi     — BGI 本地已安装 Skills（默认，极快）'));
+        console.log(chalk.dim('  clawhub — clawhub.ai 官方 SkillHub'));
+        console.log(chalk.dim('  tencent — 腾讯 SkillHub (skillhub.tencent.com)'));
+        console.log(chalk.dim('  all     — 同时搜索全部三个来源'));
+        console.log(chalk.dim('\n示例:'));
+        console.log(chalk.dim('  /search rnaseq'));
+        console.log(chalk.dim('  /search 蛋白质结构预测 --hub=tencent'));
+        console.log(chalk.dim('  /search genomics --hub=all'));
         break;
       }
       // Parse --hub flag
-      let hubKey: HubKey = 'bgi';
       const hubMatch = arg.match(/--hub=(\w+)/);
       const query = arg.replace(/--hub=\w+/g, '').trim();
-      if (hubMatch) {
-        const hk = hubMatch[1] as HubKey;
-        if (hk in SKILLHUB_HUBS) hubKey = hk;
-        else { console.log(chalk.red(`未知 hub: ${hubMatch[1]}，可选: bgi, clawhub, tencent`)); break; }
-      }
+      const hubArg = hubMatch ? hubMatch[1] : 'bgi';
+
       if (!query) { console.log(chalk.yellow('请提供搜索关键词')); break; }
 
+      if (hubArg === 'all') {
+        // Search all three hubs in parallel
+        console.log(chalk.dim(`\n正在搜索全部 SkillHub: "${query}"...\n`));
+        const hubKeys: HubKey[] = ['bgi', 'clawhub', 'tencent'];
+        const allResults: Array<{ hub: HubKey; label: string; results: SkillResult[]; error?: string }> = [];
+
+        await Promise.all(hubKeys.map(async (hk) => {
+          try {
+            const results = await searchSkillHub(query, hk, 5);
+            allResults.push({ hub: hk, label: SKILLHUB_HUBS[hk].label, results });
+          } catch (e) {
+            allResults.push({ hub: hk, label: SKILLHUB_HUBS[hk].label, results: [], error: e instanceof Error ? e.message : String(e) });
+          }
+        }));
+
+        // Sort back into consistent order
+        allResults.sort((a, b) => hubKeys.indexOf(a.hub) - hubKeys.indexOf(b.hub));
+
+        _lastSearchResults = [];
+        let globalIdx = 1;
+        for (const { label, results, error } of allResults) {
+          if (error) {
+            console.log(chalk.dim(`  ── ${label} ──`) + chalk.red(` 搜索失败: ${error}`));
+          } else if (results.length === 0) {
+            console.log(chalk.dim(`  ── ${label} ── 无结果`));
+          } else {
+            console.log(chalk.bold.dim(`  ── ${label} (${results.length}) ──`));
+            for (const s of results) {
+              const ver = s.version ? chalk.dim(` v${s.version}`) : '';
+              const owner = s.owner ? chalk.dim(` @${s.owner}`) : '';
+              console.log(`  ${chalk.cyan(`[${globalIdx}]`)} ${chalk.bold(s.name)}${owner}${ver}`);
+              console.log(`      ${chalk.dim(s.summary.substring(0, 90))}${s.summary.length > 90 ? '…' : ''}`);
+              console.log(`      ${chalk.dim(`slug: ${s.slug}`)}`);
+              _lastSearchResults.push(s);
+              globalIdx++;
+            }
+          }
+          console.log();
+        }
+        if (_lastSearchResults.length > 0)
+          console.log(chalk.dim(`安装: /install <slug>  或  /install <序号>  (如: /install 1)`));
+        break;
+      }
+
+      // Single hub search
+      if (!(hubArg in SKILLHUB_HUBS)) {
+        console.log(chalk.red(`未知 hub: ${hubArg}，可选: bgi, clawhub, tencent, all`));
+        break;
+      }
+      const hubKey = hubArg as HubKey;
       const hubLabel = SKILLHUB_HUBS[hubKey].label;
-      process.stdout.write(chalk.dim(`正在搜索 ${hubLabel} SkillHub: "${query}"...\n`));
+      process.stdout.write(chalk.dim(`正在搜索 ${hubLabel}: "${query}"...\n`));
       try {
         const results = await searchSkillHub(query, hubKey, 10);
         if (results.length === 0) {
@@ -2107,7 +2177,8 @@ ${paramSummary}
       break;
 
     default:
-      console.log(chalk.yellow(`未知命令: /${cmd}。输入 /help 查看全部命令`));
+      console.log(chalk.dim(`  提示: 未找到命令 /${cmd}，将作为消息发送给 AI。输入 /help 查看全部命令`));
+      return { sendToAI: true };
   }
 
   return {};
@@ -2241,7 +2312,7 @@ async function main(): Promise<void> {
   const ep = getActiveEndpoint(cfg);
   const allSkillsList = collectAllSkills();
   const totalSkills = allSkillsList.length;
-  const userSkillCount = allSkillsList.filter(e => e.tag === 'user').length;
+  const userSkillCount = allSkillsList.filter(e => e.tag === 'downloaded').length;
   const skillsLabel = totalSkills > 0
     ? chalk.green(`${totalSkills} 个`) + (userSkillCount > 0 ? chalk.dim(` (含 ${userSkillCount} 个用户安装)`) : '')
     : chalk.yellow('未安装');
@@ -2381,7 +2452,7 @@ async function main(): Promise<void> {
     const lines: string[] = [
       `# 会话记忆 ${new Date(sessionStartTime).toLocaleString('zh-CN')}`,
       ``,
-      `- 模型: ${loadConfig().model}`,
+      `- 模型: ${getCurrentModel(loadConfig())}`,
       `- Token: 输入 ${sessionStats.inputTokens} / 输出 ${sessionStats.outputTokens}`,
       `- 命令: ${sessionStats.successCmds} 成功 / ${sessionStats.failCmds} 失败`,
       ``,
@@ -2517,7 +2588,8 @@ async function main(): Promise<void> {
       if (result.clearHistory) { history = []; injectedSkills.clear(); }
       if (result.injectHistory) history = result.injectHistory;
       if (result.thinkMode !== undefined) thinkMode = result.thinkMode;
-      continue;
+      if (!result.sendToAI) continue;
+      // fall through — send original input to the AI as a normal message
     }
 
     // ── ! prefix: bypass LLM, execute bash directly ────────────────────────────
